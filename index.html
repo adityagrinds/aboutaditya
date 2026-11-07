@@ -1,0 +1,408 @@
+<!doctype html>
+<html lang="en" data-light="off">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Aditya Kumar Gupta | Engineer</title>
+  <meta name="description" content="Aditya Kumar Gupta. Full-stack engineer building real-time systems and multi-agent AI. 1st place Hackbriven, NASA Space Apps National Finalist, AWS SBCL, Google Student Ambassador.">
+  <meta name="theme-color" content="#070709">
+  <meta property="og:title" content="Aditya Kumar Gupta | Engineer">
+  <meta property="og:description" content="Full-stack engineer building real-time systems and multi-agent AI.">
+  <meta property="og:image" content="assets/aditya.jpg">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%23070709'/><circle cx='32' cy='30' r='12' fill='%23ffb547'/><rect x='29' y='44' width='6' height='10' rx='3' fill='%23ffb547'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@500;600;700;800&family=Inter:wght@300;400;500;600&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="is-loading">
+
+  <!-- ============ PRELOADER ============ -->
+  <div class="loader" id="loader" aria-hidden="true">
+    <div class="loader__stage">
+      <div class="loader__count" id="count">000</div>
+      <div class="watch" id="watch"><svg id="watchSvg" viewBox="0 0 600 900"></svg></div>
+    </div>
+  </div>
+  <canvas id="bolt" class="bolt" aria-hidden="true"></canvas>
+  <div class="strike-flash" id="strikeFlash" aria-hidden="true"></div>
+
+  <!-- ============ AMBIENT LAYERS ============ -->
+  <canvas id="webgl" aria-hidden="true"></canvas>
+  <div class="lightwash" aria-hidden="true"></div>
+  <div class="veil" aria-hidden="true"></div>
+  <div class="flash" id="flash" aria-hidden="true"></div>
+  <div class="grain" aria-hidden="true"></div>
+  <div class="progress" id="progress" aria-hidden="true"></div>
+
+  <!-- ============ CURSOR ============ -->
+  <div class="cursor" aria-hidden="true">
+    <div class="cursor__dot"></div>
+    <div class="cursor__ring"><div class="cursor__circle"><span class="cursor__label"></span></div></div>
+  </div>
+
+  <!-- ============ LAMP ============ -->
+  <div class="lamp" id="lampWrap">
+    <svg id="lampSvg" viewBox="0 0 240 640" aria-hidden="true">
+      <defs>
+        <radialGradient id="bulbGlow" cx="50%" cy="50%" r="50%">
+          <stop offset="0" stop-color="#fff4d2" stop-opacity="1"/>
+          <stop offset=".3" stop-color="#ffc46b" stop-opacity=".55"/>
+          <stop offset="1" stop-color="#ff9a3c" stop-opacity="0"/>
+        </radialGradient>
+        <linearGradient id="shadeGrad" x1="0" x2="1">
+          <stop offset="0" stop-color="#3a3a40"/>
+          <stop offset=".45" stop-color="#16161a"/>
+          <stop offset="1" stop-color="#050506"/>
+        </linearGradient>
+        <linearGradient id="coneGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#ffd58a" stop-opacity=".5"/>
+          <stop offset=".6" stop-color="#ffd58a" stop-opacity=".08"/>
+          <stop offset="1" stop-color="#ffd58a" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      <g id="lampHead">
+        <line class="lamp__cable" x1="120" y1="-60" x2="120" y2="108"/>
+        <path class="lamp__cone" d="M64 176 L176 176 L330 640 L-90 640 Z" fill="url(#coneGrad)"/>
+        <circle class="lamp__glow" cx="120" cy="182" r="96" fill="url(#bulbGlow)"/>
+        <rect class="lamp__cap" x="110" y="104" width="20" height="16" rx="3"/>
+        <path class="lamp__shade" d="M103 118 Q120 111 137 118 L184 171 Q120 188 56 171 Z" fill="url(#shadeGrad)"/>
+        <path class="lamp__rim" d="M56 171 Q120 188 184 171"/>
+        <circle class="lamp__bulb" cx="120" cy="180" r="12"/>
+      </g>
+      <path id="rope" class="lamp__rope" d=""/>
+      <g id="ropeHandle" class="lamp__handle" data-cursor="Pull">
+        <circle r="30" class="lamp__hit"/>
+        <rect x="-6" y="-2" width="12" height="28" rx="6" class="lamp__bead"/>
+        <rect x="-3" y="4" width="6" height="16" rx="3" class="lamp__bead-shine"/>
+      </g>
+    </svg>
+    <div class="lamp__hint mono" id="lampHint"><span>pull the cord</span><i></i></div>
+  </div>
+
+  <!-- ============ NAV ============ -->
+  <header class="nav" id="nav">
+    <a href="#home" class="nav__logo" data-cursor="Home">AKG<sup>®</sup></a>
+    <nav class="nav__links" aria-label="Primary">
+      <a href="#about" class="scramble">About</a>
+      <a href="#experience" class="scramble">Experience</a>
+      <a href="#work" class="scramble">Work</a>
+      <a href="#skills" class="scramble">Skills</a>
+      <a href="#contact" class="scramble">Contact</a>
+    </nav>
+  </header>
+
+  <button class="light-chip mono" id="lightBtn" type="button" aria-pressed="false">
+    <span class="light-chip__dot"></span><span id="lightText">Lights off</span><kbd>L</kbd>
+  </button>
+
+  <main id="main">
+
+    <!-- ============ HERO ============ -->
+    <section class="hero" id="home" data-shape="0">
+      <div class="hero__inner">
+        <div class="hero__left">
+          <h1 class="hero__title" aria-label="Aditya Kumar Gupta">
+            <span class="line"><span class="split">Aditya</span></span>
+            <span class="line line--2"><span class="split outline">Kumar</span><span class="split">&nbsp;Gupta</span></span>
+          </h1>
+
+          <div class="cal" id="cal" data-fade>
+            <div class="cal__rings" aria-hidden="true"><i></i><i></i></div>
+            <div class="cal__head mono"><span>Who I am</span><span id="calMonth">2026</span></div>
+            <div class="cal__body" aria-live="polite">
+              <div class="cal__page cal__page--back" aria-hidden="true">
+                <span class="cal__num">02</span>
+                <span class="cal__copy"><span class="cal__txt">UI/UX Developer</span><span class="cal__sub mono">Tailwind · Framer · Motion</span></span>
+              </div>
+              <div class="cal__page cal__page--front">
+                <span class="cal__num">01</span>
+                <span class="cal__copy"><span class="cal__txt">Full-Stack Developer</span><span class="cal__sub mono">React · Node.js · FastAPI</span></span>
+              </div>
+            </div>
+            <div class="cal__edge" aria-hidden="true"></div>
+          </div>
+
+          <div class="scroll-cue mono" data-fade><span>Scroll to explore</span><i></i></div>
+        </div>
+
+        <figure class="hero__photo" id="heroPhoto" data-cursor="Light up">
+          <div class="hero__halo" aria-hidden="true"></div>
+          <img src="assets/aditya-cutout.webp" alt="Aditya Kumar Gupta" draggable="false">
+          <img class="hero__shine" src="assets/aditya-cutout.webp" alt="" aria-hidden="true" draggable="false">
+        </figure>
+      </div>
+    </section>
+
+<!-- ============ ABOUT ============ -->
+    <section class="section about" id="about" data-shape="1">
+      <div class="section-label mono"><span>(01)</span> About</div>
+      <div class="about__grid">
+        <div class="portrait" id="portrait" data-cursor="Hi!">
+          <div class="portrait__frame">
+            <img class="portrait__base" src="assets/aditya.jpg" alt="Portrait of Aditya Kumar Gupta">
+            <img class="portrait__color" src="assets/aditya.jpg" alt="" aria-hidden="true">
+          </div>
+          <span class="portrait__tag mono">AKG / 2026</span>
+          <span class="portrait__tip mono">Lights are off. Your cursor is the flashlight.</span>
+        </div>
+
+        <div class="about__text">
+          <p class="reveal-words big">
+            I'm a Computer Science undergraduate who turns ambitious ideas into <em>fast, scalable</em> software.
+            I architect real-time systems, orchestrate autonomous AI agents, and ship under pressure.
+            The kind of pressure that <em>wins hackathons.</em>
+          </p>
+
+          <div class="stats">
+            <div class="stat" data-reveal><b><span data-count="8.51" data-dec="2">0</span></b><span>CGPA at Manav Rachna</span></div>
+            <div class="stat" data-reveal><b>#<span data-count="1">0</span></b><span>Hackbriven, GfG HQ</span></div>
+            <div class="stat" data-reveal><b><span data-count="2">0</span></b><span>community leadership roles</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ EXPERIENCE ============ -->
+    <section class="exp" id="experience" data-shape="2">
+      <div class="exp__pin">
+        <div class="exp__head">
+          <div class="section-label mono"><span>(02)</span> Experience</div>
+          <h2 class="h2 anim-heading">
+            <span class="line"><span class="split">Where I've</span></span>
+            <span class="line"><span class="split em">led &amp; shipped</span></span>
+          </h2>
+        </div>
+        <div class="exp__track">
+          <article class="exp-card" data-cursor="Drag on">
+            <span class="exp-card__num">01</span>
+            <div class="exp-card__top mono"><span>Oct 2026 – Nov 2026</span><span class="pill">Leadership</span></div>
+            <div>
+              <h3>Amazon Web Services</h3>
+              <p class="exp-card__role">AWS Student Builder Community Leader (SBCL)</p>
+              <ul>
+                <li>Lead student cloud-learning initiatives and community sessions on core AWS services, cloud architecture, and the AWS builder ecosystem.</li>
+                <li>Organize hands-on workshops and peer learning that help student developers build and deploy on the cloud.</li>
+              </ul>
+            </div>
+          </article>
+          <article class="exp-card">
+            <span class="exp-card__num">02</span>
+            <div class="exp-card__top mono"><span>Apr 2026 – Sep 2026</span><span class="pill">Ambassador</span></div>
+            <div>
+              <h3>Google</h3>
+              <p class="exp-card__role">Google Student Ambassador</p>
+              <ul>
+                <li>Led student outreach and technical workshops on Google's advanced developer tools, cloud infrastructure, and developer ecosystems.</li>
+                <li>Organized peer coding sessions and tech awareness initiatives across student developer networks.</li>
+              </ul>
+            </div>
+          </article>
+          <article class="exp-card">
+            <span class="exp-card__num">03</span>
+            <div class="exp-card__top mono"><span>May 2026 – Jul 2026</span><span class="pill">Open Source</span></div>
+            <div>
+              <h3>GirlScript Summer of Code</h3>
+              <p class="exp-card__role">Open Source Contributor</p>
+              <ul>
+                <li>Debugged critical frontend and backend issues, resolved edge cases, and improved modularity across community repositories.</li>
+                <li>Shipped clean pull requests and code reviews with global maintainers across diverse microservice architectures.</li>
+              </ul>
+            </div>
+          </article>
+          <article class="exp-card exp-card--next">
+            <span class="exp-card__num">04</span>
+            <div class="exp-card__top mono"><span>Next chapter</span><span class="pill pill--hot">Open</span></div>
+            <div>
+              <h3>Your team?</h3>
+              <p class="exp-card__role">I'm looking for the next hard problem.</p>
+              <a class="btn magnetic" href="mailto:adityagrinds@gmail.com" data-cursor="Write">Start a conversation</a>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ WORK ============ -->
+    <section class="section work" id="work" data-shape="3">
+      <div class="section-label mono"><span>(03)</span> Selected Work</div>
+      <h2 class="h2 anim-heading">
+        <span class="line"><span class="split">Things I've</span></span>
+        <span class="line"><span class="split em">engineered</span></span>
+      </h2>
+
+      <div class="stack">
+        <!-- SangyanAI -->
+        <article class="project">
+          <div class="project__info">
+            <div class="project__top mono"><span>P/01</span><span>Mar 2026</span></div>
+            <h3 class="project__title">SangyanAI</h3>
+            <p class="project__kicker">Multi-agent crisis response platform</p>
+            <ul class="project__points">
+              <li>Autonomous disaster-management framework on a 3-agent pipeline: Monitor, Analyzer, Responder.</li>
+              <li>Real-time polling of live earthquake and meteorological APIs to compute disaster severity indices.</li>
+              <li>Low-latency WebSocket dispatch that cut incident notification times by ~60%.</li>
+            </ul>
+            <div class="chips mono"><span>Python</span><span>FastAPI</span><span>WebSockets</span><span>Live APIs</span><span>Real-time Dashboard</span></div>
+            <a class="btn magnetic" href="https://github.com/adityagrinds/SangyanAI" target="_blank" rel="noopener" data-cursor="Code">View on GitHub</a>
+          </div>
+          <div class="project__visual viz tilt" data-cursor="Live">
+            <div class="viz__head mono"><span class="rec"></span>sangyan://ops-console <em>simulated feed</em></div>
+            <canvas id="seismo" class="viz__seismo"></canvas>
+            <svg class="viz__pipe" viewBox="0 0 420 110" aria-hidden="true">
+              <path id="pipeA" d="M70 55 C 130 20, 150 20, 210 55"/>
+              <path id="pipeB" d="M210 55 C 270 90, 290 90, 350 55"/>
+              <circle r="3.5" class="pulse"><animateMotion dur="1.6s" repeatCount="indefinite"><mpath href="#pipeA"/></animateMotion></circle>
+              <circle r="3.5" class="pulse"><animateMotion dur="1.6s" begin=".8s" repeatCount="indefinite"><mpath href="#pipeB"/></animateMotion></circle>
+              <g class="node" id="nodeM"><circle cx="70" cy="55" r="22"/><text x="70" y="94">MONITOR</text></g>
+              <g class="node" id="nodeA"><circle cx="210" cy="55" r="22"/><text x="210" y="94">ANALYZER</text></g>
+              <g class="node" id="nodeR"><circle cx="350" cy="55" r="22"/><text x="350" y="94">RESPONDER</text></g>
+              <text x="70" y="59" class="node__ico">M</text><text x="210" y="59" class="node__ico">A</text><text x="350" y="59" class="node__ico">R</text>
+            </svg>
+            <div class="viz__sev mono"><span>Severity index</span><div class="sev"><i id="sevFill"></i></div><b id="sevVal">0.00</b></div>
+            <ul class="viz__log mono" id="agentLog"></ul>
+          </div>
+        </article>
+
+        <!-- JWT -->
+        <article class="project">
+          <div class="project__info">
+            <div class="project__top mono"><span>P/02</span><span>Feb 2026</span></div>
+            <h3 class="project__title">Stateless<br>JWT Auth</h3>
+            <p class="project__kicker">Secure authorization gateway</p>
+            <ul class="project__points">
+              <li>Stateless gateway with bcrypt password hashing and cryptographically signed JWT access tokens.</li>
+              <li>Optimized session persistence and role-based route middleware with zero unauthorized resource leakage.</li>
+              <li>Decoupled in-memory validation layer that minimizes database reads and writes at peak auth traffic.</li>
+            </ul>
+            <div class="chips mono"><span>Node.js</span><span>Express.js</span><span>JWT</span><span>bcrypt</span><span>RBAC</span></div>
+            <a class="btn magnetic" href="https://github.com/adityagrinds/jwt-auth-service" target="_blank" rel="noopener" data-cursor="Code">View on GitHub</a>
+          </div>
+          <div class="project__visual viz tilt" data-cursor="Live">
+            <div class="viz__head mono"><span class="rec rec--green"></span>POST /auth/login <em>200 OK</em></div>
+            <div class="jwt mono">
+              <div class="jwt__label">encoded token</div>
+              <p class="jwt__token" id="jwtToken"></p>
+              <div class="jwt__grid">
+                <div>
+                  <div class="jwt__label">decoded payload</div>
+                  <pre id="jwtPayload"></pre>
+                </div>
+                <div>
+                  <div class="jwt__label">middleware</div>
+                  <ul class="jwt__mw">
+                    <li><i></i>verifyToken()</li>
+                    <li><i></i>requireRole('admin')</li>
+                    <li><i></i>cache.hit(sub)</li>
+                  </ul>
+                </div>
+              </div>
+              <div class="jwt__label">bcrypt hash</div>
+              <p class="jwt__hash" id="bcrypt"></p>
+              <p class="jwt__status" id="jwtStatus">verifying signature…</p>
+            </div>
+          </div>
+        </article>
+
+        <!-- More -->
+        <article class="project project--more">
+          <div class="project__info">
+            <div class="project__top mono"><span>P/03</span><span>Ongoing</span></div>
+            <h3 class="project__title">More in<br>the lab</h3>
+            <p class="project__kicker">Open-source work, hackathon builds and experiments.</p>
+            <a class="btn magnetic" href="https://github.com/adityagrinds" target="_blank" rel="noopener" data-cursor="Open">github.com/adityagrinds</a>
+          </div>
+          <div class="project__visual more-orb" aria-hidden="true">
+            <div class="orb"></div>
+            <span class="orb__ring"></span><span class="orb__ring"></span><span class="orb__ring"></span>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- ============ SKILLS ============ -->
+    <section class="section skills" id="skills" data-shape="4">
+      <div class="section-label mono"><span>(04)</span> Toolkit</div>
+      <h2 class="h2 anim-heading">
+        <span class="line"><span class="split">The stack</span></span>
+        <span class="line"><span class="split em">behind the magic</span></span>
+      </h2>
+    </section>
+    <div class="marquees" aria-label="Technologies">
+      <div class="marquee"><div class="marquee__inner"><span>React.js</span><span>Next.js</span><span>Node.js</span><span>Express.js</span><span>FastAPI</span><span>Tailwind CSS</span><span>WebSockets</span></div></div>
+      <div class="marquee marquee--outline"><div class="marquee__inner"><span>Python</span><span>Java</span><span>C</span><span>JavaScript</span><span>TypeScript</span><span>SQL</span></div></div>
+      <div class="marquee"><div class="marquee__inner"><span>MongoDB</span><span>AWS</span><span>Git</span><span>JWT</span><span>Framer</span><span>Claude</span><span>Multi-Agent AI</span></div></div>
+    </div>
+    <div class="section skills__grid-wrap">
+      <div class="skill-grid">
+        <div class="skill-col" data-reveal><h4 class="mono">Languages</h4><ul><li>C</li><li>Java</li><li>Python</li><li>JavaScript (ES6+)</li><li>TypeScript</li><li>SQL</li></ul></div>
+        <div class="skill-col" data-reveal><h4 class="mono">Frameworks &amp; Web</h4><ul><li>React.js</li><li>Next.js</li><li>Node.js</li><li>Express.js</li><li>FastAPI</li><li>Tailwind CSS</li><li>WebSockets</li></ul></div>
+        <div class="skill-col" data-reveal><h4 class="mono">Data, Cloud &amp; Tools</h4><ul><li>MongoDB</li><li>AWS</li><li>Git &amp; GitHub</li><li>JWT Authentication</li><li>Framer</li><li>Claude (Advanced Prompting)</li></ul></div>
+        <div class="skill-col" data-reveal><h4 class="mono">Core Competencies</h4><ul><li>Multi-Agent AI Orchestration</li><li>Stateless Backend Design</li><li>Data Structures &amp; Algorithms</li><li>Clean Architecture</li></ul></div>
+      </div>
+    </div>
+
+    <!-- ============ HONORS ============ -->
+    <section class="section honors" id="honors" data-shape="5">
+      <div class="section-label mono"><span>(05)</span> Honors</div>
+      <h2 class="h2 anim-heading">
+        <span class="line"><span class="split">Proof, not</span></span>
+        <span class="line"><span class="split em">promises</span></span>
+      </h2>
+      <ul class="honor-list">
+        <li class="honor" data-cursor="#1">
+          <span class="honor__year mono">Mar 2026</span>
+          <span class="honor__title">1st Place, Hackbriven Corporate Hackathon<small>Secured 1st rank at the hackathon hosted at the GeeksforGeeks corporate headquarters.</small></span>
+          <span class="honor__where mono">GfG HQ</span>
+        </li>
+        <li class="honor" data-cursor="Space">
+          <span class="honor__year mono">Oct 2025</span>
+          <span class="honor__title">National Grand Finalist, NASA Space Apps<small>Selected among the top national finalists of the global hackathon for high-impact space data solutions.</small></span>
+          <span class="honor__where mono">NASA</span>
+        </li>
+        <li class="honor" data-cursor="Google">
+          <span class="honor__year mono">Apr 2026</span>
+          <span class="honor__title">Google Student Ambassador<small>Selected through a competitive multi-tier evaluation to represent Google technologies on campus.</small></span>
+          <span class="honor__where mono">Google</span>
+        </li>
+        <li class="honor" data-cursor="OSS">
+          <span class="honor__year mono">2026</span>
+          <span class="honor__title">GSSoC Open-Source Selection<small>Selected as a GirlScript Summer of Code contributor, pushing merged code to production-grade repositories.</small></span>
+          <span class="honor__where mono">GSSoC</span>
+        </li>
+      </ul>
+    </section>
+
+    <!-- ============ CONTACT ============ -->
+    <section class="section contact" id="contact" data-shape="6">
+      <div class="section-label mono"><span>(06)</span> Contact</div>
+      <h2 class="contact__title anim-heading">
+        <span class="line"><span class="split">Let's build</span></span>
+        <span class="line"><span class="split em">something</span></span>
+        <span class="line"><span class="split accent">legendary.</span></span>
+      </h2>
+      <div class="contact__cta">
+        <a class="btn-big magnetic" href="mailto:adityagrinds@gmail.com" data-cursor="Say hi">
+          <span>adityagrinds@gmail.com</span>
+        </a>
+        <div class="contact__links mono">
+          <a href="https://github.com/adityagrinds" target="_blank" rel="noopener" class="scramble">GitHub</a>
+          <a href="mailto:adityagrinds@gmail.com" class="scramble">Email</a>
+        </div>
+      </div>
+      <footer class="footer mono">
+        <span>© 2026 Aditya Kumar Gupta</span>
+        <span>Designed &amp; engineered from scratch</span>
+        <span id="clock2">IST --:--</span>
+        <a href="#home" class="scramble">Back to top</a>
+      </footer>
+    </section>
+  </main>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  <script src="https://unpkg.com/lenis@1.1.13/dist/lenis.min.js"></script>
+  <script src="main.js"></script>
+</body>
+</html>
