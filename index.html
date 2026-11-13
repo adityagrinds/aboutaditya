@@ -175,7 +175,7 @@
             <span class="gate__portal" aria-hidden="true"></span>
             <span class="gate__peek">
               <span class="gate__peek-label mono">Inside</span>
-              <ul><li>SangyanAI</li><li>Stateless JWT Auth</li><li>More in the lab</li></ul>
+              <ul><li>SangyanAI</li><li>MRU Connect</li><li>Stateless JWT Auth</li></ul>
               <span class="gate__cta mono">Click to enter</span>
             </span>
             <span class="gate__door gate__door--l" aria-hidden="true"></span>
@@ -346,12 +346,15 @@
               <h3 class="project__title">SangyanAI</h3>
               <p class="project__kicker">Multi-agent crisis response platform</p>
               <ul class="project__points">
-                <li>Autonomous disaster-management framework on a 3-agent pipeline: Monitor, Analyzer, Responder.</li>
-                <li>Real-time polling of live earthquake and meteorological APIs to compute disaster severity indices.</li>
-                <li>Low-latency WebSocket dispatch that cut incident notification times by ~60%.</li>
+                <li>3-agent pipeline (Monitor, Analyzer, Responder) reasoning with GPT-OSS 120B on Groq, with memory of past incidents.</li>
+                <li>Cron auto-monitor pulls live USGS earthquake and Open-Meteo weather data and maps incidents on a Leaflet crisis map.</li>
+                <li>Socket.IO pushes agent activity and alerts live, cutting incident notification times by ~60%.</li>
               </ul>
-              <div class="chips mono"><span>Python</span><span>FastAPI</span><span>WebSockets</span><span>Live APIs</span><span>Real-time Dashboard</span></div>
-              <a class="btn magnetic" href="https://github.com/adityagrinds/SangyanAI" target="_blank" rel="noopener" data-cursor="Code">View on GitHub</a>
+              <div class="chips mono"><span>React</span><span>Three.js</span><span>Node.js</span><span>Express</span><span>MongoDB</span><span>Socket.IO</span><span>Groq</span><span>Leaflet</span></div>
+              <div class="project__links">
+                <a class="btn magnetic" href="https://sangyan-ai.vercel.app/" target="_blank" rel="noopener" data-cursor="Live">Live site</a>
+                <a class="btn magnetic" href="https://github.com/adityagrinds/SangyanAI" target="_blank" rel="noopener" data-cursor="Code">View on GitHub</a>
+              </div>
             </div>
             <div class="project__visual viz tilt" data-cursor="Live">
               <div class="viz__head mono"><span class="rec"></span>sangyan://ops-console <em>simulated feed</em></div>
@@ -371,10 +374,42 @@
             </div>
           </article>
 
+          <!-- MRU Connect -->
+          <article class="project">
+            <div class="project__info">
+              <div class="project__top mono"><span>P/02</span><span>2026</span></div>
+              <h3 class="project__title project__title--long">MRU<br>Connect</h3>
+              <p class="project__kicker">Faculty appointment portal for Manav Rachna University</p>
+              <ul class="project__points">
+                <li>Students find a teacher, pick an open office-hour slot and send a request; teachers approve or decline from one queue.</li>
+                <li>Each slot is claimed in a single transaction, so two students can never hold the same one.</li>
+                <li>Live notifications and appointment passes, with student, teacher and admin roles enforced by Firebase security rules.</li>
+              </ul>
+              <div class="chips mono"><span>React</span><span>Vite</span><span>React Router</span><span>Firebase Auth</span><span>Realtime Database</span><span>Security Rules</span></div>
+              <div class="project__links">
+                <a class="btn magnetic" href="https://student-teacher-appointment-sigma.vercel.app/" target="_blank" rel="noopener" data-cursor="Live">Live site</a>
+                <a class="btn magnetic" href="https://github.com/adityagrinds/student-teacher-appointment" target="_blank" rel="noopener" data-cursor="Code">View on GitHub</a>
+              </div>
+            </div>
+            <div class="project__visual viz tilt" data-cursor="Live">
+              <div class="viz__head mono"><span class="rec rec--green"></span>mru-connect://book <em>office hours</em></div>
+              <div class="mru">
+                <div class="mru__teacher"><span class="mru__avatar">DR</span><span><b>Faculty office hours</b><small class="mono">Mon &middot; 30 min slots</small></span></div>
+                <div class="mru__slots mono">
+                  <span class="is-taken">10:00</span><span>10:30</span><span class="is-pick">11:00</span><span>11:30</span><span class="is-taken">12:00</span><span>12:30</span>
+                </div>
+                <div class="mru__flow mono">
+                  <span class="mru__step is-done">Requested</span><i></i><span class="mru__step is-done">Approved</span><i></i><span class="mru__step is-now">Pass issued</span>
+                </div>
+                <p class="mru__note mono"><span class="mru__dot"></span>slot locked in one transaction &middot; no double booking</p>
+              </div>
+            </div>
+          </article>
+
           <!-- JWT -->
           <article class="project">
             <div class="project__info">
-              <div class="project__top mono"><span>P/02</span><span>Feb 2026</span></div>
+              <div class="project__top mono"><span>P/03</span><span>Feb 2026</span></div>
               <h3 class="project__title">Stateless<br>JWT Auth</h3>
               <p class="project__kicker">Secure authorization gateway</p>
               <ul class="project__points">
@@ -414,7 +449,7 @@
           <!-- More -->
           <article class="project project--more">
             <div class="project__info">
-              <div class="project__top mono"><span>P/03</span><span>Ongoing</span></div>
+              <div class="project__top mono"><span>P/04</span><span>Ongoing</span></div>
               <h3 class="project__title">More in<br>the lab</h3>
               <p class="project__kicker">Open-source work, hackathon builds and experiments.</p>
               <a class="btn magnetic" href="https://github.com/adityagrinds" target="_blank" rel="noopener" data-cursor="Open">github.com/adityagrinds</a>

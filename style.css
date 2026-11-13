@@ -412,6 +412,35 @@ html[data-light="on"] .portrait__tip { opacity: 0; }
 .a--m { color: #7aa2ff; } .a--a { color: #ffb547; } .a--r { color: #ff5a1f; }
 @keyframes logIn { from { opacity: 0; transform: translateY(-6px); } }
 
+.project__links { display: flex; flex-wrap: wrap; gap: 10px; }
+.project__title--long { font-size: clamp(34px, 3.7vw, 68px); overflow-wrap: normal; }
+
+/* MRU Connect mock: a teacher's office-hour slots and the request flow */
+.mru { display: grid; gap: 18px; padding: 6px 2px; flex: 1; align-content: center; }
+.mru__teacher { display: flex; align-items: center; gap: 12px; }
+.mru__teacher b { display: block; color: #ece8df; font-weight: 600; font-size: 15px; }
+.mru__teacher small { color: #8b877e; font-size: 10px; }
+.mru__avatar {
+  width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; flex: none;
+  font-family: var(--display); font-weight: 800; font-size: 13px; color: #0b0905;
+  background: linear-gradient(135deg, #ffe7a3, #c9952f);
+}
+.mru__slots { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; font-size: 12px; }
+.mru__slots span {
+  text-align: center; padding: 10px 0; border-radius: 10px; color: #d6d2c6;
+  border: 1px solid rgba(255, 255, 255, 0.1); background: rgba(255, 255, 255, 0.03);
+}
+.mru__slots .is-taken { color: #5e5b55; text-decoration: line-through; background: transparent; }
+.mru__slots .is-pick { color: #0b0905; border-color: transparent; background: #34d399; box-shadow: 0 0 22px rgba(52, 211, 153, 0.45); animation: mruPick 2.4s ease-in-out infinite; }
+@keyframes mruPick { 50% { box-shadow: 0 0 6px rgba(52, 211, 153, 0.25); } }
+.mru__flow { display: flex; align-items: center; gap: 8px; font-size: 10px; flex-wrap: wrap; }
+.mru__flow i { flex: 1; min-width: 12px; height: 1px; background: rgba(52, 211, 153, 0.5); }
+.mru__step { padding: 5px 10px; border-radius: 999px; border: 1px solid rgba(255, 255, 255, 0.12); color: #8b877e; }
+.mru__step.is-done { color: #34d399; border-color: rgba(52, 211, 153, 0.45); }
+.mru__step.is-now { color: #0b0905; background: #ffb547; border-color: transparent; }
+.mru__note { display: flex; align-items: center; gap: 8px; font-size: 10.5px; color: #8b877e; text-transform: none; }
+.mru__dot { width: 7px; height: 7px; border-radius: 50%; background: #34d399; box-shadow: 0 0 8px #34d399; }
+
 .jwt { display: grid; gap: 10px; font-size: 11px; text-transform: none; letter-spacing: 0.01em; }
 .jwt__label { color: #5e5b55; font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; }
 .jwt__token { word-break: break-all; line-height: 1.6; font-size: 12px; padding: 12px; border-radius: 10px; background: rgba(255, 255, 255, 0.03); }
@@ -531,7 +560,8 @@ html[data-light="on"] .portrait__tip { opacity: 0; }
 .gate:focus { outline: none; }
 .gate:focus-visible .gate__arch { outline: 2px solid rgb(var(--glow)); outline-offset: 6px; }
 /* focus: the hovered gate steps forward, the rest fall back into the dark */
-.gates:hover .gate:not(:hover), .gates:focus-within .gate:not(:focus-visible):not(:hover) { opacity: 0.3; filter: blur(3px) saturate(0.4); transform: scale(0.92); }
+/* dim only while a gate is actually hovered or keyboard-focused; plain focus (restored after leaving a room) must not dim them all */
+.gates:hover .gate:not(:hover), .gates:has(.gate:focus-visible) .gate:not(:focus-visible):not(:hover) { opacity: 0.3; filter: blur(3px) saturate(0.4); transform: scale(0.92); }
 .gates:hover .gate:hover, .gate:focus-visible { transform: translateY(-22px) scale(1.16); z-index: 3; }
 
 /* hover callout: a thin line runs out of the gate and the details sit beside it, no box */
