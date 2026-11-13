@@ -519,7 +519,7 @@
 
     const N = 12, SEG = 14, REST = (N - 1) * SEG;
     const PIVOT = { x: 120, y: -60 };
-    const ANCH = { x: 142, y: 176 };
+    const ANCH = { x: 120, y: 192 }; // dead centre, just under the bulb
     let angle = 0, angVel = 0;
     let dragging = false, moved = 0, segLen = SEG;
     let downAt = { x: 0, y: 0 }, grabOff = { x: 0, y: 0 }, dragT = { x: 0, y: 0 };
@@ -896,6 +896,50 @@
   jwtViz();
 
   /* =========================================================
+     TECH LOGOS: a small symbol in front of every toolkit item
+     ========================================================= */
+  (() => {
+    const DEV = 'https://cdn.jsdelivr.net/gh/devicons/devicon@v2.16.0/icons/';
+    const SI = 'https://cdn.jsdelivr.net/npm/simple-icons@13.21.0/icons/';
+    // [match, url, mono colour] — mono logos are drawn as a mask so dark marks stay visible on a dark page
+    const ICONS = [
+      ['react', DEV + 'react/react-original.svg'],
+      ['next', SI + 'nextdotjs.svg', 'currentColor'],
+      ['node', DEV + 'nodejs/nodejs-original.svg'],
+      ['express', DEV + 'express/express-original.svg', 'currentColor'],
+      ['fastapi', DEV + 'fastapi/fastapi-original.svg'],
+      ['tailwind', DEV + 'tailwindcss/tailwindcss-original.svg'],
+      ['websocket', SI + 'socketdotio.svg', 'currentColor'],
+      ['python', DEV + 'python/python-original.svg'],
+      ['javascript', DEV + 'javascript/javascript-original.svg'],
+      ['java', DEV + 'java/java-original.svg'],
+      ['typescript', DEV + 'typescript/typescript-original.svg'],
+      ['sql', SI + 'mysql.svg', '#5fa8e8'],
+      ['c', DEV + 'c/c-original.svg'],
+      ['mongodb', DEV + 'mongodb/mongodb-original.svg'],
+      ['aws', DEV + 'amazonwebservices/amazonwebservices-plain-wordmark.svg', '#ff9900'],
+      ['git', DEV + 'git/git-original.svg'],
+      ['jwt', SI + 'jsonwebtokens.svg', '#d63aff'],
+      ['framer', SI + 'framer.svg', 'currentColor'],
+      ['claude', SI + 'claude.svg', '#d97757'],
+    ];
+    const find = (txt) => {
+      const t = txt.trim().toLowerCase();
+      return ICONS.find(([k]) => (k === 'c' ? t === 'c' : t.startsWith(k)));
+    };
+    $$('.marquee__inner > span, .skill-col li').forEach((el) => {
+      const hit = find(el.textContent);
+      const ic = document.createElement('i');
+      ic.className = 'tech-ic';
+      ic.setAttribute('aria-hidden', 'true');
+      if (!hit) ic.classList.add('tech-ic--glyph'); // ideas, not products: a small star instead
+      else if (hit[2]) { ic.classList.add('tech-ic--mono'); ic.style.setProperty('--src', `url("${hit[1]}")`); ic.style.setProperty('--c', hit[2]); }
+      else ic.style.backgroundImage = `url("${hit[1]}")`;
+      el.prepend(ic);
+    });
+  })();
+
+  /* =========================================================
      MARQUEE DUPLICATION (seamless loop)
      ========================================================= */
   $$('.marquee__inner').forEach((el) => { el.innerHTML += el.innerHTML; });
@@ -908,6 +952,19 @@
     if (l) l.remove();
     document.body.classList.remove('is-loading');
     if (GL) GL.uniforms.uIntro.value = 1;
+    // gates still open their rooms, just without the cave
+    const ch = $('#chamber');
+    if (ch) {
+      $$('.gate').forEach((g) => g.addEventListener('click', () => {
+        $$('.room', ch).forEach((r) => r.classList.toggle('is-active', r.dataset.room === g.dataset.gate));
+        $('#chamberTitle').textContent = g.dataset.title;
+        ch.classList.add('is-open');
+        document.body.classList.add('gate-lock');
+      }));
+      const shut = () => { ch.classList.remove('is-open'); document.body.classList.remove('gate-lock'); };
+      $('#chamberBack').addEventListener('click', shut);
+      addEventListener('keydown', (e) => { if (e.key === 'Escape') shut(); });
+    }
     return;
   }
 
@@ -1039,7 +1096,7 @@
     const isDark = (c) => c === '#0d0c0a' || c === '#1c1a17';
 
     // phase 1: particles are sucked into the 12
-    const inward = Array.from({ length: mobile ? 280 : 560 }, () => ({
+    const inward = Array.from({ length: mobile ? 160 : 320 }, () => ({
       a: Math.random() * Math.PI * 2,
       r0: 140 + Math.random() * Math.max(W, H) * 0.6,
       d: Math.random() * 0.4,
@@ -1047,9 +1104,9 @@
       w: 0.6 + Math.random() * 1.6,
     }));
     // phase 2: they explode outward at lightning speed, spiralling
-    const burst = Array.from({ length: mobile ? 1000 : 2200 }, () => {
+    const burst = Array.from({ length: mobile ? 380 : 820 }, () => {
       const a = Math.random() * Math.PI * 2;
-      const s = 16 + Math.pow(Math.random(), 1.6) * 74;
+      const s = 10 + Math.pow(Math.random(), 1.6) * 38;
       return {
         x: ox, y: oy, vx: Math.cos(a) * s, vy: Math.sin(a) * s,
         spin: 0.012 + Math.random() * 0.035, c: pick(),
@@ -1074,7 +1131,7 @@
       // charging core at the 12
       const core = t < T_IN ? t / T_IN : Math.max(0, 1 - (t - T_IN) / 0.5);
       if (core > 0.01) {
-        const r = 18 + core * 120;
+        const r = 14 + core * 70;
         const g = ctx.createRadialGradient(ox, oy, 0, ox, oy, r);
         g.addColorStop(0, `rgba(255,255,255,${core})`);
         g.addColorStop(0.3, `rgba(255,222,140,${0.7 * core})`);
@@ -1149,8 +1206,6 @@
       .to(clk, { t: 3.2, duration: 3.2, ease: 'none' }, 0)
       .to('#watch', { scale: 0.95, duration: T_IN, ease: 'power2.in' }, 0)
       .add(() => { Sound.whoosh(); if (Watch) Watch.struck(); }, T_IN)
-      .fromTo(fl, { opacity: 0 }, { opacity: 0.4, duration: 0.06 }, T_IN)
-      .to(fl, { opacity: 0, duration: 0.6, ease: 'power2.out' }, T_IN + 0.06)
       .to('#watch', { scale: 1.5, opacity: 0, filter: 'blur(12px)', duration: 1, ease: 'expo.in' }, T_IN)
       .to('#count', { x: -80, opacity: 0, duration: 0.6, ease: 'power3.in' }, T_IN)
       .add(() => { document.body.classList.remove('is-loading'); reveal(ox, oy); }, T_OPEN)
@@ -1174,7 +1229,7 @@ function reveal(ox, oy) {
       .to('#heroPhoto', { opacity: 1, yPercent: 0, duration: 1.8, ease: 'expo.out' }, 0.45)
       .to('#lampWrap', { y: 0, duration: 1.6, ease: 'elastic.out(1, 0.5)', onComplete: () => Lamp && Lamp.impulse(25) }, 1.2)
       .to('.light-chip', { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out' }, 1.9)
-      .fromTo('#lampHint', { opacity: 0, x: 12 }, { opacity: 1, x: 0, duration: 0.7, ease: 'power3.out' }, 2.7)
+      .fromTo('#lampHint', { opacity: 0, x: -12 }, { opacity: 1, x: 0, duration: 0.7, ease: 'power3.out' }, 2.7)
       .add(() => { ScrollTrigger.refresh(); startCalendar(); }, 0.3);
   }
 
@@ -1299,49 +1354,442 @@ function startCalendar() {
     });
   });
 
-  // experience: horizontal pinned scroll on desktop
-  const mm = gsap.matchMedia();
-  mm.add('(min-width: 900px)', () => {
-    const track = $('.exp__track');
-    const pin = $('.exp__pin');
-    const dist = () => {
-      const pad = parseFloat(getComputedStyle(pin).paddingLeft) || 0;
-      return Math.max(0, track.scrollWidth - innerWidth + pad * 2);
-    };
-    const tween = gsap.to(track, {
-      x: () => -dist(), ease: 'none',
-      scrollTrigger: { trigger: '.exp', start: 'top top', end: () => '+=' + dist(), pin: true, scrub: 1, invalidateOnRefresh: true, anticipatePin: 1 },
-    });
-    $$('.exp-card').forEach((card) => {
-      gsap.fromTo($('.exp-card__num', card), { xPercent: 40 }, {
-        xPercent: -20, ease: 'none',
-        scrollTrigger: { trigger: card, containerAnimation: tween, start: 'left right', end: 'right left', scrub: true },
-      });
-      gsap.from(card, {
-        rotateY: -14, opacity: 0.3, transformPerspective: 1200, ease: 'none',
-        scrollTrigger: { trigger: card, containerAnimation: tween, start: 'left right', end: 'center 70%', scrub: true },
-      });
-    });
-
-    // projects stack: previous card recedes as the next one arrives
-    const projects = $$('.project');
-    projects.forEach((p, i) => {
-      if (i === projects.length - 1) return;
-      gsap.to(p, {
-        scale: 0.9, opacity: 0.35, filter: 'blur(3px)', ease: 'none',
-        scrollTrigger: { trigger: projects[i + 1], start: 'top bottom', end: 'top 10%', scrub: true },
-      });
-    });
-    return () => {};
-  });
-  mm.add('(max-width: 899px)', () => {
-    $$('.exp-card, .project').forEach((c) => {
-      gsap.from(c, { y: 60, opacity: 0, duration: 1, ease: 'power3.out', scrollTrigger: { trigger: c, start: 'top 88%' } });
-    });
-  });
-
   // project visual tilt
   $$('.tilt').forEach((el) => tilt(el, 7));
+
+  /* =========================================================
+     GATES: hover to focus one, click to fly through a cave into its room
+     ========================================================= */
+  const gatesEl = $('#gates');
+  const chamber = $('#chamber');
+  const caveCv = $('#cave');
+  if (gatesEl && chamber && caveCv) {
+    const Flight = makeFlight(caveCv);
+    const gates = $$('.gate', gatesEl);
+    const rooms = $$('.room', chamber);
+    const chamberTitle = $('#chamberTitle');
+    const backBtn = $('#chamberBack');
+    let busy = false, current = null;
+
+    gsap.from(gates, {
+      y: 80, opacity: 0, rotateX: -18, stagger: 0.12, duration: 1.3, ease: 'expo.out',
+      scrollTrigger: { trigger: gatesEl, start: 'top 85%' }, clearProps: 'transform,opacity',
+    });
+    gates.forEach((g) => tilt($('.gate__arch', g), 9));
+
+    // hover a gate: it zooms forward and a line draws out to its details
+    gates.forEach((g) => {
+      const note = document.createElement('span');
+      note.className = 'gate__note';
+      note.setAttribute('aria-hidden', 'true');
+      const sub = $('.gate__sub', g).textContent;
+      const items = $$('.gate__peek li', g).map((li) => `<span>${li.textContent}</span>`).join('');
+      note.innerHTML = `<span class="gate__note-line"></span><span class="gate__note-body">`
+        + `<span class="gate__note-kicker">${g.dataset.title.split('/')[0].trim()} \u00b7 ${sub}</span>`
+        + `<span class="gate__note-blurb">${g.dataset.blurb || ''}</span>`
+        + `<span class="gate__note-list">${items}</span></span>`;
+      g.appendChild(note);
+    });
+
+    const glowOf = (g) => g.style.getPropertyValue('--glow').split(',').map((v) => parseInt(v, 10));
+    function openRoom(gate) {
+      ['--g1', '--g2', '--g3', '--glow'].forEach((v) => chamber.style.setProperty(v, gate.style.getPropertyValue(v)));
+      rooms.forEach((r) => r.classList.toggle('is-active', r.dataset.room === gate.dataset.gate));
+      chamberTitle.textContent = gate.dataset.title;
+      chamber.classList.add('is-open');
+      chamber.setAttribute('aria-hidden', 'false');
+      chamber.scrollTop = 0;
+      dispatchEvent(new Event('resize')); // canvases inside the room size themselves now they are visible
+    }
+    function closeRoom() {
+      chamber.classList.remove('is-open');
+      chamber.setAttribute('aria-hidden', 'true');
+      gsap.set(chamber, { clearProps: 'opacity' });
+    }
+    const lock = (on) => {
+      document.body.classList.toggle('gate-lock', on);
+      if (lenis) on ? lenis.stop() : lenis.start();
+    };
+
+    function enter(gate) {
+      if (busy || current) return;
+      busy = true; current = gate;
+      lock(true);
+      const others = gates.filter((g) => g !== gate);
+      const room = rooms.find((r) => r.dataset.room === gate.dataset.gate);
+      if (reduce) {
+        openRoom(gate);
+        gsap.fromTo(chamber, { opacity: 0 }, { opacity: 1, duration: 0.3, onComplete: () => { busy = false; backBtn.focus(); } });
+        return;
+      }
+      // zoom towards the middle of the doorway
+      const ar = $('.gate__arch', gate).getBoundingClientRect();
+      const gr = gate.getBoundingClientRect();
+      const ox = ar.left - gr.left + ar.width / 2, oy = ar.top - gr.top + ar.height * 0.58;
+      const s = Math.max(innerWidth / ar.width, innerHeight / ar.height) * 2.4;
+      Sound.whoosh();
+
+      gsap.timeline({ onComplete: () => { busy = false; backBtn.focus({ preventScroll: true }); } })
+        .to(others, { opacity: 0, scale: 0.86, filter: 'blur(10px)', duration: 0.55, ease: 'power2.in' }, 0)
+        .to($('.gate__door--l', gate), { rotateY: -108, transformPerspective: 2200, duration: 0.75, ease: 'power3.inOut' }, 0)
+        .to($('.gate__door--r', gate), { rotateY: 108, transformPerspective: 2200, duration: 0.75, ease: 'power3.inOut' }, 0)
+        .to(gate, { scale: s, transformOrigin: `${ox}px ${oy}px`, duration: 1.1, ease: 'expo.in' }, 0.3)
+        // through the doorway: a carpet rises under you and the wind takes you towards the gate's light
+        .add(() => { Flight.rise = 0; Flight.arrive = 0; Flight.start(glowOf(gate), 3); }, 0.95)
+        .fromTo(caveCv, { opacity: 0 }, { opacity: 1, duration: 0.4, ease: 'power1.out' }, 0.95)
+        .to(Flight, { rise: 1, duration: 0.9, ease: 'back.out(1.4)' }, 1.0)
+        .to(Flight, { speed: 22, duration: 1.0, ease: 'power2.in' }, 1.1)
+        .add(() => Sound.whoosh(), 1.7)
+        .to(Flight, { arrive: 1, duration: 2.0, ease: 'power2.in' }, 1.15)
+        .to(Flight, { speed: 8, duration: 0.9, ease: 'power2.out' }, 2.3)
+        .to(Flight, { light: 1, duration: 0.7, ease: 'power2.in' }, 2.6)
+        // out into the light: the room is waiting on the other side
+        .add(() => {
+          openRoom(gate);
+          gsap.set([gate, ...others, ...$$('.gate__door', gate)], { clearProps: 'transform,opacity,filter' });
+        }, 3.3)
+        .to(caveCv, { opacity: 0, duration: 0.8, ease: 'power2.out' }, 3.3)
+        .fromTo(room, { scale: 1.08, filter: 'blur(12px)' }, { scale: 1, filter: 'blur(0px)', duration: 1.2, ease: 'expo.out', clearProps: 'transform,filter' }, 3.3)
+        .from(room.querySelectorAll('.room__head > *, .room-card, .project'), { y: 50, opacity: 0, stagger: 0.08, duration: 1, ease: 'power3.out', clearProps: 'transform,opacity' }, 3.45)
+        .add(() => Flight.stop(), 4.2);
+    }
+
+    function exit() {
+      if (busy || !current) return;
+      busy = true;
+      const gate = current;
+      const done = () => { busy = false; current = null; lock(false); gate.focus({ preventScroll: true }); };
+      if (reduce) {
+        gsap.to(chamber, { opacity: 0, duration: 0.3, onComplete: () => { closeRoom(); done(); } });
+        return;
+      }
+      Sound.whoosh();
+      // back out: the carpet carries you backwards out of the sky and the hall of gates reappears
+      Flight.rise = 1; Flight.arrive = 0;
+      Flight.start(glowOf(gate), 0);
+      Flight.light = 0.9;
+      gsap.timeline({ onComplete: () => { Flight.stop(); done(); } })
+        .to(caveCv, { opacity: 1, duration: 0.35, ease: 'power1.out' }, 0)
+        .to(chamber, { opacity: 0, duration: 0.35, ease: 'power1.in' }, 0)
+        .to(Flight, { light: 0, duration: 0.5, ease: 'power2.out' }, 0)
+        .to(Flight, { speed: -22, duration: 0.6, ease: 'power2.in' }, 0)
+        .to(Flight, { rise: 0, duration: 0.5, ease: 'power2.in' }, 0.3)
+        .add(closeRoom, 0.4)
+        .to(caveCv, { opacity: 0, duration: 0.6, ease: 'power2.in' }, 0.75)
+        .fromTo(gates, { opacity: 0, scale: 1.18, filter: 'blur(10px)' }, {
+          opacity: 1, scale: 1, filter: 'blur(0px)', stagger: 0.06, duration: 1.1, ease: 'expo.out', clearProps: 'transform,opacity,filter',
+        }, 0.85);
+    }
+
+    gates.forEach((g) => g.addEventListener('click', () => enter(g)));
+    backBtn.addEventListener('click', exit);
+    addEventListener('keydown', (e) => { if (e.key === 'Escape' && current) exit(); });
+  }
+
+  // magic-carpet ride: you sit on a rippling carpet and the wind carries you through a night sky into the gate's light
+  function makeFlight(cv) {
+    const ctx = cv.getContext('2d');
+    const DEPTH = 30, COLS = 22, ROWS = 30;
+    let W = 0, H = 0, run = false, last = 0, t = 0, F = 1, y0 = 0, zNear = 1, skyline = [];
+    const st = { speed: 0, light: 0, rise: 1, arrive: 0, rgb: [255, 198, 96] };
+    const rnd = (a, b) => a + Math.random() * (b - a);
+    const mix = (a, b, k) => [0, 1, 2].map((i) => Math.round(a[i] + (b[i] - a[i]) * k));
+    const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+    // carpet pattern: gold border, navy band, red field with a medallion
+    const C = { gold: [224, 170, 74], navy: [28, 40, 96], red: [138, 26, 44], deep: [84, 12, 30], cream: [240, 218, 166] };
+    const pattern = [];
+    for (let j = 0; j < ROWS; j++) for (let i = 0; i < COLS; i++) {
+      const e = Math.min(i, COLS - 1 - i, j, ROWS - 1 - j);
+      const d = Math.abs(i - (COLS - 1) / 2) / ((COLS - 1) / 2) + Math.abs(j - (ROWS - 1) / 2) / ((ROWS - 1) / 2);
+      let c;
+      if (e === 0) c = C.gold;
+      else if (e === 1) c = C.navy;
+      else if (e === 2) c = (i + j) % 2 ? C.gold : C.navy;
+      else if (d < 0.28) c = C.gold;
+      else if (d < 0.5) c = C.navy;
+      else if (d < 0.6) c = C.cream;
+      else c = (i + j) % 3 === 0 ? C.deep : C.red;
+      pattern.push(c);
+    }
+
+    const keepOffCarpet = (p) => { if (Math.abs(p.x) < 1.6 && p.y > 0.4) p.y = rnd(-2.8, 0.2); return p; };
+    const wind = Array.from({ length: 44 }, () => keepOffCarpet({ x: rnd(-5, 5), y: rnd(-2.8, 2.4), z: rnd(1, DEPTH), ph: rnd(0, 6.28), amp: rnd(0.15, 0.55) }));
+    const dust = Array.from({ length: 170 }, () => keepOffCarpet({ x: rnd(-7, 7), y: rnd(-4, 3), z: rnd(0.5, DEPTH) }));
+    const mkCloud = (z) => ({ x: (Math.random() < 0.5 ? -1 : 1) * rnd(1.8, 8), y: rnd(-2.6, 3), z, r: rnd(0.9, 2), a: rnd(0.05, 0.15) });
+    const clouds = Array.from({ length: 18 }, () => mkCloud(rnd(2, DEPTH)));
+    const stars = Array.from({ length: 150 }, () => ({ x: Math.random(), y: Math.random() * 0.5, s: rnd(0.4, 1.6), p: rnd(0, 6.28) }));
+
+    const wrap = (p, lo, fresh) => {
+      if (p.z < lo) { p.z += DEPTH - lo; if (fresh) fresh(p); }
+      else if (p.z > DEPTH) { p.z -= DEPTH - lo; if (fresh) fresh(p); }
+    };
+    const P = (x, y, z) => [W / 2 + (x / z) * F, y0 + (y / z) * F];
+
+    // distant domes and minarets on the horizon
+    function buildSkyline() {
+      skyline = [];
+      let x = -W * 0.3;
+      while (x < W * 1.3) {
+        const w = rnd(18, 54) * (W / 1400 + 0.4);
+        skyline.push({ x, w, h: rnd(6, 26) * (H / 900 + 0.3), kind: Math.random() });
+        x += w + rnd(0, 18);
+      }
+    }
+    function drawSkyline(col) {
+      const base = y0 + 2;
+      ctx.fillStyle = `rgb(${col})`;
+      ctx.beginPath();
+      ctx.moveTo(-W, base);
+      skyline.forEach((b) => {
+        ctx.lineTo(b.x, base);
+        ctx.lineTo(b.x, base - b.h);
+        if (b.kind < 0.35) {
+          ctx.quadraticCurveTo(b.x + b.w / 2, base - b.h - b.w * 0.9, b.x + b.w, base - b.h);
+        } else if (b.kind < 0.5) {
+          const mx = b.x + b.w / 2;
+          ctx.lineTo(mx - 3, base - b.h);
+          ctx.lineTo(mx - 3, base - b.h * 2.6);
+          ctx.quadraticCurveTo(mx, base - b.h * 2.6 - 10, mx + 3, base - b.h * 2.6);
+          ctx.lineTo(mx + 3, base - b.h);
+          ctx.lineTo(b.x + b.w, base - b.h);
+        } else {
+          ctx.lineTo(b.x + b.w, base - b.h);
+        }
+        ctx.lineTo(b.x + b.w, base);
+      });
+      ctx.lineTo(W * 2, base);
+      ctx.lineTo(W * 2, base + 40);
+      ctx.lineTo(-W, base + 40);
+      ctx.fill();
+    }
+
+    const size = () => {
+      const dpr = Math.min(devicePixelRatio, 2);
+      W = innerWidth; H = innerHeight;
+      cv.width = W * dpr; cv.height = H * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      F = Math.min(W, H * 1.1) * 0.85;
+      y0 = H * 0.42;
+      zNear = clamp(F / (H * 1.04 - y0), 0.4, 3); // the near edge of the carpet sits just under the screen
+      buildSkyline();
+    };
+    addEventListener('resize', () => { if (run) size(); });
+
+    function frame(now) {
+      if (!run) return;
+      requestAnimationFrame(frame);
+      const dt = Math.min(0.05, (now - last) / 1000 || 0.016);
+      last = now;
+      t += dt;
+      const sp = st.speed, dz = sp * dt;
+      const glow = st.rgb, cx = W / 2;
+      const gust = clamp(Math.abs(sp) / 20, 0, 1);
+      const roll = Math.sin(t * 0.9) * 0.035 + Math.sin(t * 2.3) * 0.01 * gust;
+      const bob = Math.sin(t * 1.8) * H * 0.008;
+
+      /* ---- the world rolls and bobs around you ---- */
+      ctx.save();
+      ctx.translate(cx, y0);
+      ctx.rotate(roll);
+      ctx.translate(-cx, -y0 + bob);
+
+      const sky = ctx.createLinearGradient(0, -H * 0.3, 0, y0);
+      sky.addColorStop(0, '#03040b');
+      sky.addColorStop(0.6, `rgb(${mix([10, 12, 34], glow, 0.12)})`);
+      sky.addColorStop(1, `rgb(${mix([26, 20, 44], glow, 0.3)})`);
+      ctx.fillStyle = sky;
+      ctx.fillRect(-W, -H, W * 3, y0 + H);
+      const ground = ctx.createLinearGradient(0, y0, 0, H * 1.3);
+      ground.addColorStop(0, `rgb(${mix([16, 12, 24], glow, 0.1)})`);
+      ground.addColorStop(1, '#030205');
+      ctx.fillStyle = ground;
+      ctx.fillRect(-W, y0, W * 3, H * 2);
+
+      // stars twinkle, a crescent moon hangs over the city
+      ctx.fillStyle = '#fff';
+      stars.forEach((s) => {
+        ctx.globalAlpha = 0.35 + 0.5 * Math.abs(Math.sin(t * 1.5 + s.p));
+        ctx.fillRect(s.x * W * 1.4 - W * 0.2, s.y * H * 0.9 - H * 0.05, s.s, s.s);
+      });
+      ctx.globalAlpha = 1;
+      const mx = W * 0.8, my = H * 0.13, mr = Math.min(W, H) * 0.055;
+      const halo = ctx.createRadialGradient(mx, my, mr * 0.8, mx, my, mr * 4);
+      halo.addColorStop(0, 'rgba(255,240,205,0.28)');
+      halo.addColorStop(1, 'rgba(255,240,205,0)');
+      ctx.fillStyle = halo;
+      ctx.fillRect(mx - mr * 4, my - mr * 4, mr * 8, mr * 8);
+      // crescent: the full disc clipped by a shadow circle, so the sky shows through
+      ctx.save();
+      const cut = new Path2D();
+      cut.rect(mx - mr * 2, my - mr * 2, mr * 4, mr * 4);
+      cut.arc(mx + mr * 0.45, my - mr * 0.2, mr * 0.9, 0, Math.PI * 2);
+      ctx.clip(cut, 'evenodd');
+      ctx.fillStyle = '#f6ead0';
+      ctx.beginPath(); ctx.arc(mx, my, mr, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+
+      // horizon haze in the gate's colour
+      const hz = ctx.createRadialGradient(cx, y0, 0, cx, y0, W * 0.7);
+      hz.addColorStop(0, `rgba(${glow},0.2)`);
+      hz.addColorStop(1, `rgba(${glow},0)`);
+      ctx.fillStyle = hz;
+      ctx.fillRect(-W, y0 - H, W * 3, H * 2);
+      drawSkyline(mix([8, 6, 14], glow, 0.1));
+
+      // the gate you are flying to: small on the horizon, then it swallows the screen
+      const k = st.arrive;
+      if (k > 0.001) {
+        const aw = H * 0.05 + Math.pow(k, 3) * Math.max(W, H * 0.6) * 2.6;
+        const ah = aw * 1.65, ab = y0 + aw * 0.2;
+        const arch = new Path2D();
+        arch.moveTo(cx - aw / 2, ab);
+        arch.lineTo(cx - aw / 2, ab - ah + aw / 2);
+        arch.arc(cx, ab - ah + aw / 2, aw / 2, Math.PI, 0);
+        arch.lineTo(cx + aw / 2, ab);
+        arch.closePath();
+        const oy = ab - ah * 0.45;
+        const out = ctx.createRadialGradient(cx, oy, 0, cx, oy, aw * 2.2);
+        out.addColorStop(0, `rgba(${glow},${0.5 * Math.min(1, k * 3)})`);
+        out.addColorStop(1, `rgba(${glow},0)`);
+        ctx.fillStyle = out;
+        ctx.fillRect(cx - aw * 2.2, oy - aw * 2.2, aw * 4.4, aw * 4.4);
+        const inn = ctx.createRadialGradient(cx, ab - ah * 0.4, 0, cx, ab - ah * 0.4, ah * 0.7);
+        inn.addColorStop(0, 'rgba(255,255,255,0.98)');
+        inn.addColorStop(0.45, `rgba(${glow},0.95)`);
+        inn.addColorStop(1, `rgba(${mix(glow, [0, 0, 0], 0.5)},0.95)`);
+        ctx.globalAlpha = Math.min(1, k * 4);
+        ctx.fillStyle = inn;
+        ctx.fill(arch);
+        ctx.strokeStyle = `rgba(${mix(glow, [255, 255, 255], 0.5)},0.95)`;
+        ctx.lineWidth = Math.max(1.5, aw * 0.05);
+        ctx.stroke(arch);
+        ctx.globalAlpha = 1;
+      }
+
+      // clouds drifting past
+      clouds.forEach((c) => { c.z -= dz * 0.8; wrap(c, 0.6, (p) => Object.assign(p, mkCloud(p.z))); });
+      const cc = mix([200, 206, 230], glow, 0.25);
+      clouds.slice().sort((a, b) => b.z - a.z).forEach((c) => {
+        const [x, y] = P(c.x, c.y, c.z);
+        const r = (c.r / c.z) * F;
+        const a = c.a * Math.min(1, (DEPTH - c.z) / 6) * Math.min(1, (c.z - 0.6) / 1.2);
+        if (a <= 0.003 || r < 2) return;
+        const g = ctx.createRadialGradient(x, y, 0, x, y, r * 1.6);
+        g.addColorStop(0, `rgba(${cc},${a})`);
+        g.addColorStop(1, `rgba(${cc},0)`);
+        ctx.fillStyle = g;
+        ctx.beginPath(); ctx.ellipse(x, y, r * 1.6, r, 0, 0, Math.PI * 2); ctx.fill();
+      });
+
+      // wind: curling ribbons and fast streaks
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      const wc = mix([235, 240, 255], glow, 0.25);
+      wind.forEach((w) => {
+        w.z -= dz * 1.3;
+        wrap(w, 0.4, (p) => { p.ph = rnd(0, 6.28); keepOffCarpet(p); });
+        const a = 0.45 * Math.min(1, (DEPTH - w.z) / 6) * Math.min(1, (w.z - 0.4) / 1.2) * (0.35 + gust);
+        if (a <= 0.01) return;
+        ctx.strokeStyle = `rgba(${wc},${a})`;
+        ctx.lineWidth = clamp((F * 0.01) / w.z, 0.5, 3.5);
+        ctx.beginPath();
+        for (let s = 0; s <= 9; s++) {
+          const z = w.z + s * 0.32;
+          const [x, y] = P(w.x + Math.sin(z * 1.3 + w.ph + t * 2.4) * w.amp, w.y + Math.cos(z * 0.9 + w.ph) * w.amp * 0.5, z);
+          if (s) ctx.lineTo(x, y); else ctx.moveTo(x, y);
+        }
+        ctx.stroke();
+      });
+      dust.forEach((d) => {
+        d.z -= dz * 1.6;
+        wrap(d, 0.3, keepOffCarpet);
+        const [x1, y1] = P(d.x, d.y, d.z);
+        const [x2, y2] = P(d.x, d.y, d.z + Math.abs(sp) * 0.035 + 0.04);
+        ctx.strokeStyle = `rgba(${wc},${Math.min(0.75, 1 - d.z / DEPTH)})`;
+        ctx.lineWidth = Math.min(2.6, 0.5 + 4 / d.z);
+        ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+      });
+      ctx.restore();
+
+      /* ---- the carpet you ride on ---- */
+      const zFar = zNear * 3.3, halfW = 1.15;
+      const amp = 0.035 + 0.05 * gust;
+      const lift = (1 - st.rise) * 1.6;
+      const wave = t * (6 + gust * 6);
+      const vy = [];
+      for (let j = 0; j <= ROWS; j++) {
+        const v = j / ROWS, z = zNear + (zFar - zNear) * v;
+        for (let i = 0; i <= COLS; i++) {
+          const u = i / COLS, x = (u * 2 - 1) * halfW;
+          const ph = v * 7.5 - wave + Math.sin(u * 3.1 + t * 1.7) * 0.6;
+          const y = 1 + lift + amp * Math.sin(ph) * (0.25 + v) - 0.1 * Math.pow(v, 4) + x * Math.sin(roll) * 0.6;
+          const slope = amp * 7.5 * Math.cos(ph) * (0.25 + v);
+          const p = P(x, y, z);
+          vy.push([p[0], p[1], slope]);
+        }
+      }
+      const at = (i, j) => vy[j * (COLS + 1) + i];
+      // soft magic glow beneath
+      const [gx, gy] = P(0, 1.2 + lift, (zNear + zFar) / 2);
+      const ug = ctx.createRadialGradient(gx, gy, 0, gx, gy, W * 0.6);
+      ug.addColorStop(0, `rgba(${glow},0.22)`);
+      ug.addColorStop(1, `rgba(${glow},0)`);
+      ctx.fillStyle = ug;
+      ctx.fillRect(0, 0, W, H);
+      const haze = mix([30, 24, 40], glow, 0.3);
+      ctx.lineWidth = 0.8;
+      for (let j = ROWS - 1; j >= 0; j--) {
+        const fog = (j / ROWS) * 0.3;
+        for (let i = 0; i < COLS; i++) {
+          const a = at(i, j), b = at(i + 1, j), c = at(i + 1, j + 1), d = at(i, j + 1);
+          const shade = clamp(1.05 - (a[2] + c[2]) * 1.6, 0.55, 1.35);
+          const col = mix(pattern[j * COLS + i].map((n) => n * shade), haze, fog);
+          ctx.fillStyle = ctx.strokeStyle = `rgb(${col})`;
+          ctx.beginPath();
+          ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.lineTo(c[0], c[1]); ctx.lineTo(d[0], d[1]);
+          ctx.closePath();
+          ctx.fill(); ctx.stroke();
+        }
+      }
+      // tassels on the leading edge flutter in the wind
+      ctx.strokeStyle = 'rgb(236,190,96)';
+      ctx.lineWidth = clamp((F * 0.008) / zFar, 0.6, 2.4);
+      for (let i = 0; i <= COLS; i++) {
+        const x = ((i / COLS) * 2 - 1) * halfW;
+        const base = at(i, ROWS);
+        const y = 1 + lift + amp * Math.sin(7.5 - wave) * 1.25 - 0.1 + x * Math.sin(roll) * 0.6;
+        const [tx, ty] = P(x + Math.sin(t * 13 + i) * 0.03, y - 0.05 - Math.sin(t * 11 + i * 1.7) * 0.04 * (0.4 + gust), zFar + 0.18 + 0.08 * gust);
+        ctx.beginPath(); ctx.moveTo(base[0], base[1]); ctx.lineTo(tx, ty); ctx.stroke();
+      }
+
+      // vignette keeps it cinematic
+      const vg = ctx.createRadialGradient(cx, H * 0.45, Math.min(W, H) * 0.35, cx, H * 0.45, Math.hypot(W, H) * 0.65);
+      vg.addColorStop(0, 'rgba(0,0,0,0)');
+      vg.addColorStop(1, 'rgba(0,0,0,0.6)');
+      ctx.fillStyle = vg;
+      ctx.fillRect(0, 0, W, H);
+
+      // emerging into the room
+      if (st.light > 0.001) {
+        const R = Math.hypot(W, H) * (0.15 + st.light * 0.9);
+        const g1 = ctx.createRadialGradient(cx, y0, 0, cx, y0, R);
+        g1.addColorStop(0, `rgba(255,255,255,${st.light})`);
+        g1.addColorStop(0.5, `rgba(${glow},${st.light * 0.85})`);
+        g1.addColorStop(1, `rgba(${glow},0)`);
+        ctx.fillStyle = g1;
+        ctx.fillRect(0, 0, W, H);
+      }
+    }
+
+    st.start = (rgb, speed) => {
+      st.rgb = rgb; st.speed = speed; st.light = 0;
+      size();
+      if (!run) { run = true; last = performance.now(); requestAnimationFrame(frame); }
+    };
+    st.stop = () => { run = false; };
+    return st;
+  }
 
   // marquees driven by scroll velocity
   const marqueeTweens = $$('.marquee__inner').map((el, i) => {

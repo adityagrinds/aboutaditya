@@ -85,7 +85,6 @@
     <a href="#home" class="nav__logo" data-cursor="Home">AKG<sup>®</sup></a>
     <nav class="nav__links" aria-label="Primary">
       <a href="#about" class="scramble">About</a>
-      <a href="#experience" class="scramble">Experience</a>
       <a href="#work" class="scramble">Work</a>
       <a href="#skills" class="scramble">Skills</a>
       <a href="#contact" class="scramble">Contact</a>
@@ -149,180 +148,97 @@
 
         <div class="about__text">
           <p class="reveal-words big">
-            I'm a Computer Science undergraduate who turns ambitious ideas into <em>fast, scalable</em> software.
-            I architect real-time systems, orchestrate autonomous AI agents, and ship under pressure.
-            The kind of pressure that <em>wins hackathons.</em>
+            The lights are off. <em>Good, that's when I work best.</em>
+            I build real-time systems, AI agents, and interfaces that <em>light up the room.</em>
           </p>
 
           <div class="stats">
             <div class="stat" data-reveal><b><span data-count="8.51" data-dec="2">0</span></b><span>CGPA at Manav Rachna</span></div>
-            <div class="stat" data-reveal><b>#<span data-count="1">0</span></b><span>Hackbriven, GfG HQ</span></div>
+            <div class="stat" data-reveal><b>#<span data-count="1">0</span></b><span>Hackbriven (Hackathon), GfG HQ</span></div>
             <div class="stat" data-reveal><b><span data-count="2">0</span></b><span>community leadership roles</span></div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- ============ EXPERIENCE ============ -->
-    <section class="exp" id="experience" data-shape="2">
-      <div class="exp__pin">
-        <div class="exp__head">
-          <div class="section-label mono"><span>(02)</span> Experience</div>
-          <h2 class="h2 anim-heading">
-            <span class="line"><span class="split">Where I've</span></span>
-            <span class="line"><span class="split em">led &amp; shipped</span></span>
-          </h2>
-        </div>
-        <div class="exp__track">
-          <article class="exp-card" data-cursor="Drag on">
-            <span class="exp-card__num">01</span>
-            <div class="exp-card__top mono"><span>Oct 2026 – Nov 2026</span><span class="pill">Leadership</span></div>
-            <div>
-              <h3>Amazon Web Services</h3>
-              <p class="exp-card__role">AWS Student Builder Community Leader (SBCL)</p>
-              <ul>
-                <li>Lead student cloud-learning initiatives and community sessions on core AWS services, cloud architecture, and the AWS builder ecosystem.</li>
-                <li>Organize hands-on workshops and peer learning that help student developers build and deploy on the cloud.</li>
-              </ul>
-            </div>
-          </article>
-          <article class="exp-card">
-            <span class="exp-card__num">02</span>
-            <div class="exp-card__top mono"><span>Apr 2026 – Sep 2026</span><span class="pill">Ambassador</span></div>
-            <div>
-              <h3>Google</h3>
-              <p class="exp-card__role">Google Student Ambassador</p>
-              <ul>
-                <li>Led student outreach and technical workshops on Google's advanced developer tools, cloud infrastructure, and developer ecosystems.</li>
-                <li>Organized peer coding sessions and tech awareness initiatives across student developer networks.</li>
-              </ul>
-            </div>
-          </article>
-          <article class="exp-card">
-            <span class="exp-card__num">03</span>
-            <div class="exp-card__top mono"><span>May 2026 – Jul 2026</span><span class="pill">Open Source</span></div>
-            <div>
-              <h3>GirlScript Summer of Code</h3>
-              <p class="exp-card__role">Open Source Contributor</p>
-              <ul>
-                <li>Debugged critical frontend and backend issues, resolved edge cases, and improved modularity across community repositories.</li>
-                <li>Shipped clean pull requests and code reviews with global maintainers across diverse microservice architectures.</li>
-              </ul>
-            </div>
-          </article>
-          <article class="exp-card exp-card--next">
-            <span class="exp-card__num">04</span>
-            <div class="exp-card__top mono"><span>Next chapter</span><span class="pill pill--hot">Open</span></div>
-            <div>
-              <h3>Your team?</h3>
-              <p class="exp-card__role">I'm looking for the next hard problem.</p>
-              <a class="btn magnetic" href="mailto:adityagrinds@gmail.com" data-cursor="Write">Start a conversation</a>
-            </div>
-          </article>
-        </div>
-      </div>
-    </section>
-
-    <!-- ============ WORK ============ -->
+    <!-- ============ WORK: four gates ============ -->
     <section class="section work" id="work" data-shape="3">
-      <div class="section-label mono"><span>(03)</span> Selected Work</div>
+      <div class="section-label mono"><span>(02)</span> What I&rsquo;ve shipped</div>
       <h2 class="h2 anim-heading">
-        <span class="line"><span class="split">Things I've</span></span>
-        <span class="line"><span class="split em">engineered</span></span>
+        <span class="line"><span class="split">Four gates.</span></span>
+        <span class="line"><span class="split em">Pick one.</span></span>
       </h2>
-
-      <div class="stack">
-        <!-- SangyanAI -->
-        <article class="project">
-          <div class="project__info">
-            <div class="project__top mono"><span>P/01</span><span>Mar 2026</span></div>
-            <h3 class="project__title">SangyanAI</h3>
-            <p class="project__kicker">Multi-agent crisis response platform</p>
-            <ul class="project__points">
-              <li>Autonomous disaster-management framework on a 3-agent pipeline: Monitor, Analyzer, Responder.</li>
-              <li>Real-time polling of live earthquake and meteorological APIs to compute disaster severity indices.</li>
-              <li>Low-latency WebSocket dispatch that cut incident notification times by ~60%.</li>
-            </ul>
-            <div class="chips mono"><span>Python</span><span>FastAPI</span><span>WebSockets</span><span>Live APIs</span><span>Real-time Dashboard</span></div>
-            <a class="btn magnetic" href="https://github.com/adityagrinds/SangyanAI" target="_blank" rel="noopener" data-cursor="Code">View on GitHub</a>
-          </div>
-          <div class="project__visual viz tilt" data-cursor="Live">
-            <div class="viz__head mono"><span class="rec"></span>sangyan://ops-console <em>simulated feed</em></div>
-            <canvas id="seismo" class="viz__seismo"></canvas>
-            <svg class="viz__pipe" viewBox="0 0 420 110" aria-hidden="true">
-              <path id="pipeA" d="M70 55 C 130 20, 150 20, 210 55"/>
-              <path id="pipeB" d="M210 55 C 270 90, 290 90, 350 55"/>
-              <circle r="3.5" class="pulse"><animateMotion dur="1.6s" repeatCount="indefinite"><mpath href="#pipeA"/></animateMotion></circle>
-              <circle r="3.5" class="pulse"><animateMotion dur="1.6s" begin=".8s" repeatCount="indefinite"><mpath href="#pipeB"/></animateMotion></circle>
-              <g class="node" id="nodeM"><circle cx="70" cy="55" r="22"/><text x="70" y="94">MONITOR</text></g>
-              <g class="node" id="nodeA"><circle cx="210" cy="55" r="22"/><text x="210" y="94">ANALYZER</text></g>
-              <g class="node" id="nodeR"><circle cx="350" cy="55" r="22"/><text x="350" y="94">RESPONDER</text></g>
-              <text x="70" y="59" class="node__ico">M</text><text x="210" y="59" class="node__ico">A</text><text x="350" y="59" class="node__ico">R</text>
-            </svg>
-            <div class="viz__sev mono"><span>Severity index</span><div class="sev"><i id="sevFill"></i></div><b id="sevVal">0.00</b></div>
-            <ul class="viz__log mono" id="agentLog"></ul>
-          </div>
-        </article>
-
-        <!-- JWT -->
-        <article class="project">
-          <div class="project__info">
-            <div class="project__top mono"><span>P/02</span><span>Feb 2026</span></div>
-            <h3 class="project__title">Stateless<br>JWT Auth</h3>
-            <p class="project__kicker">Secure authorization gateway</p>
-            <ul class="project__points">
-              <li>Stateless gateway with bcrypt password hashing and cryptographically signed JWT access tokens.</li>
-              <li>Optimized session persistence and role-based route middleware with zero unauthorized resource leakage.</li>
-              <li>Decoupled in-memory validation layer that minimizes database reads and writes at peak auth traffic.</li>
-            </ul>
-            <div class="chips mono"><span>Node.js</span><span>Express.js</span><span>JWT</span><span>bcrypt</span><span>RBAC</span></div>
-            <a class="btn magnetic" href="https://github.com/adityagrinds/jwt-auth-service" target="_blank" rel="noopener" data-cursor="Code">View on GitHub</a>
-          </div>
-          <div class="project__visual viz tilt" data-cursor="Live">
-            <div class="viz__head mono"><span class="rec rec--green"></span>POST /auth/login <em>200 OK</em></div>
-            <div class="jwt mono">
-              <div class="jwt__label">encoded token</div>
-              <p class="jwt__token" id="jwtToken"></p>
-              <div class="jwt__grid">
-                <div>
-                  <div class="jwt__label">decoded payload</div>
-                  <pre id="jwtPayload"></pre>
-                </div>
-                <div>
-                  <div class="jwt__label">middleware</div>
-                  <ul class="jwt__mw">
-                    <li><i></i>verifyToken()</li>
-                    <li><i></i>requireRole('admin')</li>
-                    <li><i></i>cache.hit(sub)</li>
-                  </ul>
-                </div>
-              </div>
-              <div class="jwt__label">bcrypt hash</div>
-              <p class="jwt__hash" id="bcrypt"></p>
-              <p class="jwt__status" id="jwtStatus">verifying signature…</p>
-            </div>
-          </div>
-        </article>
-
-        <!-- More -->
-        <article class="project project--more">
-          <div class="project__info">
-            <div class="project__top mono"><span>P/03</span><span>Ongoing</span></div>
-            <h3 class="project__title">More in<br>the lab</h3>
-            <p class="project__kicker">Open-source work, hackathon builds and experiments.</p>
-            <a class="btn magnetic" href="https://github.com/adityagrinds" target="_blank" rel="noopener" data-cursor="Open">github.com/adityagrinds</a>
-          </div>
-          <div class="project__visual more-orb" aria-hidden="true">
-            <div class="orb"></div>
-            <span class="orb__ring"></span><span class="orb__ring"></span><span class="orb__ring"></span>
-          </div>
-        </article>
+      <div class="gates" id="gates">
+        <button class="gate" type="button" data-gate="projects" data-blurb="Things I have designed, built and shipped, from AI tools to auth systems." data-title="Gate I / Projects" data-cursor="Enter"
+          style="--g1:#ffe7a3;--g2:#c9952f;--g3:#4a3210;--glow:255,198,96" aria-label="Enter gate I: Projects">
+          <span class="gate__arch">
+            <span class="gate__portal" aria-hidden="true"></span>
+            <span class="gate__peek">
+              <span class="gate__peek-label mono">Inside</span>
+              <ul><li>SangyanAI</li><li>Stateless JWT Auth</li><li>More in the lab</li></ul>
+              <span class="gate__cta mono">Click to enter</span>
+            </span>
+            <span class="gate__door gate__door--l" aria-hidden="true"></span>
+            <span class="gate__door gate__door--r" aria-hidden="true"></span>
+            <span class="gate__seal" aria-hidden="true">I</span>
+          </span>
+          <span class="gate__name">Projects</span>
+          <span class="gate__sub mono">03 builds</span>
+        </button>
+        <button class="gate" type="button" data-gate="lead" data-blurb="The student communities I lead and the builders I help ship." data-title="Gate II / Lead Roles" data-cursor="Enter"
+          style="--g1:#cfe0ff;--g2:#4f7fd6;--g3:#0f2350;--glow:120,170,255" aria-label="Enter gate II: Lead Roles">
+          <span class="gate__arch">
+            <span class="gate__portal" aria-hidden="true"></span>
+            <span class="gate__peek">
+              <span class="gate__peek-label mono">Inside</span>
+              <ul><li>AWS Student Builder Campus Leader</li><li>Google Student Ambassador</li></ul>
+              <span class="gate__cta mono">Click to enter</span>
+            </span>
+            <span class="gate__door gate__door--l" aria-hidden="true"></span>
+            <span class="gate__door gate__door--r" aria-hidden="true"></span>
+            <span class="gate__seal" aria-hidden="true">II</span>
+          </span>
+          <span class="gate__name">Lead Roles</span>
+          <span class="gate__sub mono">02 communities</span>
+        </button>
+        <button class="gate" type="button" data-gate="oss" data-blurb="Code I give away, and the reviews and merges that come with it." data-title="Gate III / Open Source" data-cursor="Enter"
+          style="--g1:#c9f7de;--g2:#2fae78;--g3:#073624;--glow:90,230,160" aria-label="Enter gate III: Open Source">
+          <span class="gate__arch">
+            <span class="gate__portal" aria-hidden="true"></span>
+            <span class="gate__peek">
+              <span class="gate__peek-label mono">Inside</span>
+              <ul><li>GirlScript Summer of Code</li><li>Merged PRs &amp; reviews</li><li>github.com/adityagrinds</li></ul>
+              <span class="gate__cta mono">Click to enter</span>
+            </span>
+            <span class="gate__door gate__door--l" aria-hidden="true"></span>
+            <span class="gate__door gate__door--r" aria-hidden="true"></span>
+            <span class="gate__seal" aria-hidden="true">III</span>
+          </span>
+          <span class="gate__name">Open Source</span>
+          <span class="gate__sub mono">GSSoC 2026</span>
+        </button>
+        <button class="gate" type="button" data-gate="social" data-blurb="Stages, hackathon nights and the people I meet off the clock." data-title="Gate IV / Social Life" data-cursor="Enter"
+          style="--g1:#ffd0dc;--g2:#d0476b;--g3:#40091c;--glow:255,120,160" aria-label="Enter gate IV: Social Life">
+          <span class="gate__arch">
+            <span class="gate__portal" aria-hidden="true"></span>
+            <span class="gate__peek">
+              <span class="gate__peek-label mono">Inside</span>
+              <ul><li>On stage</li><li>Hackathon nights</li><li>Find me online</li></ul>
+              <span class="gate__cta mono">Click to enter</span>
+            </span>
+            <span class="gate__door gate__door--l" aria-hidden="true"></span>
+            <span class="gate__door gate__door--r" aria-hidden="true"></span>
+            <span class="gate__seal" aria-hidden="true">IV</span>
+          </span>
+          <span class="gate__name">Social Life</span>
+          <span class="gate__sub mono">Off the clock</span>
+        </button>
       </div>
     </section>
 
     <!-- ============ SKILLS ============ -->
     <section class="section skills" id="skills" data-shape="4">
-      <div class="section-label mono"><span>(04)</span> Toolkit</div>
+      <div class="section-label mono"><span>(03)</span> Toolkit</div>
       <h2 class="h2 anim-heading">
         <span class="line"><span class="split">The stack</span></span>
         <span class="line"><span class="split em">behind the magic</span></span>
@@ -344,7 +260,7 @@
 
     <!-- ============ HONORS ============ -->
     <section class="section honors" id="honors" data-shape="5">
-      <div class="section-label mono"><span>(05)</span> Honors</div>
+      <div class="section-label mono"><span>(04)</span> Honors</div>
       <h2 class="h2 anim-heading">
         <span class="line"><span class="split">Proof, not</span></span>
         <span class="line"><span class="split em">promises</span></span>
@@ -365,6 +281,16 @@
           <span class="honor__title">Google Student Ambassador<small>Selected through a competitive multi-tier evaluation to represent Google technologies on campus.</small></span>
           <span class="honor__where mono">Google</span>
         </li>
+        <li class="honor" data-cursor="AWS">
+          <span class="honor__year mono">Oct 2026</span>
+          <span class="honor__title">AWS Student Builder Campus Leader (SBCL)<small>Selected to lead student cloud-learning sessions and hands-on AWS workshops for campus builders.</small></span>
+          <span class="honor__where mono">AWS</span>
+        </li>
+        <li class="honor" data-cursor="Agents">
+          <span class="honor__year mono">2026</span>
+          <span class="honor__title">Agentic AI Intern<small>Building agentic AI workflows and multi-agent systems in a real product team.</small></span>
+          <span class="honor__where mono">Internship</span>
+        </li>
         <li class="honor" data-cursor="OSS">
           <span class="honor__year mono">2026</span>
           <span class="honor__title">GSSoC Open-Source Selection<small>Selected as a GirlScript Summer of Code contributor, pushing merged code to production-grade repositories.</small></span>
@@ -375,7 +301,7 @@
 
     <!-- ============ CONTACT ============ -->
     <section class="section contact" id="contact" data-shape="6">
-      <div class="section-label mono"><span>(06)</span> Contact</div>
+      <div class="section-label mono"><span>(05)</span> Contact</div>
       <h2 class="contact__title anim-heading">
         <span class="line"><span class="split">Let's build</span></span>
         <span class="line"><span class="split em">something</span></span>
@@ -398,6 +324,196 @@
       </footer>
     </section>
   </main>
+
+  <!-- ============ GATE ROOMS (entered through the cave) ============ -->
+  <div class="chamber" id="chamber" aria-hidden="true" data-lenis-prevent>
+    <div class="chamber__bar">
+      <span class="mono" id="chamberTitle"></span>
+      <button class="chamber__back mono" id="chamberBack" type="button" data-cursor="Exit">&larr; Back to the gates <kbd>Esc</kbd></button>
+    </div>
+
+    <section class="room" data-room="projects">
+      <header class="room__head">
+        <p class="room__gate mono">Gate I</p>
+        <h2 class="room__title">Projects</h2>
+        <p class="room__lead">Things I&rsquo;ve <em>engineered</em>, end to end.</p>
+      </header>
+        <div class="stack">
+          <!-- SangyanAI -->
+          <article class="project">
+            <div class="project__info">
+              <div class="project__top mono"><span>P/01</span><span>Mar 2026</span></div>
+              <h3 class="project__title">SangyanAI</h3>
+              <p class="project__kicker">Multi-agent crisis response platform</p>
+              <ul class="project__points">
+                <li>Autonomous disaster-management framework on a 3-agent pipeline: Monitor, Analyzer, Responder.</li>
+                <li>Real-time polling of live earthquake and meteorological APIs to compute disaster severity indices.</li>
+                <li>Low-latency WebSocket dispatch that cut incident notification times by ~60%.</li>
+              </ul>
+              <div class="chips mono"><span>Python</span><span>FastAPI</span><span>WebSockets</span><span>Live APIs</span><span>Real-time Dashboard</span></div>
+              <a class="btn magnetic" href="https://github.com/adityagrinds/SangyanAI" target="_blank" rel="noopener" data-cursor="Code">View on GitHub</a>
+            </div>
+            <div class="project__visual viz tilt" data-cursor="Live">
+              <div class="viz__head mono"><span class="rec"></span>sangyan://ops-console <em>simulated feed</em></div>
+              <canvas id="seismo" class="viz__seismo"></canvas>
+              <svg class="viz__pipe" viewBox="0 0 420 110" aria-hidden="true">
+                <path id="pipeA" d="M70 55 C 130 20, 150 20, 210 55"/>
+                <path id="pipeB" d="M210 55 C 270 90, 290 90, 350 55"/>
+                <circle r="3.5" class="pulse"><animateMotion dur="1.6s" repeatCount="indefinite"><mpath href="#pipeA"/></animateMotion></circle>
+                <circle r="3.5" class="pulse"><animateMotion dur="1.6s" begin=".8s" repeatCount="indefinite"><mpath href="#pipeB"/></animateMotion></circle>
+                <g class="node" id="nodeM"><circle cx="70" cy="55" r="22"/><text x="70" y="94">MONITOR</text></g>
+                <g class="node" id="nodeA"><circle cx="210" cy="55" r="22"/><text x="210" y="94">ANALYZER</text></g>
+                <g class="node" id="nodeR"><circle cx="350" cy="55" r="22"/><text x="350" y="94">RESPONDER</text></g>
+                <text x="70" y="59" class="node__ico">M</text><text x="210" y="59" class="node__ico">A</text><text x="350" y="59" class="node__ico">R</text>
+              </svg>
+              <div class="viz__sev mono"><span>Severity index</span><div class="sev"><i id="sevFill"></i></div><b id="sevVal">0.00</b></div>
+              <ul class="viz__log mono" id="agentLog"></ul>
+            </div>
+          </article>
+
+          <!-- JWT -->
+          <article class="project">
+            <div class="project__info">
+              <div class="project__top mono"><span>P/02</span><span>Feb 2026</span></div>
+              <h3 class="project__title">Stateless<br>JWT Auth</h3>
+              <p class="project__kicker">Secure authorization gateway</p>
+              <ul class="project__points">
+                <li>Stateless gateway with bcrypt password hashing and cryptographically signed JWT access tokens.</li>
+                <li>Optimized session persistence and role-based route middleware with zero unauthorized resource leakage.</li>
+                <li>Decoupled in-memory validation layer that minimizes database reads and writes at peak auth traffic.</li>
+              </ul>
+              <div class="chips mono"><span>Node.js</span><span>Express.js</span><span>JWT</span><span>bcrypt</span><span>RBAC</span></div>
+              <a class="btn magnetic" href="https://github.com/adityagrinds/jwt-auth-service" target="_blank" rel="noopener" data-cursor="Code">View on GitHub</a>
+            </div>
+            <div class="project__visual viz tilt" data-cursor="Live">
+              <div class="viz__head mono"><span class="rec rec--green"></span>POST /auth/login <em>200 OK</em></div>
+              <div class="jwt mono">
+                <div class="jwt__label">encoded token</div>
+                <p class="jwt__token" id="jwtToken"></p>
+                <div class="jwt__grid">
+                  <div>
+                    <div class="jwt__label">decoded payload</div>
+                    <pre id="jwtPayload"></pre>
+                  </div>
+                  <div>
+                    <div class="jwt__label">middleware</div>
+                    <ul class="jwt__mw">
+                      <li><i></i>verifyToken()</li>
+                      <li><i></i>requireRole('admin')</li>
+                      <li><i></i>cache.hit(sub)</li>
+                    </ul>
+                  </div>
+                </div>
+                <div class="jwt__label">bcrypt hash</div>
+                <p class="jwt__hash" id="bcrypt"></p>
+                <p class="jwt__status" id="jwtStatus">verifying signature…</p>
+              </div>
+            </div>
+          </article>
+
+          <!-- More -->
+          <article class="project project--more">
+            <div class="project__info">
+              <div class="project__top mono"><span>P/03</span><span>Ongoing</span></div>
+              <h3 class="project__title">More in<br>the lab</h3>
+              <p class="project__kicker">Open-source work, hackathon builds and experiments.</p>
+              <a class="btn magnetic" href="https://github.com/adityagrinds" target="_blank" rel="noopener" data-cursor="Open">github.com/adityagrinds</a>
+            </div>
+            <div class="project__visual more-orb" aria-hidden="true">
+              <div class="orb"></div>
+              <span class="orb__ring"></span><span class="orb__ring"></span><span class="orb__ring"></span>
+            </div>
+          </article>
+    </section>
+
+    <section class="room" data-room="lead">
+      <header class="room__head">
+        <p class="room__gate mono">Gate II</p>
+        <h2 class="room__title">Lead Roles</h2>
+        <p class="room__lead">Rooms full of builders. I&rsquo;m the one <em>holding the mic.</em></p>
+      </header>
+      <div class="room-grid">
+        <article class="room-card">
+          <div class="room-card__top mono"><span>Oct 2026 &ndash; Nov 2026</span><span class="pill">Leadership</span></div>
+          <h3>Amazon Web Services</h3>
+          <p class="room-card__role">AWS Student Builder Campus Leader (SBCL)</p>
+          <ul>
+            <li>Lead student cloud-learning initiatives and community sessions on core AWS services, cloud architecture, and the AWS builder ecosystem.</li>
+            <li>Organize hands-on workshops and peer learning that help student developers build and deploy on the cloud.</li>
+          </ul>
+        </article>
+        <article class="room-card">
+          <div class="room-card__top mono"><span>Apr 2026 &ndash; Sep 2026</span><span class="pill">Ambassador</span></div>
+          <h3>Google</h3>
+          <p class="room-card__role">Google Student Ambassador</p>
+          <ul>
+            <li>Selected through a competitive multi-tier evaluation to represent Google technologies on campus.</li>
+            <li>Led student outreach and technical workshops on Google&rsquo;s developer tools, cloud infrastructure, and developer ecosystems.</li>
+            <li>Organized peer coding sessions and tech awareness initiatives across student developer networks.</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <section class="room" data-room="oss">
+      <header class="room__head">
+        <p class="room__gate mono">Gate III</p>
+        <h2 class="room__title">Open Source</h2>
+        <p class="room__lead">Code in the open, <em>reviewed by the world.</em></p>
+      </header>
+      <div class="room-grid">
+        <article class="room-card">
+          <div class="room-card__top mono"><span>May 2026 &ndash; Jul 2026</span><span class="pill">Contributor</span></div>
+          <h3>GirlScript Summer of Code</h3>
+          <p class="room-card__role">Open Source Contributor, GSSoC 2026</p>
+          <ul>
+            <li>Debugged critical frontend and backend issues, resolved edge cases, and improved modularity across community repositories.</li>
+            <li>Shipped clean pull requests and code reviews with global maintainers across diverse microservice architectures.</li>
+          </ul>
+        </article>
+        <article class="room-card">
+          <div class="room-card__top mono"><span>Always on</span><span class="pill">GitHub</span></div>
+          <h3>Everything else lives on GitHub</h3>
+          <p class="room-card__role">Repos, experiments and contributions.</p>
+          <a class="btn magnetic" href="https://github.com/adityagrinds" target="_blank" rel="noopener" data-cursor="Open">github.com/adityagrinds</a>
+        </article>
+      </div>
+    </section>
+
+    <section class="room" data-room="social">
+      <header class="room__head">
+        <p class="room__gate mono">Gate IV</p>
+        <h2 class="room__title">Social Life</h2>
+        <p class="room__lead">The part of me <em>that isn&rsquo;t a commit.</em></p>
+      </header>
+      <!-- TODO(Aditya): add your own photos, hobbies and social links (LinkedIn, Instagram) here -->
+      <div class="room-grid room-grid--social">
+        <figure class="room-card room-card--photo">
+          <img src="assets/aditya-stage.jpg" alt="Aditya on stage at a tech event" loading="lazy">
+          <figcaption class="mono">On stage</figcaption>
+        </figure>
+        <article class="room-card">
+          <div class="room-card__top mono"><span>2025 &ndash; 2026</span><span class="pill">Hackathons</span></div>
+          <h3>Hackathon nights</h3>
+          <p class="room-card__role">Where most of my friendships were forged.</p>
+          <ul>
+            <li>1st place at Hackbriven, hosted at the GeeksforGeeks corporate HQ.</li>
+            <li>National Grand Finalist at NASA Space Apps.</li>
+          </ul>
+        </article>
+        <article class="room-card">
+          <div class="room-card__top mono"><span>Say hi</span><span class="pill">Social</span></div>
+          <h3>Find me online</h3>
+          <p class="room-card__role">Always up for a coffee chat or a late-night build.</p>
+          <div class="room-card__links">
+            <a class="btn magnetic" href="https://github.com/adityagrinds" target="_blank" rel="noopener" data-cursor="Code">GitHub</a>
+            <a class="btn magnetic" href="mailto:adityagrinds@gmail.com" data-cursor="Write">Email</a>
+          </div>
+        </article>
+      </div>
+    </section>
+  </div>
+  <canvas class="cave" id="cave" aria-hidden="true"></canvas>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
