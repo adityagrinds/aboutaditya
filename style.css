@@ -387,6 +387,20 @@ html[data-light="on"] .portrait__tip { opacity: 0; }
   box-shadow: inset 0 0 80px rgba(255, 181, 71, 0.04), 0 30px 80px -30px rgba(0, 0, 0, 0.7);
 }
 .viz::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.025) 0 1px, transparent 1px 3px); }
+/* real-site recordings */
+.shot {
+  display: flex; flex-direction: column; align-self: center; width: 100%; border-radius: 18px; overflow: hidden;
+  background: #0c0c10; border: 1px solid rgba(255, 255, 255, 0.1); color: #8b877e;
+  box-shadow: 0 30px 80px -30px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 181, 71, 0.04);
+  transition: box-shadow 0.4s;
+}
+.shot:hover { box-shadow: 0 40px 90px -30px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 181, 71, 0.35); }
+.shot__bar { display: flex; align-items: center; gap: 6px; padding: 10px 14px; font-size: 11px; text-transform: none; background: #16161b; border-bottom: 1px solid rgba(255, 255, 255, 0.06); }
+.shot__bar > i { width: 9px; height: 9px; border-radius: 50%; background: #3a3a42; flex: none; }
+.shot__bar > span { margin-left: 10px; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; background: rgba(255, 255, 255, 0.05); border-radius: 999px; padding: 4px 12px; }
+.shot__bar em { display: flex; align-items: center; gap: 6px; font-style: normal; font-size: 10px; color: #d6d2c6; flex: none; }
+.shot__media { display: block; width: 100%; aspect-ratio: 16 / 10; object-fit: cover; object-position: top; background: #0c0c10; }
+
 .viz__head { display: flex; align-items: center; gap: 10px; font-size: 11px; color: #8b877e; text-transform: none; }
 .viz__head em { margin-left: auto; font-family: var(--mono); font-style: normal; font-size: 10px; color: #ffb547; border: 1px solid rgba(255, 181, 71, 0.3); padding: 3px 8px; border-radius: 999px; }
 .rec { width: 8px; height: 8px; border-radius: 50%; background: #ff3b30; box-shadow: 0 0 10px #ff3b30; animation: blink 1.2s infinite; }
@@ -769,6 +783,16 @@ html[data-light="on"] .chamber { --accent: var(--g2, #c9952f); }
 .room-card--photo img { width: 100%; height: 100%; object-fit: cover; position: absolute; inset: 0; }
 .room-card--photo figcaption { position: absolute; left: 18px; bottom: 18px; color: #fff; background: rgba(0, 0, 0, 0.55); padding: 6px 12px; border-radius: 999px; }
 .chamber .project { top: 12vh; }
+
+/* phones: the room must never pan sideways, and titles shrink to fit instead of breaking mid-word */
+@media (max-width: 899px) {
+  .chamber { overflow-x: hidden; touch-action: pan-y; -webkit-overflow-scrolling: touch; }
+  .chamber .project { top: 0; }
+  .room { padding-top: 5vh; }
+  .room__head { margin-bottom: 5vh; }
+  .room__title { font-size: clamp(30px, 10.5vw, 96px); }
+  .chamber .project__title { font-size: clamp(26px, 8vw, 64px); overflow-wrap: normal; }
+}
 
 @media (max-width: 899px) {
   .gates { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 48px; }

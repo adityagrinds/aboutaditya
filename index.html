@@ -343,7 +343,7 @@
           <article class="project">
             <div class="project__info">
               <div class="project__top mono"><span>P/01</span><span>Mar 2026</span></div>
-              <h3 class="project__title">SangyanAI</h3>
+              <h3 class="project__title">Sangyan<wbr>AI</h3>
               <p class="project__kicker">Multi-agent crisis response platform</p>
               <ul class="project__points">
                 <li>3-agent pipeline (Monitor, Analyzer, Responder) reasoning with GPT-OSS 120B on Groq, with memory of past incidents.</li>
@@ -356,22 +356,10 @@
                 <a class="btn magnetic" href="https://github.com/adityagrinds/SangyanAI" target="_blank" rel="noopener" data-cursor="Code">View on GitHub</a>
               </div>
             </div>
-            <div class="project__visual viz tilt" data-cursor="Live">
-              <div class="viz__head mono"><span class="rec"></span>sangyan://ops-console <em>simulated feed</em></div>
-              <canvas id="seismo" class="viz__seismo"></canvas>
-              <svg class="viz__pipe" viewBox="0 0 420 110" aria-hidden="true">
-                <path id="pipeA" d="M70 55 C 130 20, 150 20, 210 55"/>
-                <path id="pipeB" d="M210 55 C 270 90, 290 90, 350 55"/>
-                <circle r="3.5" class="pulse"><animateMotion dur="1.6s" repeatCount="indefinite"><mpath href="#pipeA"/></animateMotion></circle>
-                <circle r="3.5" class="pulse"><animateMotion dur="1.6s" begin=".8s" repeatCount="indefinite"><mpath href="#pipeB"/></animateMotion></circle>
-                <g class="node" id="nodeM"><circle cx="70" cy="55" r="22"/><text x="70" y="94">MONITOR</text></g>
-                <g class="node" id="nodeA"><circle cx="210" cy="55" r="22"/><text x="210" y="94">ANALYZER</text></g>
-                <g class="node" id="nodeR"><circle cx="350" cy="55" r="22"/><text x="350" y="94">RESPONDER</text></g>
-                <text x="70" y="59" class="node__ico">M</text><text x="210" y="59" class="node__ico">A</text><text x="350" y="59" class="node__ico">R</text>
-              </svg>
-              <div class="viz__sev mono"><span>Severity index</span><div class="sev"><i id="sevFill"></i></div><b id="sevVal">0.00</b></div>
-              <ul class="viz__log mono" id="agentLog"></ul>
-            </div>
+            <a class="project__visual shot tilt" href="https://sangyan-ai.vercel.app/" target="_blank" rel="noopener" data-cursor="Live" aria-label="Open SangyanAI live site">
+              <div class="shot__bar mono"><i></i><i></i><i></i><span>sangyan-ai.vercel.app</span><em><span class="rec"></span>live</em></div>
+              <video class="shot__media" src="assets/projects/sangyan.mp4" poster="assets/projects/sangyan.jpg" muted loop playsinline preload="none" aria-label="Screen recording of the SangyanAI site"></video>
+            </a>
           </article>
 
           <!-- MRU Connect -->
@@ -391,19 +379,10 @@
                 <a class="btn magnetic" href="https://github.com/adityagrinds/student-teacher-appointment" target="_blank" rel="noopener" data-cursor="Code">View on GitHub</a>
               </div>
             </div>
-            <div class="project__visual viz tilt" data-cursor="Live">
-              <div class="viz__head mono"><span class="rec rec--green"></span>mru-connect://book <em>office hours</em></div>
-              <div class="mru">
-                <div class="mru__teacher"><span class="mru__avatar">DR</span><span><b>Faculty office hours</b><small class="mono">Mon &middot; 30 min slots</small></span></div>
-                <div class="mru__slots mono">
-                  <span class="is-taken">10:00</span><span>10:30</span><span class="is-pick">11:00</span><span>11:30</span><span class="is-taken">12:00</span><span>12:30</span>
-                </div>
-                <div class="mru__flow mono">
-                  <span class="mru__step is-done">Requested</span><i></i><span class="mru__step is-done">Approved</span><i></i><span class="mru__step is-now">Pass issued</span>
-                </div>
-                <p class="mru__note mono"><span class="mru__dot"></span>slot locked in one transaction &middot; no double booking</p>
-              </div>
-            </div>
+            <a class="project__visual shot tilt" href="https://student-teacher-appointment-sigma.vercel.app/" target="_blank" rel="noopener" data-cursor="Live" aria-label="Open MRU Connect live site">
+              <div class="shot__bar mono"><i></i><i></i><i></i><span>student-teacher-appointment-sigma.vercel.app</span><em><span class="rec rec--green"></span>live</em></div>
+              <video class="shot__media" src="assets/projects/mru.mp4" poster="assets/projects/mru.jpg" muted loop playsinline preload="none" aria-label="Screen recording of the MRU Connect site"></video>
+            </a>
           </article>
 
           <!-- JWT -->

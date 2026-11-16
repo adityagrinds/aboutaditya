@@ -14,7 +14,9 @@
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const hasGSAP = !!(window.gsap && window.ScrollTrigger);
   const mouse = { x: innerWidth / 2, y: innerHeight / 2, nx: 0, ny: 0 };
-  let lightOn = false;
+  // phones (touch + small screen, either orientation) start with the lights on
+  const isPhone = matchMedia('(pointer: coarse) and (max-width: 767px), (pointer: coarse) and (max-height: 500px)').matches;
+  let lightOn = isPhone;
   let scrollVel = 0;
 
   /* ---------------- text splitting ---------------- */
@@ -686,6 +688,7 @@
       if (tag !== 'INPUT' && tag !== 'TEXTAREA') toggleLight();
     }
   });
+  if (lightOn) applyLight(true);
 
   /* =========================================================
      POINTER: flashlight veil, cursor, portrait reveal
@@ -1356,6 +1359,16 @@ function startCalendar() {
 
   // project visual tilt
   $$('.tilt').forEach((el) => tilt(el, 7));
+
+  // real-site recordings: play only while on screen (poster only for reduced motion)
+  const shotVids = $$('.shot__media');
+  if (shotVids.length && 'IntersectionObserver' in window && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    const vio = new IntersectionObserver((entries) => entries.forEach((e) => {
+      if (e.isIntersecting) { e.target.preload = 'auto'; e.target.play().catch(() => {}); }
+      else e.target.pause();
+    }), { threshold: 0.25 });
+    shotVids.forEach((v) => vio.observe(v));
+  }
 
   /* =========================================================
      GATES: hover to focus one, click to fly through a cave into its room
