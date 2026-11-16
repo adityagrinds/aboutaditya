@@ -242,7 +242,7 @@
             <span class="gate__portal" aria-hidden="true"></span>
             <span class="gate__peek">
               <span class="gate__peek-label mono">Inside</span>
-              <ul><li>On stage</li><li>Hackathon nights</li><li>Find me online</li></ul>
+              <ul><li>The Win</li><li>At GfG HQ</li><li>The Crew</li><li>Find me online</li></ul>
               <span class="gate__cta mono">Click to enter</span>
             </span>
             <span class="gate__door gate__door--l" aria-hidden="true"><svg class="gate__art" viewBox="0 0 100 340" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><g class="art-base"><path d="M0 34Q50 74 100 34M0 52Q50 88 100 52"/></g><g class="art-bars"><rect x="12" y="262" width="6" height="62" rx="3" style="animation-delay:-0.00s"/><rect x="23" y="262" width="6" height="62" rx="3" style="animation-delay:-0.37s"/><rect x="34" y="262" width="6" height="62" rx="3" style="animation-delay:-0.74s"/><rect x="45" y="262" width="6" height="62" rx="3" style="animation-delay:-0.01s"/><rect x="56" y="262" width="6" height="62" rx="3" style="animation-delay:-0.38s"/><rect x="67" y="262" width="6" height="62" rx="3" style="animation-delay:-0.75s"/><rect x="78" y="262" width="6" height="62" rx="3" style="animation-delay:-0.02s"/><rect x="89" y="262" width="6" height="62" rx="3" style="animation-delay:-0.39s"/></g><g class="art-star"><path d="M24 112Q24 118 30 118Q24 118 24 124Q24 118 18 118Q24 118 24 112Z" style="animation-delay:0.00s"/><path d="M70 146Q70 150 74 150Q70 150 70 154Q70 150 66 150Q70 150 70 146Z" style="animation-delay:0.45s"/><path d="M40 191Q40 196 45 196Q40 196 40 201Q40 196 35 196Q40 196 40 191Z" style="animation-delay:0.90s"/><path d="M80 222.5Q80 226 83.5 226Q80 226 80 229.5Q80 226 76.5 226Q80 226 80 222.5Z" style="animation-delay:1.35s"/><path d="M18 237Q18 240 21 240Q18 240 18 243Q18 240 15 240Q18 240 18 237Z" style="animation-delay:1.80s"/><path d="M60 101Q60 104 63 104Q60 104 60 107Q60 104 57 104Q60 104 60 101Z" style="animation-delay:2.25s"/></g></svg></span>
@@ -336,6 +336,7 @@
           <span>adityagrinds@gmail.com</span>
         </a>
         <div class="contact__links mono">
+          <a href="https://www.linkedin.com/in/aditya-kumar-gupta-048a96371/" target="_blank" rel="noopener" class="scramble">LinkedIn</a>
           <a href="https://github.com/adityagrinds" target="_blank" rel="noopener" class="scramble">GitHub</a>
           <a href="mailto:adityagrinds@gmail.com" class="scramble">Email</a>
         </div>
@@ -549,32 +550,67 @@
         <h2 class="room__title">Social Life</h2>
         <p class="room__lead">The part of me <em>that isn&rsquo;t a commit.</em></p>
       </header>
-      <!-- TODO(Aditya): add your own photos, hobbies and social links (LinkedIn, Instagram) here -->
-      <div class="room-grid room-grid--social">
-        <figure class="room-card room-card--photo">
-          <img src="assets/aditya-stage.jpg" alt="Aditya on stage at a tech event" loading="lazy">
-          <figcaption class="mono">On stage</figcaption>
-        </figure>
-        <article class="room-card">
-          <div class="room-card__top mono"><span>2025 &ndash; 2026</span><span class="pill">Hackathons</span></div>
-          <h3>Hackathon nights</h3>
-          <p class="room-card__role">Where most of my friendships were forged.</p>
-          <ul>
-            <li>1st place at Hackbriven, hosted at the GeeksforGeeks corporate HQ.</li>
-            <li>National Grand Finalist at NASA Space Apps.</li>
-          </ul>
-        </article>
-        <article class="room-card">
-          <div class="room-card__top mono"><span>Say hi</span><span class="pill">Social</span></div>
-          <h3>Find me online</h3>
-          <p class="room-card__role">Always up for a coffee chat or a late-night build.</p>
-          <div class="room-card__links">
-            <a class="btn magnetic" href="https://github.com/adityagrinds" target="_blank" rel="noopener" data-cursor="Code">GitHub</a>
-            <a class="btn magnetic" href="mailto:adityagrinds@gmail.com" data-cursor="Write">Email</a>
+      <div class="sx" id="social">
+        <div class="sx-tabs" role="tablist" aria-label="Social life">
+          <span class="sx-tabs__ink" aria-hidden="true"></span>
+          <button class="sx-tab is-active" type="button" role="tab" aria-selected="true" aria-controls="sx-win" data-tab="win" data-cursor="Open"
+            data-peek="1st place at Hackbriven &times; TRAE, the trophy and the haul." data-thumbs="prize-haul,trophy-hold,trophy-plaque">
+            <span class="sx-tab__no mono">01</span><span class="sx-tab__name">The Win</span></button>
+          <button class="sx-tab" type="button" role="tab" aria-selected="false" aria-controls="sx-hq" data-tab="hq" data-cursor="Open"
+            data-peek="Hack day inside the GeeksforGeeks corporate HQ." data-thumbs="gfg-hq,hack-floor,crowd">
+            <span class="sx-tab__no mono">02</span><span class="sx-tab__name">At GfG HQ</span></button>
+          <button class="sx-tab" type="button" role="tab" aria-selected="false" aria-controls="sx-crew" data-tab="crew" data-cursor="Open"
+            data-peek="The winners and the people who made the day." data-thumbs="winners-team,winners-all">
+            <span class="sx-tab__no mono">03</span><span class="sx-tab__name">The Crew</span></button>
+          <button class="sx-tab" type="button" role="tab" aria-selected="false" aria-controls="sx-online" data-tab="online" data-cursor="Open"
+            data-peek="LinkedIn, GitHub and email. Say hi.">
+            <span class="sx-tab__no mono">04</span><span class="sx-tab__name">Find Me Online</span></button>
+        </div>
+
+        <div class="sx-panel is-active" id="sx-win" role="tabpanel" data-panel="win">
+          <p class="sx-panel__lead"><span class="mono">25 Mar 2026 &middot; Hackbriven &times; TRAE</span>First place. One trophy, a certificate and a bag full of swag.</p>
+          <div class="sx-grid sx-grid--win">
+          <button class="sx-ph sx-ph--hero" type="button" data-cursor="View" data-cap="The haul"><img src="assets/social/prize-haul.jpg" alt="1st Prize trophy from TheYouthTalks and Hackbriven with the TRAE certificate, GeeksforGeeks bag and t-shirts" loading="lazy" width="1280" height="919"><span class="sx-ph__cap mono">The haul</span></button>
+          <button class="sx-ph" type="button" data-cursor="View" data-cap="1st Prize, in hand"><img src="assets/social/trophy-hold.jpg" alt="Aditya holding the 1st Prize trophy" loading="lazy" width="1112" height="1168"><span class="sx-ph__cap mono">1st Prize, in hand</span></button>
+          <button class="sx-ph sx-ph--tall" type="button" data-cursor="View" data-cap="The plaque"><img src="assets/social/trophy-plaque.jpg" alt="Trophy plaque reading 1st Prize, organised by TheYouthTalks and Hackbriven" loading="lazy" width="899" height="1599"><span class="sx-ph__cap mono">The plaque</span></button>
           </div>
-        </article>
+        </div>
+
+        <div class="sx-panel" id="sx-hq" role="tabpanel" data-panel="hq" hidden>
+          <p class="sx-panel__lead"><span class="mono">GeeksforGeeks HQ</span>A full room of builders, one long day of shipping.</p>
+          <div class="sx-grid sx-grid--hq">
+          <button class="sx-ph sx-ph--hero" type="button" data-cursor="View" data-cap="Heads down, shipping"><img src="assets/social/hack-floor.jpg" alt="Rows of students coding on laptops in the GeeksforGeeks hall" loading="lazy" width="1280" height="963"><span class="sx-ph__cap mono">Heads down, shipping</span></button>
+          <button class="sx-ph" type="button" data-cursor="View" data-cap="Where it happened"><img src="assets/social/gfg-hq.jpg" alt="GeeksforGeeks reception wall at the corporate office" loading="lazy" width="928" height="784"><span class="sx-ph__cap mono">Where it happened</span></button>
+          <button class="sx-ph" type="button" data-cursor="View" data-cap="Waiting for results"><img src="assets/social/crowd.jpg" alt="A packed hall waiting for the results" loading="lazy" width="1280" height="960"><span class="sx-ph__cap mono">Waiting for results</span></button>
+          </div>
+        </div>
+
+        <div class="sx-panel" id="sx-crew" role="tabpanel" data-panel="crew" hidden>
+          <p class="sx-panel__lead"><span class="mono">The winners</span>Certificates, backpacks and a lot of new friends.</p>
+          <div class="sx-grid sx-grid--crew">
+          <button class="sx-ph" type="button" data-cursor="View" data-cap="All the winners"><img src="assets/social/winners-all.jpg" alt="All the winning teams with certificates and backpacks" loading="lazy" width="1280" height="960"><span class="sx-ph__cap mono">All the winners</span></button>
+          <button class="sx-ph" type="button" data-cursor="View" data-cap="Team photo"><img src="assets/social/winners-team.jpg" alt="Winners group photo with the trophy" loading="lazy" width="1280" height="963"><span class="sx-ph__cap mono">Team photo</span></button>
+          </div>
+        </div>
+
+        <div class="sx-panel" id="sx-online" role="tabpanel" data-panel="online" hidden>
+          <p class="sx-panel__lead"><span class="mono">Say hi</span>Always up for a coffee chat or a late-night build.</p>
+          <div class="sx-links">
+            <a class="sx-link" href="https://www.linkedin.com/in/aditya-kumar-gupta-048a96371/" target="_blank" rel="noopener" data-cursor="Connect"><span class="mono">01</span>LinkedIn<i>&nearr;</i></a>
+            <a class="sx-link" href="https://github.com/adityagrinds" target="_blank" rel="noopener" data-cursor="Code"><span class="mono">02</span>GitHub<i>&nearr;</i></a>
+            <a class="sx-link" href="mailto:adityagrinds@gmail.com" data-cursor="Write"><span class="mono">03</span>Email<i>&nearr;</i></a>
+          </div>
+        </div>
       </div>
     </section>
+  </div>
+  <div class="lb" id="lightbox" role="dialog" aria-modal="true" aria-label="Photo viewer" hidden>
+    <div class="lb__bg"></div>
+    <img class="lb__img" alt="">
+    <p class="lb__cap mono"></p>
+    <button class="lb__btn lb__close" type="button" aria-label="Close" data-cursor="Close">&times;</button>
+    <button class="lb__btn lb__prev" type="button" aria-label="Previous photo">&larr;</button>
+    <button class="lb__btn lb__next" type="button" aria-label="Next photo">&rarr;</button>
   </div>
   <canvas class="cave" id="cave" aria-hidden="true"></canvas>
 

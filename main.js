@@ -1906,5 +1906,171 @@ function startCalendar() {
     });
   }
 
-  addEventListener('load', () => ScrollTrigger.refresh());
+  /* =========================================================
+     SOCIAL: tabs that peek on hover, animate their photos in on click, photos open in a lightbox
+     ========================================================= */
+  const sx = $('#social');
+  if (sx) {
+    const G = window.gsap && !reduce ? gsap : null;
+    const tabsEl = $('.sx-tabs', sx);
+    const tabs = $$('.sx-tab', sx);
+    const panels = $$('.sx-panel', sx);
+    const ink = $('.sx-tabs__ink', sx);
+
+    // hover peek: a fan of the photos inside plus a line about the tab, words rising one by one
+    tabs.forEach((t) => {
+      const peek = document.createElement('span');
+      peek.className = 'sx-peek';
+      peek.setAttribute('aria-hidden', 'true');
+      let wi = 0;
+      const text = (t.dataset.peek || '').trim().split(/\s+/)
+        .map((w) => `<span class="nw"><span style="--i:${wi++}">${w}</span></span>`).join(' ');
+      const thumbs = (t.dataset.thumbs || '').split(',').filter(Boolean);
+      const top = thumbs.length
+        ? `<span class="sx-peek__fan">${thumbs.map((n) => `<img src="assets/social/${n}.jpg" alt="" loading="lazy">`).join('')}</span>`
+        : '<span class="sx-peek__icons"><span>LinkedIn</span><span>GitHub</span><span>Email</span></span>';
+      const count = thumbs.length ? `${String(thumbs.length).padStart(2, '0')} photos inside` : '03 links inside';
+      peek.innerHTML = `${top}<span class="sx-peek__text">${text}</span><span class="sx-peek__count mono">${count}</span>`;
+      t.appendChild(peek);
+    });
+
+    // the glowing ink slides under the active tab
+    const moveInk = (t, instant) => {
+      const p = tabsEl.getBoundingClientRect();
+      if (!p.width) return;
+      const r = t.getBoundingClientRect();
+      const n = $('.sx-tab__name', t).getBoundingClientRect();
+      ink.style.transition = instant ? 'none' : 'left 0.7s cubic-bezier(0.7,0,0.2,1), top 0.7s cubic-bezier(0.7,0,0.2,1), width 0.7s cubic-bezier(0.7,0,0.2,1)';
+      ink.style.left = `${r.left - p.left}px`;
+      ink.style.top = `${r.bottom - p.top - 1}px`;
+      ink.style.bottom = 'auto';
+      ink.style.width = `${n.right - r.left}px`;
+    };
+    const activeTab = () => tabs.find((t) => t.classList.contains('is-active'));
+    if ('ResizeObserver' in window) new ResizeObserver(() => moveInk(activeTab(), true)).observe(tabsEl);
+
+    // click: the old panel lifts away, the new one's photos wipe up out of a mask
+    let cur = panels.find((p) => p.classList.contains('is-active'));
+    let switching = false;
+    function reveal(panel) {
+      if (!G) return;
+      const items = $$('.sx-ph, .sx-link', panel);
+      G.fromTo($('.sx-panel__lead', panel), { y: 30, opacity: 0, filter: 'blur(8px)' },
+        { y: 0, opacity: 1, filter: 'blur(0px)', duration: 0.8, ease: 'expo.out', clearProps: 'all' });
+      G.fromTo(items, { clipPath: 'inset(100% 0% 0% 0%)', y: 60, rotate: 1.5 },
+        { clipPath: 'inset(0% 0% 0% 0%)', y: 0, rotate: 0, duration: 1.1, ease: 'expo.out', stagger: 0.09, delay: 0.08, clearProps: 'clipPath,transform' });
+      const imgs = items.map((i) => $('img', i)).filter(Boolean);
+      if (imgs.length) G.fromTo(imgs, { scale: 1.35 }, { scale: 1, duration: 1.4, ease: 'expo.out', stagger: 0.09, delay: 0.08, clearProps: 'transform' });
+    }
+    function show(tab) {
+      const next = panels.find((p) => p.dataset.panel === tab.dataset.tab);
+      if (!next || next === cur || switching) return;
+      tabs.forEach((x) => { const on = x === tab; x.classList.toggle('is-active', on); x.setAttribute('aria-selected', String(on)); });
+      moveInk(tab);
+      const prev = cur;
+      cur = next;
+      const swap = () => {
+        prev.hidden = true; prev.classList.remove('is-active');
+        next.hidden = false; next.classList.add('is-active');
+        reveal(next);
+      };
+      if (!G) { swap(); return; }
+      switching = true;
+      G.to(prev, {
+        opacity: 0, y: -24, filter: 'blur(6px)', duration: 0.35, ease: 'power2.in',
+        onComplete: () => { G.set(prev, { clearProps: 'all' }); swap(); switching = false; },
+      });
+    }
+    tabs.forEach((t, i) => {
+      t.addEventListener('click', () => show(t));
+      t.addEventListener('keydown', (e) => {
+        const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+        if (!d) return;
+        e.preventDefault();
+        const n = tabs[(i + d + tabs.length) % tabs.length];
+        n.focus(); show(n);
+      });
+    });
+
+    // lightbox: the photo grows out of its thumbnail, arrows step through the tab, closing shrinks it back
+    const lb = $('#lightbox');
+    const lbImg = $('.lb__img', lb);
+    const lbCap = $('.lb__cap', lb);
+    const lbBg = $('.lb__bg', lb);
+    const lbBtns = $$('.lb__btn', lb);
+    let list = [], idx = 0, isOpen = false, moving = false;
+    const dims = (btn) => {
+      const im = $('img', btn);
+      return [im.naturalWidth || +im.getAttribute('width'), im.naturalHeight || +im.getAttribute('height')];
+    };
+    const fit = (btn) => {
+      const [w, h] = dims(btn);
+      const s = Math.min((innerWidth * 0.88) / w, (innerHeight * 0.76) / h);
+      return { left: (innerWidth - w * s) / 2, top: (innerHeight - h * s) / 2 - innerHeight * 0.02, width: w * s, height: h * s };
+    };
+    const rectOf = (btn) => { const r = btn.getBoundingClientRect(); return { left: r.left, top: r.top, width: r.width, height: r.height }; };
+    const px = (o) => Object.fromEntries(Object.entries(o).map(([k, v]) => [k, `${v}px`]));
+    const fill = (btn) => {
+      const im = $('img', btn);
+      lbImg.src = im.currentSrc || im.src;
+      lbImg.alt = im.alt;
+      lbCap.textContent = `${btn.dataset.cap} · ${String(idx + 1).padStart(2, '0')} / ${String(list.length).padStart(2, '0')}`;
+    };
+    function openLb(btn) {
+      list = $$('.sx-ph', btn.closest('.sx-panel'));
+      idx = list.indexOf(btn);
+      fill(btn);
+      lb.hidden = false; isOpen = true;
+      btn.style.visibility = 'hidden';
+      const to = fit(btn);
+      if (!G) { Object.assign(lbImg.style, px(to)); $('.lb__close', lb).focus(); return; }
+      G.fromTo(lbBg, { opacity: 0 }, { opacity: 1, duration: 0.5, ease: 'power2.out' });
+      G.fromTo(lbImg, { ...px(rectOf(btn)), borderRadius: 18 }, { ...px(to), borderRadius: 14, duration: 0.9, ease: 'expo.inOut' });
+      G.fromTo([...lbBtns, lbCap], { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.6, ease: 'expo.out', stagger: 0.05, delay: 0.45 });
+      $('.lb__close', lb).focus({ preventScroll: true });
+    }
+    function closeLb() {
+      if (!isOpen || moving) return;
+      isOpen = false;
+      const btn = list[idx];
+      const done = () => { lb.hidden = true; btn.style.visibility = ''; G && G.set([lbImg, lbBg, lbCap, ...lbBtns], { clearProps: 'all' }); btn.focus({ preventScroll: true }); };
+      if (!G) { done(); return; }
+      G.to([...lbBtns, lbCap], { opacity: 0, duration: 0.2 });
+      G.to(lbBg, { opacity: 0, duration: 0.6, ease: 'power2.inOut', delay: 0.15 });
+      G.to(lbImg, { ...px(rectOf(btn)), borderRadius: 18, duration: 0.75, ease: 'expo.inOut', onComplete: done });
+    }
+    function step(d) {
+      if (!isOpen || moving || list.length < 2) return;
+      const old = list[idx];
+      idx = (idx + d + list.length) % list.length;
+      const btn = list[idx];
+      const swap = () => { old.style.visibility = ''; btn.style.visibility = 'hidden'; fill(btn); Object.assign(lbImg.style, px(fit(btn))); };
+      if (!G) { swap(); return; }
+      moving = true;
+      G.to(lbImg, {
+        x: -d * 80, opacity: 0, rotate: -d * 2, duration: 0.28, ease: 'power2.in',
+        onComplete: () => {
+          swap();
+          G.fromTo(lbImg, { x: d * 80, opacity: 0, rotate: d * 2 }, { x: 0, opacity: 1, rotate: 0, duration: 0.6, ease: 'expo.out', onComplete: () => { moving = false; } });
+        },
+      });
+    }
+    $$('.sx-ph', sx).forEach((b) => b.addEventListener('click', () => openLb(b)));
+    $('.lb__close', lb).addEventListener('click', closeLb);
+    lbBg.addEventListener('click', closeLb);
+    $('.lb__prev', lb).addEventListener('click', () => step(-1));
+    $('.lb__next', lb).addEventListener('click', () => step(1));
+    // capture phase, so Esc closes the photo before it can close the whole room
+    addEventListener('keydown', (e) => {
+      if (!isOpen) return;
+      if (e.key === 'Escape') closeLb();
+      else if (e.key === 'ArrowRight') step(1);
+      else if (e.key === 'ArrowLeft') step(-1);
+      else return;
+      e.preventDefault(); e.stopPropagation();
+    }, true);
+    addEventListener('resize', () => { if (isOpen && !moving) Object.assign(lbImg.style, px(fit(list[idx]))); });
+  }
+
+  if (window.ScrollTrigger) addEventListener('load', () => ScrollTrigger.refresh());
 })();
