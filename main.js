@@ -1384,10 +1384,55 @@ function startCalendar() {
     const backBtn = $('#chamberBack');
     let busy = false, current = null;
 
-    gsap.from(gates, {
-      y: 80, opacity: 0, rotateX: -18, stagger: 0.12, duration: 1.3, ease: 'expo.out',
-      scrollTrigger: { trigger: gatesEl, start: 'top 85%' }, clearProps: 'transform,opacity',
-    });
+    // entrance: each gate flies in from deep space, spinning and twisting, then lands with a flash and its seal stamps on
+    if (reduce) {
+      gsap.from(gates, {
+        opacity: 0, y: 30, stagger: 0.1, duration: 0.8, ease: 'power2.out',
+        scrollTrigger: { trigger: gatesEl, start: 'top 85%', once: true }, clearProps: 'transform,opacity',
+      });
+    } else {
+      const from = [
+        { x: '-70vw', y: '-45vh', rY: -540, rZ: -38 },
+        { x: '-18vw', y: '-70vh', rY: 360, rZ: 28 },
+        { x: '18vw', y: '70vh', rY: -360, rZ: -28 },
+        { x: '70vw', y: '-45vh', rY: 540, rZ: 38 },
+      ];
+      const seals = gates.map((g) => $('.gate__seal', g));
+      const arches = gates.map((g) => $('.gate__arch', g));
+      const crests = gates.map((g) => $('.gate__crest', g)).filter(Boolean);
+      gsap.set([...gates, ...seals, ...arches, ...crests], { transition: 'none' });
+      const fly = gsap.timeline({
+        scrollTrigger: { trigger: gatesEl, start: 'top 80%', once: true },
+        onComplete: () => {
+          gsap.set(gates, { clearProps: 'transform,opacity,filter,transition' });
+          gsap.set([...seals, ...arches, ...crests], { clearProps: 'transform,opacity,filter,transition,backgroundPosition' });
+        },
+      });
+      gates.forEach((g, i) => {
+        const f = from[i % from.length];
+        const t = i * 0.16;
+        fly.fromTo(g, {
+          x: f.x, y: f.y, z: -1400, rotateY: f.rY, rotateX: 50, scale: 0.25, opacity: 0, filter: 'blur(18px)',
+        }, {
+          x: 0, y: 0, z: 0, rotateY: 0, rotateX: 0, scale: 1, opacity: 1, filter: 'blur(0px)',
+          duration: 1.9, ease: 'expo.out',
+        }, t)
+          .fromTo(g, { rotateZ: f.rZ }, { rotateZ: 0, duration: 1.6, ease: 'back.out(2.2)' }, t + 0.15)
+          // touchdown: the arch flares in its own colour, then cools
+          .fromTo(arches[i], { filter: 'brightness(2.4) saturate(1.6)' },
+            { filter: 'brightness(1) saturate(1)', duration: 1, ease: 'power2.out' }, t + 0.7)
+          // a streak of light sweeps across the metal as it settles
+          .fromTo(arches[i], { backgroundPosition: '-200% 0, 0 0' },
+            { backgroundPosition: '200% 0, 0 0', duration: 1.2, ease: 'power2.inOut' }, t + 0.75)
+          // the seal stamps down onto the doors
+          .fromTo(seals[i], { scale: 2.6, opacity: 0, rotate: -90 },
+            { scale: 1, opacity: 1, rotate: 0, duration: 0.7, ease: 'back.out(3)' }, t + 0.85);
+        // the role crest drops onto the keystone last, spinning once
+        const crest = $('.gate__crest', g);
+        if (crest) fly.fromTo(crest, { y: -70, scale: 0, opacity: 0, rotateY: 360 },
+          { y: 0, scale: 1, opacity: 1, rotateY: 0, duration: 0.9, ease: 'back.out(2.4)' }, t + 1);
+      });
+    }
     gates.forEach((g) => tilt($('.gate__arch', g), 9));
 
     // hover a gate: it zooms forward and a line draws out to its details
@@ -1396,11 +1441,16 @@ function startCalendar() {
       note.className = 'gate__note';
       note.setAttribute('aria-hidden', 'true');
       const sub = $('.gate__sub', g).textContent;
-      const items = $$('.gate__peek li', g).map((li) => `<span>${li.textContent}</span>`).join('');
+      // every word sits in a mask and rises into place one after another
+      let wi = 0;
+      const words = (t) => t.trim().split(/\s+/).map((w) => `<span class="nw"><span style="--i:${wi++}">${w}</span></span>`).join(' ');
+      const kicker = words(`${g.dataset.title.split('/')[0].trim()} \u00b7 ${sub}`);
+      const blurb = words(g.dataset.blurb || '');
+      const items = $$('.gate__peek li', g).map((li, k) => `<span class="gate__note-item" style="--k:${k}">${li.textContent}</span>`).join('');
       note.innerHTML = `<span class="gate__note-line"></span><span class="gate__note-body">`
-        + `<span class="gate__note-kicker">${g.dataset.title.split('/')[0].trim()} \u00b7 ${sub}</span>`
-        + `<span class="gate__note-blurb">${g.dataset.blurb || ''}</span>`
-        + `<span class="gate__note-list">${items}</span></span>`;
+        + `<span class="gate__note-kicker">${kicker}</span>`
+        + `<span class="gate__note-blurb">${blurb}</span>`
+        + `<span class="gate__note-list" style="--n:${wi}">${items}</span></span>`;
       g.appendChild(note);
     });
 

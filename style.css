@@ -556,13 +556,13 @@ html[data-light="on"] .portrait__tip { opacity: 0; }
 }
 .work .section-label { margin-bottom: 14px; }
 .work .h2 { display: flex; flex-wrap: wrap; column-gap: 0.28em; font-size: clamp(30px, 4.2vw, 72px); margin-bottom: 3vh; }
-.work .gates { width: min(100%, calc(4 * 33vh + 3 * clamp(16px, 2.4vw, 40px))); margin: 0 auto; padding-top: 3vh; }
+.work .gates { width: min(100%, calc(4 * 33vh + 3 * clamp(28px, 4vw, 72px))); margin: 0 auto; padding-top: 3vh; }
 .work .gate__name { margin-top: 8px; font-size: clamp(14px, 1.4vw, 22px); white-space: nowrap; }
 @media (max-width: 899px) {
-  .work .gates { width: min(100%, calc(2 * 24vh + 16px)); row-gap: 28px; }
+  .work .gates { width: min(100%, calc(2 * 24vh + 24px)); column-gap: 24px; row-gap: 36px; }
 }
 .gates {
-  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: clamp(16px, 2.4vw, 40px);
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: clamp(28px, 4vw, 72px);
   align-items: end; perspective: 1600px; padding-top: 2vh;
 }
 .gate {
@@ -583,9 +583,8 @@ html[data-light="on"] .portrait__tip { opacity: 0; }
 @media (hover: hover) and (min-width: 900px) {
   .gate .gate__peek ul, .gate .gate__peek-label { display: none; }
   .gate__note {
-    display: block; position: absolute; top: 16%; left: calc(100% - 6px); width: clamp(190px, 15vw, 250px);
-    text-align: left; pointer-events: none; z-index: 8; color: var(--fg);
-    text-shadow: 0 2px 12px var(--bg), 0 0 2px var(--bg);
+    display: block; position: absolute; top: 14%; left: calc(100% - 6px); width: clamp(250px, 19vw, 320px);
+    text-align: left; pointer-events: none; z-index: 8; color: #fff;
   }
   .gate:last-child .gate__note { left: auto; right: calc(100% - 6px); text-align: right; }
   /* the connector: a dot on the arch, a line out, then a rule running down beside the text */
@@ -600,23 +599,55 @@ html[data-light="on"] .portrait__tip { opacity: 0; }
   }
   .gate:last-child .gate__note-line { left: auto; right: 0; transform-origin: 100% 50%; }
   .gate:last-child .gate__note-line::before { left: auto; right: -4px; }
+  /* a dark glass card tinted with the gate's colour, so the text reads over any glow behind it */
   .gate__note-body {
-    display: flex; flex-direction: column; gap: 8px; margin-left: 46px; padding: 0 0 2px 14px;
-    border-left: 1px solid rgba(var(--glow), 0.6); clip-path: inset(0 0 100% 0);
-    transition: clip-path 0.6s var(--ease) 0.25s;
+    position: relative; display: flex; flex-direction: column; gap: 12px; margin: -18px 0 0 46px; padding: 18px 20px 20px;
+    border-radius: 14px; overflow: hidden;
+    background: linear-gradient(160deg, rgba(var(--glow), 0.16), rgba(10, 10, 12, 0.9) 42%), rgba(8, 8, 10, 0.86);
+    -webkit-backdrop-filter: blur(16px) saturate(1.3); backdrop-filter: blur(16px) saturate(1.3);
+    border: 1px solid rgba(var(--glow), 0.5);
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.6), 0 30px 60px -20px rgba(0, 0, 0, 0.9), 0 0 50px -12px rgba(var(--glow), 0.7),
+      inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    opacity: 0; transform: translateX(-14px) scale(0.94); transform-origin: 0 20px; filter: blur(6px);
+    transition: opacity 0.45s var(--ease) 0.2s, transform 0.7s var(--ease) 0.2s, filter 0.5s var(--ease) 0.2s;
   }
-  .gate:last-child .gate__note-body { margin: 0 46px 0 0; padding: 0 14px 2px 0; border-left: 0; border-right: 1px solid rgba(var(--glow), 0.6); align-items: flex-end; }
-  .gate__note-kicker { font-family: var(--mono); font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: rgb(var(--glow)); margin-top: -6px; }
-  .gate__note-blurb { font-size: 14px; line-height: 1.45; color: var(--fg); }
-  .gate__note-list { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--muted); }
+  /* a sheen sweeps across the card as it lands */
+  .gate__note-body::before {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background: linear-gradient(110deg, transparent 35%, rgba(255, 255, 255, 0.16) 50%, transparent 65%) -150% 0 / 250% 100% no-repeat;
+  }
+  .gate:hover .gate__note-body::before, .gate:focus-visible .gate__note-body::before { animation: noteSheen 1.1s var(--ease) 0.45s both; }
+  @keyframes noteSheen { to { background-position: 150% 0; } }
+  .gate:last-child .gate__note-body { margin: -18px 46px 0 0; align-items: flex-end; text-align: right; transform-origin: 100% 20px; transform: translateX(14px) scale(0.94); }
+  .gate__note-kicker { font-family: var(--mono); font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: rgb(var(--glow)); text-shadow: 0 0 12px rgba(var(--glow), 0.8); }
+  .gate__note-blurb { font-size: 17px; line-height: 1.45; font-weight: 500; color: #fff; }
+  .gate__note-list {
+    display: flex; flex-direction: column; gap: 8px; padding-top: 12px; font-size: 15px; font-weight: 600; color: rgba(255, 255, 255, 0.92);
+    border-top: 1px solid rgba(var(--glow), 0.3);
+  }
   .gate__note-list > span::before { content: "\2192\00a0"; color: rgb(var(--glow)); }
   .gate:last-child .gate__note-list > span::before { content: none; }
   .gate:last-child .gate__note-list > span::after { content: "\00a0\2190"; color: rgb(var(--glow)); }
-  html[data-light="on"] .gate__note-kicker,
-  html[data-light="on"] .gate__note-list > span::before,
-  html[data-light="on"] .gate__note-list > span::after { color: var(--g2); }
+
+  /* words rise out of a mask, unblurring, one after another */
+  .gate__note .nw { display: inline-block; overflow: hidden; vertical-align: top; padding-bottom: 0.08em; margin-bottom: -0.08em; }
+  .gate__note .nw > span {
+    display: inline-block; transform: translateY(110%) rotate(6deg); opacity: 0; filter: blur(4px);
+    transition: transform 0.7s cubic-bezier(0.2, 0.9, 0.2, 1), opacity 0.5s ease, filter 0.6s ease;
+    transition-delay: calc(0.35s + var(--i) * 0.035s);
+  }
+  .gate__note-item {
+    opacity: 0; transform: translateX(-16px); filter: blur(4px);
+    transition: opacity 0.5s ease, transform 0.7s var(--ease), filter 0.6s ease;
+    transition-delay: calc(0.45s + var(--n, 10) * 0.035s + var(--k) * 0.1s);
+  }
+  .gate:last-child .gate__note-item { transform: translateX(16px); }
   .gate:hover .gate__note-line, .gate:focus-visible .gate__note-line { transform: scaleX(1); }
-  .gate:hover .gate__note-body, .gate:focus-visible .gate__note-body { clip-path: inset(-20px -40px -20px -40px); }
+  .gate:hover .gate__note-body, .gate:focus-visible .gate__note-body { opacity: 1; transform: none; filter: none; }
+  .gate:hover .gate__note .nw > span, .gate:focus-visible .gate__note .nw > span,
+  .gate:hover .gate__note-item, .gate:focus-visible .gate__note-item { opacity: 1; transform: none; filter: none; }
+  /* leaving: everything drops out together, no stagger */
+  .gate:not(:hover):not(:focus-visible) .gate__note * { transition-delay: 0s !important; }
 }
 
 .gate__arch {
@@ -725,6 +756,151 @@ html[data-light="on"] .portrait__tip { opacity: 0; }
 .gate:hover .gate__name, .gate:focus-visible .gate__name { color: rgb(var(--glow)); }
 html[data-light="on"] .gate:hover .gate__name, html[data-light="on"] .gate:focus-visible .gate__name { color: var(--g2); }
 
+/* ---------------- gates: their own light + role-specific craftsmanship ---------------- */
+@property --rim { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+.gate__arch { z-index: 1; }
+/* breathing halo: every gate gives off its own light, even in a dark room */
+.gate__aura {
+  position: absolute; left: -32%; top: -10%; width: 164%; aspect-ratio: 3 / 4.4; z-index: 0; pointer-events: none;
+  background: radial-gradient(closest-side, rgba(var(--glow), 0.55), rgba(var(--glow), 0.16) 55%, transparent 100%);
+  filter: blur(22px); opacity: 0.55; animation: gateBreathe 4.8s ease-in-out infinite;
+  transition: opacity 0.8s var(--ease);
+}
+.gate:nth-child(2) .gate__aura { animation-delay: -1.2s; }
+.gate:nth-child(3) .gate__aura { animation-delay: -2.4s; }
+.gate:nth-child(4) .gate__aura { animation-delay: -3.6s; }
+.gate:hover .gate__aura, .gate:focus-visible .gate__aura { opacity: 1; }
+@keyframes gateBreathe { 50% { opacity: 0.85; transform: scale(1.06); } }
+
+/* a band of light that runs round the frame */
+.gate__rim {
+  position: absolute; inset: -1px; z-index: 5; border-radius: inherit; padding: 2px; pointer-events: none;
+  background: conic-gradient(from var(--rim), transparent 0 62%, rgba(var(--glow), 0.9) 76%, #fff 80%, rgba(var(--glow), 0.9) 84%, transparent 96%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  filter: drop-shadow(0 0 6px rgba(var(--glow), 0.9)); animation: gateRim 6s linear infinite;
+}
+.gate:nth-child(2) .gate__rim { animation-delay: -1.5s; }
+.gate:nth-child(3) .gate__rim { animation-delay: -3s; }
+.gate:nth-child(4) .gate__rim { animation-delay: -4.5s; }
+@keyframes gateRim { to { --rim: 360deg; } }
+
+/* light leaking through the crack between the closed doors */
+.gate__seam {
+  position: absolute; top: 14%; bottom: 12px; left: 50%; width: 2px; margin-left: -1px; z-index: 3; pointer-events: none;
+  background: linear-gradient(180deg, transparent, #fff 18%, rgba(var(--glow), 1) 60%, #fff 92%, transparent);
+  box-shadow: 0 0 10px 2px rgba(var(--glow), 0.9), 0 0 34px 8px rgba(var(--glow), 0.45);
+  animation: gateSeam 2.6s ease-in-out infinite; transition: opacity 0.4s var(--ease);
+}
+.gate:hover .gate__seam, .gate:focus-visible .gate__seam { opacity: 0; animation: none; }
+@keyframes gateSeam { 50% { opacity: 0.55; } 56% { opacity: 1; } 60% { opacity: 0.75; } }
+
+/* the pool of light the gate throws on the floor, with motes rising out of it */
+.gate__floor {
+  position: absolute; left: -18%; right: -18%; bottom: -34px; height: 58px; z-index: -1; pointer-events: none;
+  background: radial-gradient(50% 50% at 50% 40%, rgba(var(--glow), 0.6), rgba(var(--glow), 0.12) 60%, transparent 75%);
+  filter: blur(6px); transition: opacity 0.6s var(--ease), transform 0.8s var(--ease);
+}
+.gate__floor::before, .gate__floor::after {
+  content: ""; position: absolute; left: 18%; right: 18%; bottom: 40%; height: 220px;
+  background:
+    radial-gradient(1.5px 1.5px at 14% 92%, rgba(var(--glow), 1), transparent), radial-gradient(1px 1px at 32% 80%, #fff, transparent),
+    radial-gradient(2px 2px at 52% 96%, rgba(var(--glow), 1), transparent), radial-gradient(1px 1px at 70% 86%, #fff, transparent),
+    radial-gradient(1.5px 1.5px at 88% 94%, rgba(var(--glow), 1), transparent);
+  animation: gateMotes 5s linear infinite; opacity: 0;
+}
+.gate__floor::after { animation-delay: -2.5s; left: 26%; right: 10%; }
+.gate:hover .gate__floor, .gate:focus-visible .gate__floor { transform: scale(1.25); }
+@keyframes gateMotes { 0% { opacity: 0; transform: translateY(0); } 20% { opacity: 1; } 100% { opacity: 0; transform: translateY(-190px); } }
+
+/* role crest on the keystone, haloed by slowly turning rays */
+.gate__arch::after { content: none; }
+.gate__crest {
+  position: absolute; top: -30px; left: 50%; width: 60px; height: 60px; margin-left: -30px; z-index: 7;
+  display: grid; place-items: center; border-radius: 50%;
+  background: radial-gradient(circle at 34% 28%, #fff, var(--g1) 30%, var(--g2) 70%, var(--g3));
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.5), 0 0 0 3px rgba(var(--glow), 0.8), 0 0 0 7px rgba(0, 0, 0, 0.35),
+    0 0 0 8px rgba(var(--glow), 0.4), 0 0 36px rgba(var(--glow), 0.9);
+  transition: transform 0.8s var(--ease);
+}
+.gate__crest::before {
+  content: ""; position: absolute; inset: -34px; z-index: -1; border-radius: 50%; pointer-events: none;
+  background: repeating-conic-gradient(from 0deg, rgba(var(--glow), 0.55) 0 3deg, transparent 3deg 18deg);
+  -webkit-mask: radial-gradient(closest-side, transparent 52%, #000 60%, transparent 100%);
+  mask: radial-gradient(closest-side, transparent 52%, #000 60%, transparent 100%);
+  animation: gateSwirl 24s linear infinite;
+}
+.gate__crest svg {
+  width: 32px; height: 32px; fill: none; stroke: #1a1408; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round;
+  filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.6));
+}
+.gate:hover .gate__crest, .gate:focus-visible .gate__crest { transform: translateY(-8px) scale(1.08); }
+
+/* engraved name plate across the foot of the doors */
+.gate__plaque {
+  position: absolute; left: 50%; bottom: 7%; z-index: 4; transform: translateX(-50%); white-space: nowrap;
+  padding: 5px 10px; border-radius: 3px; font-size: 9px; letter-spacing: 0.26em; text-transform: uppercase; color: #1a1408;
+  background: linear-gradient(180deg, var(--g1), var(--g2) 60%, var(--g3));
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 0 18px rgba(var(--glow), 0.55);
+  transition: opacity 0.4s var(--ease), transform 0.6s var(--ease);
+}
+.gate:hover .gate__plaque, .gate:focus-visible .gate__plaque { opacity: 0; transform: translate(-50%, 12px); }
+
+/* door art: each role engraved into its own doors, lit from within */
+.gate__door { overflow: hidden; }
+.gate__art { position: absolute; inset: 0; width: 100%; height: 100%; color: rgb(var(--glow)); pointer-events: none; }
+.gate__door--r .gate__art { transform: scaleX(-1); }
+.gate__art .art-base { fill: none; stroke: currentColor; stroke-width: 1.3; opacity: 0.45; stroke-linecap: round; stroke-linejoin: round; }
+.gate__art .art-flow { fill: none; stroke: #fff; stroke-width: 1.6; stroke-linecap: round; stroke-dasharray: 5 60; animation: artFlow 3.2s linear infinite; filter: drop-shadow(0 0 3px rgb(var(--glow))); }
+@keyframes artFlow { from { stroke-dashoffset: 260; } to { stroke-dashoffset: 0; } }
+
+/* I. Projects - the forge: gilded circuitry with current running to the seam */
+.gate--projects .art-base rect { fill: rgba(var(--glow), 0.12); }
+.gate--projects .art-dots circle { fill: currentColor; filter: drop-shadow(0 0 3px currentColor); }
+.gate--projects .gate__door { background:
+  linear-gradient(90deg, rgba(var(--glow), 0.18), transparent 12%, transparent 88%, rgba(0, 0, 0, 0.5)),
+  radial-gradient(120% 60% at 50% 100%, rgba(var(--glow), 0.14), transparent 70%),
+  linear-gradient(180deg, #221a0c, #0d0a05 70%, #1a1309); }
+
+/* II. Lead roles - the council: laurels, fluted pilasters, rank chevrons, a guiding star */
+.gate--lead .art-leaf ellipse { fill: currentColor; opacity: 0.55; animation: artLeaf 4s ease-in-out infinite; }
+.gate--lead .art-star { fill: #fff; filter: drop-shadow(0 0 4px rgb(var(--glow))); transform-box: fill-box; transform-origin: center; animation: artTwinkle 3s ease-in-out infinite; }
+.gate--lead .gate__door { background:
+  linear-gradient(90deg, rgba(var(--glow), 0.2), transparent 12%, transparent 88%, rgba(0, 0, 0, 0.55)),
+  repeating-linear-gradient(90deg, transparent 0 9px, rgba(var(--glow), 0.05) 9px 10px),
+  linear-gradient(180deg, #0f1a33, #060b18 70%, #0c1428); }
+@keyframes artLeaf { 50% { opacity: 0.95; } }
+
+/* III. Open source - the commons: a living commit graph, branches forking and merging */
+.gate--oss .art-node circle { fill: #04140d; stroke: currentColor; stroke-width: 2; transform-box: fill-box; transform-origin: center; animation: artNode 3.5s ease-in-out infinite; }
+.gate--oss .art-flow { stroke-dasharray: 4 40; animation-duration: 4s; }
+.gate--oss .gate__door { background:
+  linear-gradient(90deg, rgba(var(--glow), 0.16), transparent 12%, transparent 88%, rgba(0, 0, 0, 0.5)),
+  radial-gradient(circle at 50% 50%, rgba(var(--glow), 0.07) 1px, transparent 1.5px) 0 0 / 12px 12px,
+  linear-gradient(180deg, #0a1f16, #03100a 70%, #08190f); }
+@keyframes artNode { 0%, 70%, 100% { fill: #04140d; transform: scale(1); } 80% { fill: #fff; transform: scale(1.35); } }
+
+/* IV. Social life - the stage: velvet curtains, a live equaliser, sparkle in the air */
+.gate--social .art-bars rect { fill: currentColor; opacity: 0.75; transform-box: fill-box; transform-origin: 50% 100%; animation: artEq 1.1s ease-in-out infinite alternate; }
+.gate--social .art-star path { fill: #fff; opacity: 0; transform-box: fill-box; transform-origin: center; animation: artTwinkle 2.7s ease-in-out infinite; filter: drop-shadow(0 0 4px rgb(var(--glow))); }
+.gate--social .gate__door { background:
+  linear-gradient(90deg, rgba(var(--glow), 0.16), transparent 12%, transparent 88%, rgba(0, 0, 0, 0.55)),
+  linear-gradient(180deg, rgba(0, 0, 0, 0) 40%, rgba(0, 0, 0, 0.45)),
+  repeating-linear-gradient(90deg, #2a0510 0, #6e1430 9px, #2a0510 18px); }
+@keyframes artEq { from { transform: scaleY(0.18); } to { transform: scaleY(1); } }
+@keyframes artTwinkle { 0%, 100% { opacity: 0.15; transform: scale(0.6) rotate(0deg); } 50% { opacity: 1; transform: scale(1.1) rotate(45deg); } }
+
+@media (pointer: coarse) {
+  .gate__seam { opacity: 0; animation: none; }
+  .gate__plaque { display: none; }
+}
+@media (max-width: 899px) {
+  .gate__crest { width: 46px; height: 46px; margin-left: -23px; top: -23px; }
+  .gate__crest::before { inset: -24px; }
+  .gate__crest svg { width: 24px; height: 24px; }
+  .gate__plaque { font-size: 8px; letter-spacing: 0.18em; padding: 4px 7px; }
+}
+
 /* touch: no hover, so the doors stay ajar and the prompt is always there */
 @media (pointer: coarse) {
   .gate__door--l { transform: perspective(2200px) rotateY(-58deg); }
@@ -787,6 +963,42 @@ html[data-light="on"] .chamber { --accent: var(--g2, #c9952f); }
 /* lead roles: AWS SBCL photo mosaic */
 .room-card--aws { grid-column: 1 / -1; }
 .room-card--aws ul { max-width: 760px; }
+/* the SBCL completion certificate, framed like a credential */
+.cert {
+  position: relative; display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); align-items: center;
+  gap: clamp(18px, 3vw, 44px); width: 100%; margin-top: 8px; padding: clamp(14px, 2vw, 24px); border-radius: 20px;
+  color: inherit; text-decoration: none; overflow: hidden;
+  background: radial-gradient(120% 140% at 0% 0%, rgba(63, 177, 255, 0.16), transparent 60%), rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(63, 177, 255, 0.35);
+  transition: border-color 0.5s var(--ease), box-shadow 0.6s var(--ease);
+}
+.cert::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(110deg, transparent 35%, rgba(255, 255, 255, 0.1) 50%, transparent 65%) -150% 0 / 250% 100% no-repeat;
+  transition: background-position 1.2s var(--ease);
+}
+.cert:hover { border-color: rgba(63, 177, 255, 0.8); box-shadow: 0 0 60px -18px rgba(63, 177, 255, 0.7); }
+.cert:hover::after { background-position: 150% 0; }
+.cert__frame {
+  display: block; border-radius: 10px; overflow: hidden; transform: perspective(1200px) rotateY(8deg) rotateX(2deg);
+  box-shadow: 0 0 0 1px rgba(63, 177, 255, 0.45), 0 30px 60px -24px rgba(0, 0, 0, 0.8), 0 0 40px -10px rgba(63, 177, 255, 0.5);
+  transition: transform 0.9s var(--ease);
+}
+.cert__frame img { display: block; width: 100%; height: auto; }
+.cert:hover .cert__frame { transform: perspective(1200px) rotateY(0deg) scale(1.02); }
+.cert__meta { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; }
+.cert__badge {
+  padding: 5px 12px; border-radius: 999px; font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase;
+  color: #06121c; background: linear-gradient(180deg, #8fd3ff, #3fb1ff); box-shadow: 0 0 20px rgba(63, 177, 255, 0.6);
+}
+.cert__title { font-family: var(--display); font-weight: 700; font-size: clamp(20px, 2vw, 30px); line-height: 1.05; letter-spacing: -0.02em; }
+.cert__sub { color: var(--muted); font-size: 14px; }
+.cert__cta { margin-top: 6px; font-size: 11px; color: #3fb1ff; letter-spacing: 0.12em; }
+@media (max-width: 699px) {
+  .cert { grid-template-columns: 1fr; }
+  .cert__frame { transform: none; }
+}
+
 .mosaic {
   display: grid; width: 100%; margin-top: 10px; grid-template-columns: repeat(4, minmax(0, 1fr));
   grid-auto-rows: clamp(110px, 11vw, 180px); grid-auto-flow: dense; gap: clamp(8px, 1vw, 14px);
