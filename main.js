@@ -2017,8 +2017,9 @@ function startCalendar() {
       lbCap.textContent = `${btn.dataset.cap} · ${String(idx + 1).padStart(2, '0')} / ${String(list.length).padStart(2, '0')}`;
     };
     function openLb(btn) {
-      list = $$('.sx-ph', btn.closest('.sx-panel'));
+      list = $$('[data-lb]', btn.closest('[data-lb-group]'));
       idx = list.indexOf(btn);
+      [$('.lb__prev', lb), $('.lb__next', lb)].forEach((a) => { a.hidden = list.length < 2; });
       fill(btn);
       lb.hidden = false; isOpen = true;
       btn.style.visibility = 'hidden';
@@ -2055,7 +2056,10 @@ function startCalendar() {
         },
       });
     }
-    $$('.sx-ph', sx).forEach((b) => b.addEventListener('click', () => openLb(b)));
+    // any [data-lb] button opens here: social photos, certificates, SBCL photos (steps within its [data-lb-group])
+    panels.forEach((p) => p.setAttribute('data-lb-group', ''));
+    $$('.sx-ph', sx).forEach((b) => b.setAttribute('data-lb', ''));
+    $$('[data-lb]').forEach((b) => b.addEventListener('click', () => openLb(b)));
     $('.lb__close', lb).addEventListener('click', closeLb);
     lbBg.addEventListener('click', closeLb);
     $('.lb__prev', lb).addEventListener('click', () => step(-1));
@@ -2071,6 +2075,57 @@ function startCalendar() {
     }, true);
     addEventListener('resize', () => { if (isOpen && !moving) Object.assign(lbImg.style, px(fit(list[idx]))); });
   }
+
+  /* =========================================================
+     LEAD ROLES: certificates swing in when seen; "Photos" drawer deals its photos in
+     ========================================================= */
+  const certs = $$('.cert');
+  if (certs.length) {
+    if (reduce || !('IntersectionObserver' in window)) certs.forEach((c) => c.classList.add('is-in'));
+    else {
+      const io = new IntersectionObserver((es) => es.forEach((e) => {
+        e.target.classList.toggle('is-in', e.isIntersecting); // replays each time the room is reopened
+      }), { threshold: 0 });
+      certs.forEach((c) => io.observe(c));
+    }
+  }
+  $$('.photos').forEach((box) => {
+    const G = window.gsap && !reduce ? gsap : null;
+    const btn = $('.photos__toggle', box);
+    const drawer = $('.photos__drawer', box);
+    const items = $$('.mosaic__item', drawer);
+    let open = false;
+    btn.addEventListener('click', () => {
+      open = !open;
+      btn.setAttribute('aria-expanded', String(open));
+      const cnt = $('.photos__count', btn);
+      if (cnt) cnt.textContent = cnt.textContent.replace(/tap to (open|close)/, open ? 'tap to close' : 'tap to open');
+      if (!G) { drawer.hidden = !open; return; }
+      G.killTweensOf([drawer, ...items]);
+      if (open) {
+        drawer.hidden = false;
+        G.fromTo(drawer, { height: 0 }, { height: 'auto', duration: 0.9, ease: 'expo.inOut' });
+        // photos fly out of the thumbnail fan: tilted, small, blurred, then settle into the grid one by one
+        const fan = $('.photos__fan', btn).getBoundingClientRect();
+        const fx = fan.left + fan.width / 2;
+        G.fromTo(items, {
+          opacity: 0, scale: 0.55, filter: 'blur(10px)',
+          rotate: () => G.utils.random(-16, 16),
+          x: (i, el) => fx - (el.getBoundingClientRect().left + el.offsetWidth / 2),
+          y: -110,
+        }, {
+          opacity: 1, scale: 1, rotate: 0, x: 0, y: 0, filter: 'blur(0px)',
+          duration: 1.1, ease: 'expo.out', stagger: 0.08, delay: 0.15, clearProps: 'filter,transform,opacity',
+        });
+      } else {
+        G.to(items, { opacity: 0, y: 40, scale: 0.9, duration: 0.35, ease: 'power2.in', stagger: { each: 0.04, from: 'end' } });
+        G.to(drawer, {
+          height: 0, duration: 0.7, ease: 'expo.inOut', delay: 0.2,
+          onComplete: () => { drawer.hidden = true; G.set([drawer, ...items], { clearProps: 'all' }); },
+        });
+      }
+    });
+  });
 
   if (window.ScrollTrigger) addEventListener('load', () => ScrollTrigger.refresh());
 })();
