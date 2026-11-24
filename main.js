@@ -315,7 +315,7 @@
       renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: false, powerPreference: 'high-performance' });
     } catch (e) { return null; }
     const mobile = innerWidth < 768;
-    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    renderer.setPixelRatio(Math.min(devicePixelRatio, mobile ? 1.25 : 1.5));
     renderer.setSize(innerWidth, innerHeight);
 
     const scene = new THREE.Scene();
@@ -387,7 +387,9 @@
     const offX = [2.0, -2.6, 0, 2.6, 0, 0, 0];
     const offScale = [1, 0.9, 1.05, 1, 1, 1.1, 1];
 
-    function setShape(i) { if (i >= 0 && i < shapes.length) target = i; }
+    // morph only while particles are still travelling; once settled, skip the CPU loop and the buffer upload
+    let morphing = true, morphFrames = 0;
+    function setShape(i) { if (i >= 0 && i < shapes.length && i !== target) { target = i; morphing = true; morphFrames = 0; } }
 
     function setLight(on) {
       const A = new THREE.Color(on ? '#ff5a1f' : '#ffc46b');
@@ -407,16 +409,22 @@
     const clock = new THREE.Clock();
     function frame() {
       requestAnimationFrame(frame);
+      // nothing to draw behind a gate room or in a hidden tab
+      if (document.hidden || document.body.classList.contains('gate-lock')) return;
       const t = clock.getElapsedTime();
       uniforms.uTime.value = t;
-      const tgt = shapes[target];
-      for (let i = 0, j = 0; i < COUNT; i++, j += 3) {
-        const k = 0.018 + rand[i] * 0.05;
-        pos[j] += (tgt[j] - pos[j]) * k;
-        pos[j + 1] += (tgt[j + 1] - pos[j + 1]) * k;
-        pos[j + 2] += (tgt[j + 2] - pos[j + 2]) * k;
+      if (morphing) {
+        const tgt = shapes[target];
+        for (let i = 0, j = 0; i < COUNT; i++, j += 3) {
+          const k = 0.018 + rand[i] * 0.05;
+          pos[j] += (tgt[j] - pos[j]) * k;
+          pos[j + 1] += (tgt[j + 1] - pos[j + 1]) * k;
+          pos[j + 2] += (tgt[j + 2] - pos[j + 2]) * k;
+        }
+        geo.attributes.position.needsUpdate = true;
+        // the slowest particle closes 1.8% of the gap per frame, so ~320 frames lands everything
+        if (++morphFrames > 320) morphing = false;
       }
-      geo.attributes.position.needsUpdate = true;
 
       rotY += (reduce ? 0.0005 : 0.0016) + Math.min(Math.abs(scrollVel), 60) * 0.0004;
       group.rotation.y = rotY + mouse.nx * 0.35;
@@ -642,7 +650,19 @@
 
     // settle the rope before first paint
     for (let i = 0; i < 60; i++) step();
-    (function loop() { requestAnimationFrame(loop); step(); render(); })();
+    let lampVisible = true, idle = 0, lastSig = '';
+    if ('IntersectionObserver' in window) new IntersectionObserver(([e]) => { lampVisible = e.isIntersecting; }).observe(svg);
+    (function loop() {
+      requestAnimationFrame(loop);
+      if (!lampVisible || document.hidden) return;
+      step();
+      // skip DOM writes once the cord has come to rest
+      const l = pts[N - 1];
+      const sig = `${l.x.toFixed(1)},${l.y.toFixed(1)},${angle.toFixed(4)}`;
+      if (sig === lastSig && !dragging) { if (++idle > 2) return; } else idle = 0;
+      lastSig = sig;
+      render();
+    })();
 
     return { impulse };
   })();
@@ -694,6 +714,7 @@
      POINTER: flashlight veil, cursor, portrait reveal
      ========================================================= */
   let veilQueued = false;
+  const veilEl = $('.veil');
   addEventListener('pointermove', (e) => {
     mouse.x = e.clientX; mouse.y = e.clientY;
     mouse.nx = e.clientX / innerWidth - 0.5;
@@ -701,8 +722,10 @@
     if (!veilQueued) {
       veilQueued = true;
       requestAnimationFrame(() => {
-        html.style.setProperty('--mx', mouse.x + 'px');
-        html.style.setProperty('--my', mouse.y + 'px');
+        if (veilEl) {
+          veilEl.style.setProperty('--mx', mouse.x + 'px');
+          veilEl.style.setProperty('--my', mouse.y + 'px');
+        }
         veilQueued = false;
       });
     }
@@ -714,12 +737,15 @@
     const ring = $('.cursor__ring');
     const label = $('.cursor__label');
     let rx = mouse.x, ry = mouse.y;
+    let lx = NaN, ly = NaN;
     (function loop() {
       requestAnimationFrame(loop);
-      rx += (mouse.x - rx) * 0.17;
-      ry += (mouse.y - ry) * 0.17;
-      dot.style.transform = `translate(${mouse.x}px, ${mouse.y}px)`;
-      ring.style.transform = `translate(${rx}px, ${ry}px)`;
+      const dx = mouse.x - rx, dy = mouse.y - ry;
+      if (Math.abs(dx) < 0.1 && Math.abs(dy) < 0.1 && lx === mouse.x && ly === mouse.y) return;
+      rx += dx * 0.22;
+      ry += dy * 0.22;
+      if (lx !== mouse.x || ly !== mouse.y) { dot.style.transform = `translate3d(${mouse.x}px, ${mouse.y}px, 0)`; lx = mouse.x; ly = mouse.y; }
+      ring.style.transform = `translate3d(${rx.toFixed(1)}px, ${ry.toFixed(1)}px, 0)`;
     })();
     document.addEventListener('pointerover', (e) => {
       const t = e.target.closest && e.target.closest('a, button, [data-cursor]');
@@ -976,7 +1002,7 @@
   /* ---------------- smooth scroll ---------------- */
   let lenis = null;
   if (window.Lenis && !reduce) {
-    lenis = new Lenis({ lerp: 0.085, smoothWheel: true, wheelMultiplier: 1 });
+    lenis = new Lenis({ lerp: 0.12, smoothWheel: true, wheelMultiplier: 1 });
     lenis.on('scroll', (e) => { scrollVel = e.velocity || 0; ScrollTrigger.update(); });
     gsap.ticker.add((time) => lenis.raf(time * 1000));
     gsap.ticker.lagSmoothing(0);
@@ -1391,49 +1417,12 @@ function startCalendar() {
         scrollTrigger: { trigger: gatesEl, start: 'top 85%', once: true }, clearProps: 'transform,opacity',
       });
     } else {
-      const from = [
-        { x: '-70vw', y: '-45vh', rY: -540, rZ: -38 },
-        { x: '-18vw', y: '-70vh', rY: 360, rZ: 28 },
-        { x: '18vw', y: '70vh', rY: -360, rZ: -28 },
-        { x: '70vw', y: '-45vh', rY: 540, rZ: 38 },
-      ];
-      const seals = gates.map((g) => $('.gate__seal', g));
-      const arches = gates.map((g) => $('.gate__arch', g));
-      const crests = gates.map((g) => $('.gate__crest', g)).filter(Boolean);
-      gsap.set([...gates, ...seals, ...arches, ...crests], { transition: 'none' });
-      const fly = gsap.timeline({
-        scrollTrigger: { trigger: gatesEl, start: 'top 80%', once: true },
-        onComplete: () => {
-          gsap.set(gates, { clearProps: 'transform,opacity,filter,transition' });
-          gsap.set([...seals, ...arches, ...crests], { clearProps: 'transform,opacity,filter,transition,backgroundPosition' });
-        },
-      });
-      gates.forEach((g, i) => {
-        const f = from[i % from.length];
-        const t = i * 0.16;
-        fly.fromTo(g, {
-          x: f.x, y: f.y, z: -1400, rotateY: f.rY, rotateX: 50, scale: 0.25, opacity: 0, filter: 'blur(18px)',
-        }, {
-          x: 0, y: 0, z: 0, rotateY: 0, rotateX: 0, scale: 1, opacity: 1, filter: 'blur(0px)',
-          duration: 1.9, ease: 'expo.out',
-        }, t)
-          .fromTo(g, { rotateZ: f.rZ }, { rotateZ: 0, duration: 1.6, ease: 'back.out(2.2)' }, t + 0.15)
-          // touchdown: the arch flares in its own colour, then cools
-          .fromTo(arches[i], { filter: 'brightness(2.4) saturate(1.6)' },
-            { filter: 'brightness(1) saturate(1)', duration: 1, ease: 'power2.out' }, t + 0.7)
-          // a streak of light sweeps across the metal as it settles
-          .fromTo(arches[i], { backgroundPosition: '-200% 0, 0 0' },
-            { backgroundPosition: '200% 0, 0 0', duration: 1.2, ease: 'power2.inOut' }, t + 0.75)
-          // the seal stamps down onto the doors
-          .fromTo(seals[i], { scale: 2.6, opacity: 0, rotate: -90 },
-            { scale: 1, opacity: 1, rotate: 0, duration: 0.7, ease: 'back.out(3)' }, t + 0.85);
-        // the role crest drops onto the keystone last, spinning once
-        const crest = $('.gate__crest', g);
-        if (crest) fly.fromTo(crest, { y: -70, scale: 0, opacity: 0, rotateY: 360 },
-          { y: 0, scale: 1, opacity: 1, rotateY: 0, duration: 0.9, ease: 'back.out(2.4)' }, t + 1);
+      gsap.fromTo(gates, { opacity: 0, y: 48 }, {
+        opacity: 1, y: 0, stagger: 0.12, duration: 1.1, ease: 'power3.out',
+        scrollTrigger: { trigger: gatesEl, start: 'top 85%', once: true }, clearProps: 'transform,opacity',
       });
     }
-    gates.forEach((g) => tilt($('.gate__arch', g), 9));
+    gates.forEach((g) => tilt($('.gate__arch', g), 4));
 
     // hover a gate: it zooms forward and a line draws out to its details
     gates.forEach((g) => {
@@ -1493,7 +1482,7 @@ function startCalendar() {
       Sound.whoosh();
 
       gsap.timeline({ onComplete: () => { busy = false; backBtn.focus({ preventScroll: true }); } })
-        .to(others, { opacity: 0, scale: 0.86, filter: 'blur(10px)', duration: 0.55, ease: 'power2.in' }, 0)
+        .to(others, { opacity: 0, scale: 0.94, duration: 0.45, ease: 'power2.in' }, 0)
         .to($('.gate__door--l', gate), { rotateY: -108, transformPerspective: 2200, duration: 0.75, ease: 'power3.inOut' }, 0)
         .to($('.gate__door--r', gate), { rotateY: 108, transformPerspective: 2200, duration: 0.75, ease: 'power3.inOut' }, 0)
         .to(gate, { scale: s, transformOrigin: `${ox}px ${oy}px`, duration: 1.1, ease: 'expo.in' }, 0.3)
@@ -1512,7 +1501,7 @@ function startCalendar() {
           gsap.set([gate, ...others, ...$$('.gate__door', gate)], { clearProps: 'transform,opacity,filter' });
         }, 3.3)
         .to(caveCv, { opacity: 0, duration: 0.8, ease: 'power2.out' }, 3.3)
-        .fromTo(room, { scale: 1.08, filter: 'blur(12px)' }, { scale: 1, filter: 'blur(0px)', duration: 1.2, ease: 'expo.out', clearProps: 'transform,filter' }, 3.3)
+        .fromTo(room, { scale: 1.04, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.9, ease: 'expo.out', clearProps: 'transform,opacity' }, 3.3)
         .from(room.querySelectorAll('.room__head > *, .room-card, .project'), { y: 50, opacity: 0, stagger: 0.08, duration: 1, ease: 'power3.out', clearProps: 'transform,opacity' }, 3.45)
         .add(() => Flight.stop(), 4.2);
     }
@@ -1539,8 +1528,8 @@ function startCalendar() {
         .to(Flight, { rise: 0, duration: 0.5, ease: 'power2.in' }, 0.3)
         .add(closeRoom, 0.4)
         .to(caveCv, { opacity: 0, duration: 0.6, ease: 'power2.in' }, 0.75)
-        .fromTo(gates, { opacity: 0, scale: 1.18, filter: 'blur(10px)' }, {
-          opacity: 1, scale: 1, filter: 'blur(0px)', stagger: 0.06, duration: 1.1, ease: 'expo.out', clearProps: 'transform,opacity,filter',
+        .fromTo(gates, { opacity: 0, scale: 1.06 }, {
+          opacity: 1, scale: 1, stagger: 0.06, duration: 0.9, ease: 'expo.out', clearProps: 'transform,opacity',
         }, 0.85);
     }
 
@@ -1861,13 +1850,14 @@ function startCalendar() {
   });
   let mSpeed = 1;
   const marquees = $$('.marquee');
+  let lastSkew = '';
   gsap.ticker.add(() => {
     const v = Math.max(-40, Math.min(40, scrollVel));
     const wanted = 1 + Math.abs(v) * 0.25;
     mSpeed += ((v < -0.5 ? -wanted : wanted) - mSpeed) * 0.08;
     marqueeTweens.forEach((t) => t.timeScale(mSpeed));
-    const sk = v * 0.15;
-    marquees.forEach((m) => { m.style.transform = `skewX(${(-sk).toFixed(2)}deg)`; });
+    const sk = (-v * 0.15).toFixed(1);
+    if (sk !== lastSkew) { lastSkew = sk; marquees.forEach((m) => { m.style.transform = `skewX(${sk}deg)`; }); }
   });
 
   // honors rows
