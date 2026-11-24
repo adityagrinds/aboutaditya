@@ -148,9 +148,15 @@
 
         <div class="about__text">
           <p class="reveal-words big">
-            I write code at 2 AM and call it &ldquo;focus mode.&rdquo; <em>Somehow it ships.</em>
-            Multi-agent AI, real-time apps, and UI that <em>feels alive.</em>
+            I&rsquo;m Aditya. I build web apps, train models,
+            and <em>don&rsquo;t stop until they actually work.</em>
           </p>
+
+          <div class="about__more" data-reveal>
+            <p>I&rsquo;m a student at Manav Rachna University who learns by building. One week it&rsquo;s a crisis-response app where three AI agents work as a team. The next it&rsquo;s a portal so students can stop chasing teachers for appointments. Or a model that works out which asteroids are worth worrying about.</p>
+            <p>Away from my own code, I&rsquo;m a Google Student Ambassador, I lead in the AWS SBCL programme, I contribute to open source through GSSoC, and I won 1st place at Hackbriven at GfG HQ.</p>
+            <p class="about__line">What I care about: <b>building things real people use, and knowing why they work.</b></p>
+          </div>
 
           <div class="stats">
             <div class="stat" data-reveal><b><span data-count="8.51" data-dec="2">0</span></b><span>CGPA at Manav Rachna</span></div>
@@ -176,7 +182,7 @@
             <span class="gate__portal" aria-hidden="true"></span>
             <span class="gate__peek">
               <span class="gate__peek-label mono">Inside</span>
-              <ul><li>SangyanAI</li><li>MRU Connect</li><li>Stateless JWT Auth</li></ul>
+              <ul><li>SangyanAI</li><li>MRU Connect</li><li>Stateless JWT Auth</li><li>NEO Hazard Classifier</li></ul>
               <span class="gate__cta mono">Click to enter</span>
             </span>
             <span class="gate__door gate__door--l" aria-hidden="true"><svg class="gate__art" viewBox="0 0 100 340" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><g class="art-base"><path d="M100 70H72L58 84V150H34L22 162V230"/><path d="M100 120H84V196L70 210H46V300"/><path d="M100 250H78L64 264V326"/><path d="M10 120H36L48 108V60"/><path d="M10 280H30L40 270V240H60"/><path d="M100 176H90"/><rect x="22" y="176" width="22" height="16" rx="2"/><path d="M26 172v4M33 172v4M40 172v4M26 192v4M33 192v4M40 192v4"/></g><g class="art-flow"><path d="M100 70H72L58 84V150H34L22 162V230" style="animation-delay:-0.0s"/><path d="M100 120H84V196L70 210H46V300" style="animation-delay:-0.7s"/><path d="M100 250H78L64 264V326" style="animation-delay:-1.4s"/><path d="M10 120H36L48 108V60" style="animation-delay:-2.1s"/><path d="M10 280H30L40 270V240H60" style="animation-delay:-2.8s"/><path d="M100 176H90" style="animation-delay:-3.5s"/></g><g class="art-dots"><circle cx="22" cy="230" r="2.6"/><circle cx="46" cy="300" r="2.6"/><circle cx="64" cy="326" r="2.6"/><circle cx="48" cy="60" r="2.6"/><circle cx="60" cy="240" r="2.6"/><circle cx="10" cy="120" r="2.6"/><circle cx="10" cy="280" r="2.6"/><circle cx="90" cy="176" r="2.6"/></g></svg></span>
@@ -189,7 +195,7 @@
             <span class="gate__seal" aria-hidden="true">I</span>
           </span>
           <span class="gate__name">Projects</span>
-          <span class="gate__sub mono">03 builds</span>
+          <span class="gate__sub mono">04 builds</span>
         </button>
         <button class="gate gate--lead" type="button" data-gate="lead" data-blurb="The student communities I lead and the builders I help ship." data-title="Gate II / Lead Roles" data-cursor="Enter"
           style="--g1:#cfe0ff;--g2:#4f7fd6;--g3:#0f2350;--glow:120,170,255" aria-label="Enter gate II: Lead Roles">
@@ -450,10 +456,32 @@
             </div>
           </article>
 
+          <!-- NEO hazard ML -->
+          <article class="project">
+            <div class="project__info">
+              <div class="project__top mono"><span>P/04</span><span>Nov 2026</span></div>
+              <h3 class="project__title project__title--long">NEO Hazard<br>Classifier</h3>
+              <p class="project__kicker">Explainable ML on 90,836 NASA asteroid records</p>
+              <ul class="project__points">
+                <li>Predicts whether a near-Earth asteroid is hazardous from four close-approach measurements, where only 9.73% are hazardous.</li>
+                <li>Compared 5 algorithms and class weighting vs SMOTE on a leakage-safe pipeline: 97.57% recall, best F1 54.37% (MCC 0.492).</li>
+                <li>SHAP showed object size drives 82% of the reasoning, matching NASA&rsquo;s own H &le; 22 rule. Found a 62% precision ceiling caused by the missing orbit feature (MOID).</li>
+              </ul>
+              <div class="chips mono"><span>Python</span><span>scikit-learn</span><span>SMOTE</span><span>SHAP</span><span>pandas</span><span>Seaborn</span></div>
+              <div class="project__links">
+                <a class="btn magnetic" href="neo-hazard.html" target="_blank" rel="noopener" data-cursor="Open">Open full case study</a>
+              </div>
+            </div>
+            <a class="project__visual shot tilt" href="neo-hazard.html" target="_blank" rel="noopener" data-cursor="Open" aria-label="Open the NEO hazard classification case study">
+              <div class="shot__bar mono"><i></i><i></i><i></i><span>case study · neo-hazard.html</span><em><span class="rec rec--green"></span>interactive</em></div>
+              <video class="shot__media" src="assets/projects/neo.mp4" poster="assets/projects/neo.jpg" muted loop playsinline preload="none" aria-label="Screen recording of the NEO hazard case study page"></video>
+            </a>
+          </article>
+
           <!-- More -->
           <article class="project project--more">
             <div class="project__info">
-              <div class="project__top mono"><span>P/04</span><span>Ongoing</span></div>
+              <div class="project__top mono"><span>P/05</span><span>Ongoing</span></div>
               <h3 class="project__title">More in<br>the lab</h3>
               <p class="project__kicker">Open-source work, hackathon builds and experiments.</p>
               <a class="btn magnetic" href="https://github.com/adityagrinds" target="_blank" rel="noopener" data-cursor="Open">github.com/adityagrinds</a>

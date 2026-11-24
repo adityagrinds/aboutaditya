@@ -347,6 +347,9 @@ html[data-light="on"] .portrait__color { opacity: 0; }
 html[data-light="on"] .portrait__tip { opacity: 0; }
 .big { font-size: clamp(24px, 3vw, 46px); line-height: 1.18; letter-spacing: -0.02em; font-weight: 400; }
 .big em { color: var(--accent); }
+.about__more { display: grid; gap: 16px; margin-top: 32px; max-width: 560px; color: var(--muted); font-size: clamp(15px, 1.15vw, 17px); line-height: 1.7; }
+.about__line { color: var(--fg); padding-top: 4px; }
+.about__line b { font-weight: 500; color: var(--accent); }
 .reveal-words .w { display: inline-block; }
 .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin: 8vh 0 6vh; }
 .stat { border-top: 1px solid var(--line); padding-top: 18px; }

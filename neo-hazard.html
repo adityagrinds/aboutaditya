@@ -1,0 +1,1162 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NEO Hazard Classification | Aditya Kumar Gupta</title>
+  <meta name="description" content="Classifying 90,836 NASA asteroid records as hazardous or safe, with imbalance handling, SHAP explanations, and an analysis of why accuracy alone fails.">
+  <meta name="theme-color" content="#070709">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%23070709'/><circle cx='32' cy='32' r='10' fill='%23ffb547'/><ellipse cx='32' cy='32' rx='24' ry='12' fill='none' stroke='%23ff5a1f' stroke-width='3' transform='rotate(-25 32 32)'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@500;600;700;800&family=Inter:wght@300;400;500;600&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #070709; --bg-2: #0d0d11; --panel: #111116; --fg: #ece8df; --muted: #8b877e; --dim: #5e5b55;
+      --line: rgba(236, 232, 223, 0.1); --line-2: rgba(236, 232, 223, 0.18);
+      --gold: #ffb547; --ember: #ff5a1f; --safe: #7aa2ff; --ok: #34d399;
+      --ease: cubic-bezier(0.19, 1, 0.22, 1);
+      --pad: clamp(18px, 5vw, 88px);
+      --display: "Syne", system-ui, sans-serif; --serif: "Instrument Serif", Georgia, serif;
+      --sans: "Inter", system-ui, sans-serif; --mono: "JetBrains Mono", ui-monospace, monospace;
+    }
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { background: var(--bg); color: var(--fg); scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+    body { font-family: var(--sans); font-size: 16px; line-height: 1.6; overflow-x: hidden; }
+    body::before { /* static starfield */
+      content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; opacity: 0.55;
+      background-image:
+        radial-gradient(1px 1px at 12% 18%, #fff 50%, transparent 51%), radial-gradient(1px 1px at 72% 12%, #fff 50%, transparent 51%),
+        radial-gradient(1px 1px at 38% 66%, #fff 50%, transparent 51%), radial-gradient(1.5px 1.5px at 86% 54%, #ffe7a3 50%, transparent 51%),
+        radial-gradient(1px 1px at 22% 88%, #fff 50%, transparent 51%), radial-gradient(1px 1px at 58% 36%, #fff 50%, transparent 51%),
+        radial-gradient(1px 1px at 92% 84%, #fff 50%, transparent 51%), radial-gradient(1.5px 1.5px at 6% 52%, #cfe0ff 50%, transparent 51%),
+        radial-gradient(900px 600px at 85% -10%, rgba(255, 181, 71, 0.07), transparent 70%),
+        radial-gradient(800px 600px at -10% 110%, rgba(122, 162, 255, 0.06), transparent 70%);
+      background-size: 420px 420px, 380px 380px, 460px 460px, 520px 520px, 400px 400px, 440px 440px, 500px 500px, 480px 480px, 100% 100%, 100% 100%;
+    }
+    a { color: inherit; text-decoration: none; }
+    img { display: block; max-width: 100%; }
+    button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+    .mono { font-family: var(--mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; }
+    em.s { font-family: var(--serif); font-style: italic; font-weight: 400; color: var(--gold); letter-spacing: 0; }
+
+    /* ---------- top bar ---------- */
+    .bar {
+      position: fixed; inset: 0 0 auto; z-index: 50; display: flex; align-items: center; gap: 24px;
+      padding: 14px var(--pad); background: #070709; border-bottom: 1px solid var(--line);
+    }
+    .bar__back { display: inline-flex; align-items: center; gap: 8px; color: var(--fg); border: 1px solid var(--line-2); border-radius: 999px; padding: 8px 14px; transition: border-color .3s, color .3s; }
+    .bar__back:hover { border-color: var(--gold); color: var(--gold); }
+    .bar__nav { display: flex; gap: 4px; margin-left: auto; overflow-x: auto; scrollbar-width: none; }
+    .bar__nav a { color: var(--muted); padding: 8px 10px; border-radius: 8px; white-space: nowrap; transition: color .3s, background .3s; }
+    .bar__nav a:hover, .bar__nav a.is-on { color: var(--fg); background: rgba(255, 255, 255, 0.05); }
+    .bar__nav a.is-on { color: var(--gold); }
+    .bar__prog { position: absolute; left: 0; bottom: -1px; height: 2px; width: 100%; background: linear-gradient(90deg, var(--gold), var(--ember)); transform-origin: 0 50%; transform: scaleX(0); }
+    @media (max-width: 860px) { .bar__nav { display: none; } .bar { justify-content: space-between; } }
+
+    /* ---------- layout ---------- */
+    .wrap { width: min(1240px, 100%); margin: 0 auto; padding: 0 var(--pad); }
+    section.sec { padding: clamp(80px, 12vh, 140px) 0 0; scroll-margin-top: 60px; }
+    .sec__head { display: grid; grid-template-columns: 120px 1fr; gap: 24px; align-items: start; margin-bottom: clamp(28px, 5vh, 48px); }
+    .sec__num { font-family: var(--display); font-weight: 800; font-size: 56px; line-height: 1; color: transparent; -webkit-text-stroke: 1px var(--line-2); }
+    .sec__kick { color: var(--gold); margin-bottom: 10px; }
+    h2 { font-family: var(--display); font-weight: 800; font-size: clamp(30px, 4.2vw, 58px); line-height: 1; letter-spacing: -0.035em; }
+    h3 { font-family: var(--display); font-weight: 700; font-size: clamp(19px, 1.7vw, 24px); letter-spacing: -0.02em; line-height: 1.15; }
+    .lead { color: var(--muted); font-size: clamp(16px, 1.3vw, 19px); max-width: 760px; margin-top: 16px; }
+    .lead b, p b, li b { color: var(--fg); font-weight: 600; }
+    @media (max-width: 720px) { .sec__head { grid-template-columns: 1fr; gap: 8px; } .sec__num { font-size: 40px; } }
+
+    .card { background: var(--panel); border: 1px solid var(--line); border-radius: 20px; padding: clamp(18px, 2.4vw, 30px); }
+    .grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+    @media (max-width: 900px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+    .note { display: flex; gap: 12px; align-items: flex-start; padding: 16px 18px; border-radius: 14px; border: 1px solid rgba(255, 181, 71, 0.28); background: rgba(255, 181, 71, 0.05); color: #d6d2c6; font-size: 15px; }
+    .note::before { content: "→"; color: var(--gold); font-family: var(--mono); }
+    .note--red { border-color: rgba(255, 90, 31, 0.35); background: rgba(255, 90, 31, 0.06); }
+    .note--red::before { color: var(--ember); content: "!"; font-weight: 700; }
+    .ticks { display: grid; gap: 10px; color: var(--muted); }
+    .ticks li { list-style: none; padding-left: 22px; position: relative; }
+    .ticks li::before { content: "→"; position: absolute; left: 0; color: var(--gold); }
+
+    /* reveal (one-shot) */
+    .rv { opacity: 0; transform: translateY(28px); transition: opacity 0.9s var(--ease), transform 0.9s var(--ease); }
+    .rv.in { opacity: 1; transform: none; }
+    @media (prefers-reduced-motion: reduce) { .rv { opacity: 1; transform: none; transition: none; } html { scroll-behavior: auto; } }
+
+    /* ---------- hero ---------- */
+    .hero { min-height: 100vh; display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr); gap: 40px; align-items: center; padding-top: 110px; padding-bottom: 40px; }
+    .hero__eyebrow { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 26px; }
+    .tag { border: 1px solid var(--line-2); border-radius: 999px; padding: 6px 12px; color: var(--muted); }
+    .tag--hot { background: var(--gold); border-color: var(--gold); color: #0b0905; }
+    .hero h1 { font-family: var(--display); font-weight: 800; font-size: clamp(27px, 3.1vw, 56px); line-height: 0.92; letter-spacing: -0.045em; text-transform: uppercase; }
+    .hero h1 span { display: block; }
+    .hero__sub { font-family: var(--serif); font-style: italic; font-size: clamp(22px, 2.4vw, 34px); color: var(--gold); margin-top: 14px; }
+    .hero__one { color: var(--muted); max-width: 560px; margin-top: 22px; font-size: 17px; }
+    .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; margin-top: 40px; border: 1px solid var(--line); border-radius: 18px; overflow: hidden; background: var(--line); }
+    .stat { background: var(--bg-2); padding: 18px 16px; }
+    .stat b { display: block; font-family: var(--display); font-weight: 700; font-size: clamp(20px, 1.8vw, 28px); letter-spacing: -0.03em; line-height: 1.05; font-variant-numeric: tabular-nums; }
+    .stat small { display: block; color: var(--muted); font-size: 12px; margin-top: 6px; line-height: 1.35; }
+    .stat--hot b { color: var(--ember); } .stat--gold b { color: var(--gold); }
+    @media (max-width: 980px) { .hero { grid-template-columns: 1fr; min-height: auto; } .stats { grid-template-columns: repeat(2, 1fr); } }
+
+    .orbit { width: 100%; height: auto; overflow: visible; }
+    .orbit .draw { stroke-dasharray: 2200; stroke-dashoffset: 2200; animation: draw 2.6s var(--ease) 0.3s forwards; }
+    .orbit .fade { opacity: 0; animation: fadeIn 1s ease 1.8s forwards; }
+    @keyframes draw { to { stroke-dashoffset: 0; } }
+    @keyframes fadeIn { to { opacity: 1; } }
+    .orbit text { font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; fill: var(--muted); }
+    .orbit .lbl-gold { fill: var(--gold); } .orbit .lbl-red { fill: var(--ember); } .orbit .lbl-blue { fill: var(--safe); }
+    .hero__caption { color: var(--dim); text-align: center; margin-top: 6px; }
+
+    /* ---------- rule cards ---------- */
+    .rule { position: relative; overflow: hidden; }
+    .rule__icon { width: 46px; height: 46px; border-radius: 12px; display: grid; place-items: center; font-family: var(--display); font-weight: 800; margin-bottom: 18px; }
+    .rule__formula { font-family: var(--mono); font-size: clamp(22px, 2.2vw, 30px); margin: 10px 0 12px; letter-spacing: -0.01em; }
+    .rule p { color: var(--muted); }
+    .badge { display: inline-flex; align-items: center; gap: 8px; margin-top: 18px; padding: 7px 12px; border-radius: 999px; font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; }
+    .badge--yes { color: var(--ok); border: 1px solid rgba(52, 211, 153, 0.4); background: rgba(52, 211, 153, 0.07); }
+    .badge--no { color: var(--ember); border: 1px solid rgba(255, 90, 31, 0.45); background: rgba(255, 90, 31, 0.07); }
+    .rule-plus { display: grid; place-items: center; font-family: var(--display); font-size: 28px; color: var(--dim); }
+    .rules { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; gap: 16px; align-items: stretch; }
+    @media (max-width: 980px) { .rules { grid-template-columns: 1fr; } .rule-plus { padding: 0; } }
+
+    /* ---------- data table ---------- */
+    .tbl { width: 100%; border-collapse: collapse; font-size: 14px; }
+    .tbl th { text-align: left; font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--dim); font-weight: 400; padding: 0 12px 12px 0; border-bottom: 1px solid var(--line); }
+    .tbl td { padding: 12px 12px 12px 0; border-bottom: 1px solid var(--line); vertical-align: top; color: var(--muted); }
+    .tbl td:first-child { font-family: var(--mono); font-size: 12.5px; color: var(--fg); white-space: nowrap; }
+    .tbl tr:last-child td { border-bottom: 0; }
+    .use { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.08em; padding: 3px 8px; border-radius: 6px; white-space: nowrap; }
+    .use--in { color: var(--ok); background: rgba(52, 211, 153, 0.1); }
+    .use--out { color: var(--dim); background: rgba(255, 255, 255, 0.05); }
+    .use--y { color: #0b0905; background: var(--gold); }
+    .tbl-wrap { overflow-x: auto; }
+
+    /* imbalance bar */
+    .imb { display: grid; gap: 14px; }
+    .imb__row { display: grid; grid-template-columns: 110px 1fr 80px; gap: 14px; align-items: center; font-size: 14px; }
+    .imb__track { height: 34px; border-radius: 8px; background: rgba(255, 255, 255, 0.04); overflow: hidden; }
+    .imb__fill { height: 100%; width: 0; border-radius: 8px; transition: width 1.4s var(--ease); }
+    .imb__row b { font-family: var(--mono); font-weight: 500; text-align: right; font-variant-numeric: tabular-nums; }
+    .dots { display: grid; grid-template-columns: repeat(25, 1fr); gap: 5px; margin-top: 8px; }
+    .dots i { aspect-ratio: 1; border-radius: 50%; background: rgba(122, 162, 255, 0.35); }
+    .dots i.h { background: var(--ember); box-shadow: 0 0 8px rgba(255, 90, 31, 0.6); }
+
+    /* ---------- figures / screenshots ---------- */
+    .fig { margin: 0; }
+    .fig__btn { display: block; width: 100%; border-radius: 16px; overflow: hidden; background: #fff; border: 1px solid var(--line); position: relative; cursor: zoom-in; transition: transform .5s var(--ease), box-shadow .5s var(--ease); }
+    .fig__btn:hover { transform: translateY(-3px); box-shadow: 0 30px 60px -30px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(255, 181, 71, 0.4); }
+    .fig__btn img { width: 100%; height: auto; padding: 10px; }
+    .fig__btn::after { content: "⤢ Zoom"; position: absolute; right: 10px; top: 10px; font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; padding: 5px 9px; border-radius: 999px; background: rgba(7, 7, 9, 0.78); color: #ece8df; opacity: 0; transition: opacity .3s; }
+    .fig__btn:hover::after { opacity: 1; }
+    .fig__chrome { display: flex; align-items: center; gap: 6px; padding: 9px 12px; background: #16161b; border-bottom: 1px solid rgba(255, 255, 255, 0.06); font-family: var(--mono); font-size: 10.5px; color: var(--muted); text-transform: none; letter-spacing: 0.04em; }
+    .fig__chrome i { width: 8px; height: 8px; border-radius: 50%; background: #3a3a42; }
+    .fig__chrome span { margin-left: 8px; }
+    .fig figcaption { color: var(--muted); font-size: 14px; margin-top: 12px; line-height: 1.5; }
+    .fig figcaption b { color: var(--fg); }
+
+    /* code cell (Colab-style) */
+    .cell { border-radius: 14px; overflow: hidden; border: 1px solid var(--line); background: #0b0b0f; font-family: var(--mono); font-size: 12.5px; }
+    .cell__head { display: flex; align-items: center; gap: 10px; padding: 9px 14px; background: #15151a; color: var(--dim); font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; }
+    .cell__head b { color: var(--gold); font-weight: 500; }
+    .cell pre { padding: 16px 18px; overflow-x: auto; line-height: 1.65; color: #d6d2c6; }
+    .cell .k { color: #ff7ab2; } .cell .f { color: #7aa2ff; } .cell .st { color: #a5d6a7; } .cell .c { color: #5e5b55; } .cell .n { color: var(--gold); }
+    .cell__out { border-top: 1px dashed var(--line); padding: 12px 18px; color: var(--muted); white-space: pre; overflow-x: auto; line-height: 1.6; }
+
+    /* ---------- pipeline ---------- */
+    .pipe { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; counter-reset: step; }
+    .step { position: relative; padding: 20px; border-radius: 16px; border: 1px solid var(--line); background: var(--panel); counter-increment: step; }
+    .step::before { content: counter(step, decimal-leading-zero); font-family: var(--mono); font-size: 11px; color: var(--gold); letter-spacing: 0.1em; }
+    .step h3 { font-size: 18px; margin: 10px 0 8px; }
+    .step p { color: var(--muted); font-size: 14px; line-height: 1.5; }
+    .step__n { display: inline-block; margin-top: 12px; font-family: var(--mono); font-size: 11px; color: var(--fg); background: rgba(255, 255, 255, 0.05); padding: 4px 8px; border-radius: 6px; }
+    .step--lock { border-color: rgba(52, 211, 153, 0.35); }
+    .step--lock .step__n { color: var(--ok); background: rgba(52, 211, 153, 0.08); }
+    @media (max-width: 1000px) { .pipe { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 560px) { .pipe { grid-template-columns: 1fr; } }
+
+    /* ---------- accuracy trap ---------- */
+    .trap { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .trap__card { text-align: left; }
+    .trap__big { font-family: var(--display); font-weight: 800; font-size: clamp(52px, 7vw, 96px); letter-spacing: -0.05em; line-height: 1; margin: 12px 0 6px; font-variant-numeric: tabular-nums; }
+    .trap__row { display: flex; justify-content: space-between; gap: 12px; padding: 12px 0; border-top: 1px solid var(--line); color: var(--muted); font-size: 15px; }
+    .trap__row b { color: var(--fg); font-family: var(--mono); font-weight: 500; }
+    .trap__row b.bad { color: var(--ember); }
+    @media (max-width: 800px) { .trap { grid-template-columns: 1fr; } }
+
+    /* ---------- confusion explorer ---------- */
+    .cmx { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 28px; align-items: start; }
+    .pills { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 22px; }
+    .pill { font-family: var(--mono); font-size: 11px; letter-spacing: 0.06em; padding: 8px 12px; border-radius: 999px; border: 1px solid var(--line-2); color: var(--muted); transition: all .3s var(--ease); }
+    .pill:hover { color: var(--fg); border-color: var(--fg); }
+    .pill.is-on { background: var(--gold); border-color: var(--gold); color: #0b0905; }
+    .pill small { opacity: 0.6; margin-left: 4px; }
+    .pills { display: grid; gap: 10px; }
+    .pills__row { display: grid; grid-template-columns: 130px 1fr; gap: 12px; align-items: center; }
+    .pills__row > div { display: flex; flex-wrap: wrap; gap: 8px; }
+    .grp { font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--dim); }
+    @media (max-width: 720px) { .pills__row { grid-template-columns: 1fr; gap: 6px; } }
+    .matrix { display: grid; grid-template-columns: 90px 1fr 1fr; grid-template-rows: auto 1fr 1fr; gap: 8px; }
+    .matrix__ax { font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dim); display: flex; align-items: center; }
+    .matrix__ax--top { justify-content: center; padding-bottom: 2px; }
+    .cellm { position: relative; border-radius: 14px; padding: 18px; min-height: 130px; display: flex; flex-direction: column; justify-content: space-between; border: 1px solid var(--line); overflow: hidden; transition: background .6s var(--ease); }
+    .cellm b { font-family: var(--display); font-weight: 700; font-size: clamp(28px, 3vw, 42px); letter-spacing: -0.03em; font-variant-numeric: tabular-nums; position: relative; }
+    .cellm span { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; position: relative; }
+    .cellm small { color: var(--muted); font-size: 12.5px; position: relative; }
+    .cellm::before { content: ""; position: absolute; inset: 0; background: var(--tint); opacity: var(--o, 0); transition: opacity .6s var(--ease); }
+    .cellm--tn { --tint: var(--safe); } .cellm--tp { --tint: var(--ok); } .cellm--fp { --tint: var(--gold); } .cellm--fn { --tint: var(--ember); }
+    .cellm--fn span { color: var(--ember); } .cellm--tp span { color: var(--ok); } .cellm--fp span { color: var(--gold); } .cellm--tn span { color: var(--safe); }
+    .metrics { display: grid; gap: 14px; }
+    .metric { display: grid; grid-template-columns: 140px 1fr 64px; gap: 12px; align-items: center; font-size: 14px; }
+    .metric__name { color: var(--muted); }
+    .metric__name small { display: block; color: var(--dim); font-size: 11.5px; line-height: 1.3; }
+    .metric__track { height: 10px; border-radius: 6px; background: rgba(255, 255, 255, 0.05); overflow: hidden; }
+    .metric__fill { height: 100%; width: 0; border-radius: 6px; background: var(--fg); transition: width .8s var(--ease); }
+    .metric b { font-family: var(--mono); font-weight: 500; text-align: right; font-variant-numeric: tabular-nums; }
+    .metric--key .metric__fill { background: linear-gradient(90deg, var(--gold), var(--ember)); }
+    .metric--key .metric__name { color: var(--fg); }
+    .cmx__say { margin-top: 20px; min-height: 72px; }
+    .cmx__img { margin-top: 18px; }
+    @media (max-width: 900px) { .cmx { grid-template-columns: 1fr; } .matrix { grid-template-columns: 70px 1fr 1fr; } .metric { grid-template-columns: 110px 1fr 56px; } }
+
+    /* ---------- bar chart (models) ---------- */
+    .tabs { display: inline-flex; gap: 4px; padding: 4px; border-radius: 999px; border: 1px solid var(--line); margin-bottom: 24px; flex-wrap: wrap; }
+    .tab { font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; padding: 8px 14px; border-radius: 999px; color: var(--muted); transition: all .3s var(--ease); }
+    .tab.is-on { background: var(--fg); color: var(--bg); }
+    .hbars { display: grid; gap: 14px; }
+    .hbar { display: grid; grid-template-columns: 220px 1fr 70px; gap: 16px; align-items: center; }
+    .hbar__name { font-size: 15px; }
+    .hbar__name small { display: block; color: var(--dim); font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.06em; }
+    .hbar__track { height: 28px; border-radius: 8px; background: rgba(255, 255, 255, 0.04); position: relative; overflow: hidden; }
+    .hbar__fill { position: absolute; inset: 0 auto 0 0; width: 0; border-radius: 8px; transition: width .9s var(--ease), background .5s; }
+    .hbar b { font-family: var(--mono); font-weight: 500; text-align: right; font-variant-numeric: tabular-nums; }
+    .hbar.is-top .hbar__fill { background: linear-gradient(90deg, var(--gold), var(--ember)) !important; }
+    .hbar.is-top b { color: var(--gold); }
+    @media (max-width: 720px) { .hbar { grid-template-columns: 1fr 60px; } .hbar__name { grid-column: 1 / -1; } }
+    .chart-say { margin-top: 22px; }
+
+    .thumbs { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px; }
+    .thumbs .fig figcaption { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.06em; text-transform: uppercase; margin-top: 8px; }
+    .thumbs .fig__btn img { padding: 4px; }
+    @media (max-width: 1000px) { .thumbs { grid-template-columns: repeat(3, 1fr); } }
+
+    /* dumbbell */
+    .db { display: grid; gap: 18px; }
+    .db__axis { display: grid; grid-template-columns: 190px 1fr 90px; gap: 16px; font-family: var(--mono); font-size: 10px; color: var(--dim); letter-spacing: 0.08em; }
+    .db__ticks { display: flex; justify-content: space-between; }
+    .db__row { display: grid; grid-template-columns: 190px 1fr 90px; gap: 16px; align-items: center; }
+    .db__name { font-size: 15px; }
+    .db__name small { display: block; color: var(--dim); font-size: 12px; }
+    .db__track { position: relative; height: 26px; background-image: linear-gradient(90deg, var(--line) 1px, transparent 1px); background-size: 20% 100%; border-left: 1px solid var(--line); }
+    .db__line { position: absolute; top: 50%; height: 3px; transform: translateY(-50%); border-radius: 3px; background: linear-gradient(90deg, var(--safe), var(--gold)); }
+    .db__dot { position: absolute; top: 50%; width: 14px; height: 14px; border-radius: 50%; transform: translate(-50%, -50%); }
+    .db__dot--a { background: var(--safe); }
+    .db__dot--b { background: var(--gold); box-shadow: 0 0 14px rgba(255, 181, 71, 0.7); }
+    .db__delta { font-family: var(--mono); font-size: 13px; text-align: right; color: var(--dim); }
+    .db__delta.up { color: var(--ok); }
+    .legend { display: flex; gap: 18px; flex-wrap: wrap; font-size: 13px; color: var(--muted); margin-bottom: 18px; }
+    .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 8px; vertical-align: -1px; }
+    @media (max-width: 720px) { .db__row, .db__axis { grid-template-columns: 1fr 64px; } .db__name { grid-column: 1 / -1; } .db__axis > span:first-child { display: none; } }
+
+    /* SHAP donut */
+    .donut-wrap { display: grid; grid-template-columns: 220px 1fr; gap: 28px; align-items: center; }
+    .donut { width: 220px; height: 220px; }
+    .donut circle { fill: none; stroke-width: 22; }
+    .donut .arc { stroke: url(#dg); stroke-linecap: round; stroke-dasharray: 0 999; transition: stroke-dasharray 1.6s var(--ease); transform: rotate(-90deg); transform-origin: 50% 50%; }
+    .donut text { font-family: var(--display); font-weight: 800; fill: var(--fg); }
+    .shapbars { display: grid; gap: 12px; }
+    .shapbar { display: grid; grid-template-columns: 160px 1fr 52px; gap: 12px; align-items: center; font-size: 14px; }
+    .shapbar span { font-family: var(--mono); font-size: 12px; }
+    .shapbar b { font-family: var(--mono); font-weight: 500; text-align: right; }
+    .shapbar__t { height: 14px; border-radius: 6px; background: rgba(255, 255, 255, 0.05); overflow: hidden; }
+    .shapbar__f { height: 100%; width: 0; border-radius: 6px; background: #ff0d57; transition: width 1.2s var(--ease); }
+    .shapbar.dim .shapbar__f { background: #6b6b74; }
+    @media (max-width: 720px) { .donut-wrap { grid-template-columns: 1fr; justify-items: center; } .shapbar { grid-template-columns: 120px 1fr 46px; } }
+
+    /* precision ceiling chart */
+    .ceil { position: relative; height: 320px; display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 8px; align-items: end; padding-top: 10px; border-bottom: 1px solid var(--line-2); }
+    .ceil__bar { position: relative; height: 0; border-radius: 6px 6px 0 0; background: rgba(122, 162, 255, 0.45); transition: height 1.1s var(--ease); }
+    .ceil__bar.is-max { background: linear-gradient(180deg, var(--gold), rgba(255, 181, 71, 0.4)); }
+    .ceil__bar.is-max b { top: 10px; color: #0b0905; font-weight: 700; }
+    .ceil__bar b { position: absolute; top: -20px; left: 50%; transform: translateX(-50%); font-family: var(--mono); font-size: 10px; font-weight: 500; color: var(--muted); white-space: nowrap; }
+    .ceil__line { position: absolute; left: 0; right: 0; border-top: 2px dashed var(--ember); pointer-events: none; }
+    .ceil__line span { position: absolute; right: 0; top: -26px; font-family: var(--mono); font-size: 11px; color: var(--ember); letter-spacing: 0.06em; background: var(--panel); padding: 2px 6px; }
+    .ceil__names { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 8px; margin-top: 10px; }
+    .ceil__names span { font-family: var(--mono); font-size: 9.5px; color: var(--dim); text-align: center; line-height: 1.3; letter-spacing: 0.02em; }
+    @media (max-width: 720px) { .ceil__bar b { display: none; } .ceil__names span { writing-mode: vertical-rl; transform: rotate(180deg); margin: 0 auto; } }
+
+    /* split diagram for insight */
+    .split { display: grid; grid-template-columns: 1fr 60px 1fr; align-items: center; gap: 10px; }
+    .split__box { border-radius: 16px; padding: 20px; border: 1px solid var(--line); background: rgba(255, 255, 255, 0.02); }
+    .split__box h3 { font-size: 17px; margin-bottom: 6px; }
+    .split__box p { color: var(--muted); font-size: 14px; }
+    .split__box--seen { border-color: rgba(52, 211, 153, 0.35); }
+    .split__box--blind { border-color: rgba(255, 90, 31, 0.4); border-style: dashed; }
+    .split__arrow { text-align: center; color: var(--dim); font-family: var(--mono); font-size: 22px; }
+    .split__outs { display: grid; gap: 10px; }
+    @media (max-width: 800px) { .split { grid-template-columns: 1fr; } .split__arrow { transform: rotate(90deg); } }
+
+    /* leaderboard */
+    .lb-tbl td, .lb-tbl th { padding-right: 16px; }
+    .lb-tbl td { font-family: var(--mono); font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+    .lb-tbl td:first-child { font-family: var(--sans); font-size: 14.5px; color: var(--fg); white-space: normal; }
+    .lb-tbl td:first-child small { display: block; font-family: var(--mono); font-size: 10.5px; color: var(--dim); letter-spacing: 0.04em; }
+    .lb-tbl tr.is-best td { color: var(--fg); }
+    .lb-tbl tr.is-best { background: linear-gradient(90deg, rgba(255, 181, 71, 0.1), transparent); }
+    .lb-tbl tr.is-best td:first-child::after { content: "Best balance"; margin-left: 8px; font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.08em; text-transform: uppercase; background: var(--gold); color: #0b0905; padding: 2px 7px; border-radius: 999px; }
+    .lb-tbl tr.is-recall td:first-child::after { content: "Best recall"; margin-left: 8px; font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.08em; text-transform: uppercase; background: var(--ok); color: #0b0905; padding: 2px 7px; border-radius: 999px; }
+    .lb-tbl .hi { color: var(--gold); }
+    .mini { display: inline-block; height: 6px; border-radius: 3px; background: var(--gold); vertical-align: middle; margin-right: 8px; opacity: 0.8; }
+
+    /* impact + stack */
+    .impact { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+    .impact .card h3 { margin: 14px 0 8px; }
+    .impact .card p { color: var(--muted); font-size: 15px; }
+    .impact__ico { font-size: 26px; }
+    @media (max-width: 900px) { .impact { grid-template-columns: 1fr; } }
+    .stack-chips { display: flex; flex-wrap: wrap; gap: 10px; }
+    .stack-chips span { border: 1px solid var(--line-2); border-radius: 999px; padding: 9px 16px; font-family: var(--mono); font-size: 12px; }
+
+    .end { padding: clamp(80px, 14vh, 160px) 0 60px; text-align: center; }
+    .end h2 { font-size: clamp(34px, 5vw, 72px); }
+    .end .btns { display: flex; gap: 12px; justify-content: center; margin-top: 32px; flex-wrap: wrap; }
+    .btn { display: inline-flex; align-items: center; gap: 10px; padding: 14px 22px; border-radius: 999px; border: 1px solid var(--line-2); font-family: var(--mono); font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; transition: all .35s var(--ease); }
+    .btn:hover { border-color: var(--gold); color: var(--gold); }
+    .btn--fill { background: var(--gold); color: #0b0905; border-color: var(--gold); }
+    .btn--fill:hover { background: var(--fg); border-color: var(--fg); color: var(--bg); }
+    .foot { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding: 28px 0 40px; border-top: 1px solid var(--line); color: var(--dim); margin-top: 80px; }
+
+    /* lightbox */
+    .lbx { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 4vh 4vw; background: rgba(5, 5, 7, 0.92); opacity: 0; pointer-events: none; transition: opacity .35s ease; }
+    .lbx.open { opacity: 1; pointer-events: auto; }
+    .lbx figure { max-width: min(1200px, 92vw); transform: scale(0.94); transition: transform .45s var(--ease); }
+    .lbx.open figure { transform: none; }
+    .lbx img { max-height: 78vh; width: auto; margin: 0 auto; background: #fff; border-radius: 14px; padding: 14px; }
+    .lbx figcaption { color: #d6d2c6; text-align: center; margin-top: 14px; max-width: 760px; margin-inline: auto; }
+    .lbx__x, .lbx__nav { position: absolute; width: 46px; height: 46px; border-radius: 50%; border: 1px solid var(--line-2); display: grid; place-items: center; font-size: 18px; background: rgba(255, 255, 255, 0.04); }
+    .lbx__x { top: 20px; right: 20px; }
+    .lbx__nav--p { left: 20px; top: 50%; } .lbx__nav--n { right: 20px; top: 50%; }
+    .lbx__x:hover, .lbx__nav:hover { border-color: var(--gold); color: var(--gold); }
+    .lbx__count { position: absolute; top: 32px; left: 24px; color: var(--muted); }
+  </style>
+</head>
+<body>
+
+  <header class="bar">
+    <a class="bar__back mono" href="index.html">&larr; Portfolio</a>
+    <nav class="bar__nav mono" aria-label="Sections">
+      <a href="#question">Question</a>
+      <a href="#data">Data</a>
+      <a href="#pipeline">Pipeline</a>
+      <a href="#trap">Accuracy trap</a>
+      <a href="#models">Models</a>
+      <a href="#smote">SMOTE</a>
+      <a href="#shap">SHAP</a>
+      <a href="#tuning">Tuning</a>
+      <a href="#insight">Insight</a>
+      <a href="#impact">Impact</a>
+    </nav>
+    <span class="bar__prog" id="prog"></span>
+  </header>
+
+  <main>
+    <!-- ================= HERO ================= -->
+    <section class="wrap hero" id="top">
+      <div>
+        <div class="hero__eyebrow mono">
+          <span class="tag tag--hot">P/04 · Case study</span>
+          <span class="tag">Machine learning</span>
+          <span class="tag">Explainable AI</span>
+          <span class="tag">NASA NEO data</span>
+        </div>
+        <h1><span>Near-Earth</span><span>Object Hazard</span><span>Classification</span></h1>
+        <p class="hero__sub">with explainable machine learning</p>
+        <p class="hero__one">Classifying <b>90,836 NASA asteroid records</b> as hazardous or safe, with imbalance handling, SHAP explanations, and an analysis of <b>why accuracy alone fails</b>.</p>
+        <div class="stats">
+          <div class="stat"><b data-count="90836">90,836</b><small>close-approach records</small></div>
+          <div class="stat stat--hot"><b data-count="9.73" data-dec="2" data-suf="%">9.73%</b><small>are hazardous: a rare class</small></div>
+          <div class="stat stat--gold"><b data-count="97.57" data-dec="2" data-suf="%">97.57%</b><small>recall: missed only 43 of 1,768</small></div>
+          <div class="stat"><b data-count="54.37" data-dec="2" data-suf="%">54.37%</b><small>best F1 (MCC 0.492)</small></div>
+        </div>
+      </div>
+      <div>
+        <svg class="orbit" viewBox="100 70 640 470" role="img" aria-label="Diagram: Earth's orbit around the Sun and an asteroid orbit passing very close to it. The gap between them is the MOID.">
+          <defs>
+            <radialGradient id="sun"><stop offset="0" stop-color="#fff4d2"/><stop offset=".45" stop-color="#ffb547"/><stop offset="1" stop-color="#ff5a1f" stop-opacity="0"/></radialGradient>
+            <radialGradient id="ast"><stop offset="0" stop-color="#ffd2b8"/><stop offset=".5" stop-color="#ff5a1f"/><stop offset="1" stop-color="#ff5a1f" stop-opacity="0"/></radialGradient>
+          </defs>
+          <circle cx="300" cy="300" r="46" fill="url(#sun)" class="fade" style="animation-delay:.2s"/>
+          <circle cx="300" cy="300" r="13" fill="#ffe7a3"/>
+          <text x="300" y="338" text-anchor="middle" class="fade lbl-gold" style="animation-delay:.6s">SUN</text>
+          <!-- Earth orbit -->
+          <circle cx="300" cy="300" r="150" fill="none" stroke="#7aa2ff" stroke-opacity=".55" stroke-width="1.5" class="draw"/>
+          <!-- asteroid orbit -->
+          <path id="astPath" d="M 140 300 A 280 200 0 1 1 700 300 A 280 200 0 1 1 140 300" fill="none" stroke="#ff5a1f" stroke-opacity=".6" stroke-width="1.5" stroke-dasharray="5 6"/>
+          <!-- Earth -->
+          <circle cx="150" cy="300" r="9" fill="#7aa2ff"/>
+          <circle cx="150" cy="300" r="16" fill="none" stroke="#7aa2ff" stroke-opacity=".3"/>
+          <text x="168" y="276" class="lbl-blue fade">EARTH</text>
+          <!-- MOID bracket -->
+          <g class="fade">
+            <line x1="140" y1="300" x2="118" y2="250" stroke="#ff5a1f" stroke-width="1"/>
+            <line x1="118" y1="250" x2="118" y2="200" stroke="#ff5a1f" stroke-width="1"/>
+            <text x="112" y="190" class="lbl-red">MOID ≤ 0.05 au</text>
+            <text x="112" y="174" font-size="10">CLOSE ENOUGH?</text>
+          </g>
+          <!-- moving asteroid -->
+          <g>
+            <circle r="16" fill="url(#ast)"/>
+            <circle r="5" fill="#ffd2b8"/>
+            <animateMotion dur="24s" repeatCount="indefinite" rotate="auto"><mpath href="#astPath"/></animateMotion>
+          </g>
+          <g class="fade" style="animation-delay:2.2s">
+            <text x="560" y="128" class="lbl-gold">H ≤ 22</text>
+            <text x="560" y="144" font-size="10">BIG ENOUGH? (~140 m+)</text>
+            <line x1="556" y1="134" x2="520" y2="134" stroke="#ffb547" stroke-width="1"/>
+          </g>
+          <text x="420" y="532" text-anchor="middle" class="fade" font-size="10">BOTH TRUE  →  NASA CALLS IT “POTENTIALLY HAZARDOUS”</text>
+        </svg>
+      </div>
+    </section>
+
+    <!-- ================= 01 QUESTION ================= -->
+    <section class="sec wrap" id="question">
+      <div class="sec__head rv">
+        <span class="sec__num">01</span>
+        <div>
+          <p class="sec__kick mono">The question</p>
+          <h2>How much of NASA&rsquo;s hazard label can <em class="s">machine learning</em> recover?</h2>
+          <p class="lead">NASA labels an asteroid <b>potentially hazardous</b> only when two conditions are true. We asked how much of that label a model can learn from four quick measurements, and where it stops.</p>
+        </div>
+      </div>
+      <div class="rules">
+        <div class="card rule rv">
+          <div class="rule__icon" style="background:rgba(255,181,71,.12);color:var(--gold)">1</div>
+          <h3>Big enough</h3>
+          <p class="rule__formula" style="color:var(--gold)">H ≤ 22</p>
+          <p>Absolute magnitude is brightness. Brighter means bigger, roughly 140 m or more across.</p>
+          <span class="badge badge--yes">✓ In our data</span>
+        </div>
+        <div class="rule-plus rv">+</div>
+        <div class="card rule rv">
+          <div class="rule__icon" style="background:rgba(255,90,31,.12);color:var(--ember)">2</div>
+          <h3>Close enough</h3>
+          <p class="rule__formula" style="color:var(--ember)">MOID ≤ 0.05 au</p>
+          <p>Minimum Orbit Intersection Distance: how close the asteroid&rsquo;s orbit ever gets to Earth&rsquo;s orbit.</p>
+          <span class="badge badge--no">✕ Not in our data</span>
+        </div>
+        <div class="rule-plus rv">=</div>
+        <div class="card rule rv" style="border-color:rgba(255,90,31,.35)">
+          <div class="rule__icon" style="background:var(--ember);color:#0b0905">!</div>
+          <h3>Potentially hazardous</h3>
+          <p class="rule__formula">hazardous = 1</p>
+          <p>Our target column. The model must guess it from size, speed and one fly-by distance.</p>
+          <span class="badge badge--yes" style="color:var(--gold);border-color:rgba(255,181,71,.4);background:rgba(255,181,71,.07)">Target to predict</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 02 DATA ================= -->
+    <section class="sec wrap" id="data">
+      <div class="sec__head rv">
+        <span class="sec__num">02</span>
+        <div>
+          <p class="sec__kick mono">The data</p>
+          <h2>90,836 fly-bys, <em class="s">only 1 in 10</em> hazardous</h2>
+          <p class="lead">NASA Nearest Earth Objects dataset from Kaggle (<b>neo_v2.csv</b>): 90,836 rows, 10 columns, <b>zero missing values</b>. Each row is one close approach of an asteroid to Earth.</p>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card rv tbl-wrap">
+          <table class="tbl">
+            <thead><tr><th>Column</th><th>Meaning</th><th>Used?</th></tr></thead>
+            <tbody>
+              <tr><td>est_diameter_min</td><td>Estimated minimum size (km)</td><td><span class="use use--in">feature</span></td></tr>
+              <tr><td>est_diameter_max</td><td>Estimated maximum size (km). Correlation 1.00 with min, so it adds nothing</td><td><span class="use use--out">dropped</span></td></tr>
+              <tr><td>relative_velocity</td><td>Speed relative to Earth (km/h)</td><td><span class="use use--in">feature</span></td></tr>
+              <tr><td>miss_distance</td><td>How far it passed from Earth on this fly-by (km)</td><td><span class="use use--in">feature</span></td></tr>
+              <tr><td>absolute_magnitude</td><td>Brightness H, the &ldquo;big enough&rdquo; signal</td><td><span class="use use--in">feature</span></td></tr>
+              <tr><td>id, name</td><td>Identifiers only</td><td><span class="use use--out">dropped</span></td></tr>
+              <tr><td>orbiting_body, sentry_object</td><td>Context flags, no signal for this task</td><td><span class="use use--out">dropped</span></td></tr>
+              <tr><td>hazardous</td><td>True / False, converted to 1 / 0</td><td><span class="use use--y">target</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="card rv">
+          <h3>The class imbalance</h3>
+          <p style="color:var(--muted);margin:8px 0 22px;font-size:15px">This is the core difficulty of the whole project.</p>
+          <div class="imb">
+            <div class="imb__row"><span>Safe</span><div class="imb__track"><div class="imb__fill" data-w="100" style="background:rgba(122,162,255,.55)"></div></div><b>81,996</b></div>
+            <div class="imb__row"><span style="color:var(--ember)">Hazardous</span><div class="imb__track"><div class="imb__fill" data-w="10.78" style="background:var(--ember)"></div></div><b>8,840</b></div>
+          </div>
+          <p class="mono" style="color:var(--dim);margin:26px 0 8px">Every dot is ~363 asteroids</p>
+          <div class="dots" id="dots" aria-label="250 dots, 24 of them hazardous"></div>
+        </div>
+      </div>
+
+      <div class="grid-2" style="margin-top:20px">
+        <figure class="fig rv">
+          <button class="fig__btn" data-lb data-cap="Hazardous vs non-hazardous count from the notebook: 81,996 safe vs 8,840 hazardous."><div class="fig__chrome"><i></i><i></i><i></i><span>notebook · sns.countplot</span></div><img src="assets/neo/class-balance.png" alt="Bar chart: 81,996 non-hazardous vs 8,840 hazardous asteroids" loading="lazy"></button>
+          <figcaption><b>Notebook output.</b> The same imbalance as plotted in Colab.</figcaption>
+        </figure>
+        <figure class="fig rv">
+          <button class="fig__btn" data-lb data-cap="Feature correlation heatmap. est_diameter_min and est_diameter_max correlate at 1.00 (identical). absolute_magnitude correlates −0.56 with diameter, because diameter is calculated from brightness."><div class="fig__chrome"><i></i><i></i><i></i><span>notebook · correlation heatmap</span></div><img src="assets/neo/correlation.png" alt="Correlation heatmap of numeric features" loading="lazy"></button>
+          <figcaption><b>What EDA found:</b> the two diameter columns correlate at <b>1.00</b> (identical), and diameter is derived from brightness (<b>−0.56</b>). So we kept one diameter column and dropped the other.</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- ================= 03 PIPELINE ================= -->
+    <section class="sec wrap" id="pipeline">
+      <div class="sec__head rv">
+        <span class="sec__num">03</span>
+        <div>
+          <p class="sec__kick mono">The method</p>
+          <h2>A pipeline built so the <em class="s">test set stays honest</em></h2>
+          <p class="lead">Every step that learns from data (scaling, SMOTE) is fitted on training data only. The 18,168-record test set is <b>never resampled</b> and never seen during training.</p>
+        </div>
+      </div>
+      <div class="pipe">
+        <div class="step rv"><h3>Load &amp; check</h3><p>Downloaded with kagglehub, checked types, nulls and describe().</p><span class="step__n">90,836 × 10</span></div>
+        <div class="step rv"><h3>Select features</h3><p>4 inputs: diameter, velocity, miss distance, magnitude. Target True/False → 1/0.</p><span class="step__n">90,836 × 4</span></div>
+        <div class="step step--lock rv"><h3>Stratified split</h3><p>80 / 20 split that keeps 9.73% hazardous in both halves.</p><span class="step__n">72,668 train · 18,168 test</span></div>
+        <div class="step rv"><h3>Scale</h3><p>StandardScaler fitted on train, then applied to test.</p><span class="step__n">fit on train only</span></div>
+        <div class="step rv"><h3>Train 5 models</h3><p>Logistic Regression, Random Forest, Decision Tree, KNN, Linear SVM.</p><span class="step__n">5 algorithms</span></div>
+        <div class="step rv"><h3>Fix imbalance</h3><p>Class weighting vs SMOTE, both judged on the same untouched test set.</p><span class="step__n">2 strategies</span></div>
+        <div class="step rv"><h3>Explain with SHAP</h3><p>Global importance plus a breakdown of one asteroid&rsquo;s prediction.</p><span class="step__n">300 explained</span></div>
+        <div class="step step--lock rv"><h3>Tune, leak-free</h3><p>Scaler → SMOTE → RF inside every CV fold with RandomizedSearchCV.</p><span class="step__n">scored on F1</span></div>
+      </div>
+      <div class="grid-2" style="margin-top:20px">
+        <div class="cell rv">
+          <div class="cell__head"><b>[ ]</b> stratified train / test split</div>
+<pre>X_train, X_test, y_train, y_test = <span class="f">train_test_split</span>(
+    X, y,
+    test_size=<span class="n">0.20</span>,
+    random_state=<span class="n">42</span>,
+    stratify=y          <span class="c"># keep 9.73% hazardous in both</span>
+)</pre>
+          <div class="cell__out">Training Data: (72668, 4)
+Testing Data:  (18168, 4)
+hazardous share → train 0.0973 · test 0.0973</div>
+        </div>
+        <div class="cell rv">
+          <div class="cell__head"><b>[ ]</b> scale without leaking test data</div>
+<pre>scaler = <span class="f">StandardScaler</span>()
+
+X_train_scaled = scaler.<span class="f">fit_transform</span>(X_train)
+X_test_scaled  = scaler.<span class="f">transform</span>(X_test)   <span class="c"># no fit!</span>
+
+<span class="c"># SMOTE is applied to X_train_scaled only.</span>
+<span class="c"># The test set always stays real data.</span></pre>
+          <div class="cell__out">Scaled Training Shape: (72668, 4)
+Scaled Testing Shape:  (18168, 4)</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 04 ACCURACY TRAP ================= -->
+    <section class="sec wrap" id="trap">
+      <div class="sec__head rv">
+        <span class="sec__num">04</span>
+        <div>
+          <p class="sec__kick mono">The accuracy trap</p>
+          <h2>90% accurate, and <em class="s">almost useless</em></h2>
+          <p class="lead">With only 9.73% hazardous, a model can look excellent by ignoring the rare class. That&rsquo;s why we judged every model on <b>recall, F1, MCC and balanced accuracy</b>, not accuracy alone.</p>
+        </div>
+      </div>
+      <div class="trap">
+        <div class="card trap__card rv">
+          <p class="mono" style="color:var(--muted)">A &ldquo;model&rdquo; that always says <b style="color:var(--fg)">safe</b></p>
+          <div class="trap__big">90.27%</div>
+          <p class="mono" style="color:var(--dim);margin-bottom:12px">accuracy</p>
+          <div class="trap__row"><span>Hazardous asteroids caught</span><b class="bad">0 of 1,768</b></div>
+          <div class="trap__row"><span>Recall</span><b class="bad">0%</b></div>
+        </div>
+        <div class="card trap__card rv">
+          <p class="mono" style="color:var(--muted)">Our first Logistic Regression</p>
+          <div class="trap__big">90.33%</div>
+          <p class="mono" style="color:var(--dim);margin-bottom:12px">accuracy</p>
+          <div class="trap__row"><span>Hazardous asteroids caught</span><b class="bad">137 of 1,768</b></div>
+          <div class="trap__row"><span>Recall</span><b class="bad">7.75%</b></div>
+        </div>
+      </div>
+      <p class="note note--red rv" style="margin-top:20px">Our trained model was only 0.06 points more accurate than doing nothing. It missed 1,631 hazardous asteroids. Accuracy hid the failure.</p>
+
+      <!-- explorer -->
+      <div class="card rv" style="margin-top:40px" id="explorer">
+        <p class="sec__kick mono">Interactive · confusion matrix explorer</p>
+        <h3 style="font-size:clamp(22px,2.2vw,30px);margin-bottom:18px">Pick a model and see what it actually catches</h3>
+        <div class="pills" id="pills"></div>
+        <div class="cmx">
+          <div>
+            <div class="matrix">
+              <span></span>
+              <span class="matrix__ax matrix__ax--top">Predicted safe</span>
+              <span class="matrix__ax matrix__ax--top">Predicted hazardous</span>
+              <span class="matrix__ax">Actually safe</span>
+              <div class="cellm cellm--tn"><span>Correctly safe</span><b id="cTN">0</b><small>true negatives</small></div>
+              <div class="cellm cellm--fp"><span>False alarm</span><b id="cFP">0</b><small>safe, flagged hazardous</small></div>
+              <span class="matrix__ax">Actually hazardous</span>
+              <div class="cellm cellm--fn"><span>Missed hazard</span><b id="cFN">0</b><small>the costly mistake</small></div>
+              <div class="cellm cellm--tp"><span>Caught</span><b id="cTP">0</b><small>true positives</small></div>
+            </div>
+            <p class="note cmx__say" id="cmxSay"></p>
+          </div>
+          <div>
+            <div class="metrics" id="metrics"></div>
+            <figure class="fig cmx__img" id="cmxFig">
+              <button class="fig__btn" data-lb id="cmxBtn"><div class="fig__chrome"><i></i><i></i><i></i><span id="cmxChrome">notebook output</span></div><img id="cmxImg" alt="" loading="lazy"></button>
+            </figure>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 05 MODELS ================= -->
+    <section class="sec wrap" id="models">
+      <div class="sec__head rv">
+        <span class="sec__num">05</span>
+        <div>
+          <p class="sec__kick mono">Five algorithms</p>
+          <h2>Same data, five <em class="s">very different</em> trade-offs</h2>
+          <p class="lead">We trained each with <b>class weighting</b> where the algorithm supports it. Switch the metric to see the trade-off: high recall comes with low precision, and high precision with low recall.</p>
+        </div>
+      </div>
+      <div class="card rv">
+        <div class="tabs" id="tabs" role="tablist">
+          <button class="tab" data-m="acc">Accuracy</button>
+          <button class="tab" data-m="prec">Precision</button>
+          <button class="tab" data-m="rec">Recall</button>
+          <button class="tab is-on" data-m="f1">F1 score</button>
+        </div>
+        <div class="hbars" id="hbars"></div>
+        <p class="note chart-say" id="chartSay"></p>
+      </div>
+      <div class="thumbs" style="margin-top:20px">
+        <figure class="fig rv"><button class="fig__btn" data-lb data-group="cm" data-cap="Balanced Logistic Regression: caught 1,648 of 1,768 hazardous, with 3,769 false alarms."><img src="assets/neo/cm-logreg-balanced.png" alt="Balanced Logistic Regression confusion matrix" loading="lazy"></button><figcaption>Balanced LR</figcaption></figure>
+        <figure class="fig rv"><button class="fig__btn" data-lb data-group="cm" data-cap="Random Forest: most precise (61.6%) but caught only 626 of 1,768 hazardous."><img src="assets/neo/cm-rf.png" alt="Random Forest confusion matrix" loading="lazy"></button><figcaption>Random Forest</figcaption></figure>
+        <figure class="fig rv"><button class="fig__btn" data-lb data-group="cm" data-cap="Decision Tree (max_depth 10, balanced): missed only 43 of 1,768 hazardous, 97.57% recall."><img src="assets/neo/cm-dtree.png" alt="Decision Tree confusion matrix" loading="lazy"></button><figcaption>Decision Tree</figcaption></figure>
+        <figure class="fig rv"><button class="fig__btn" data-lb data-group="cm" data-cap="KNN (k=5, distance-weighted): KNN has no class weighting, so it behaves like an unbalanced model and catches only 625."><img src="assets/neo/cm-knn.png" alt="KNN confusion matrix" loading="lazy"></button><figcaption>KNN</figcaption></figure>
+        <figure class="fig rv"><button class="fig__btn" data-lb data-group="cm" data-cap="Linear SVM (balanced): 95.81% recall, 30% precision, very close to Logistic Regression."><img src="assets/neo/cm-svm.png" alt="Linear SVM confusion matrix" loading="lazy"></button><figcaption>Linear SVM</figcaption></figure>
+        <figure class="fig rv"><button class="fig__btn" data-lb data-group="cm" data-cap="All five models side by side from the notebook: accuracy, precision, recall and F1."><img src="assets/neo/compare-five.png" alt="Grouped bar chart comparing five models" loading="lazy"></button><figcaption>All five</figcaption></figure>
+      </div>
+      <div class="grid-2" style="margin-top:20px">
+        <figure class="fig rv">
+          <button class="fig__btn" data-lb data-cap="Random Forest feature importance: absolute_magnitude 0.355, est_diameter_min 0.335, relative_velocity 0.164, miss_distance 0.146."><div class="fig__chrome"><i></i><i></i><i></i><span>notebook · rf.feature_importances_</span></div><img src="assets/neo/rf-importance.png" alt="Random Forest feature importance bar chart" loading="lazy"></button>
+          <figcaption><b>Random Forest feature importance.</b> The two size signals (magnitude and diameter) carry about <b>69%</b> of the weight.</figcaption>
+        </figure>
+        <div class="card rv" style="align-self:start">
+          <h3>What the five models taught us</h3>
+          <ul class="ticks" style="margin-top:16px">
+            <li><b>Linear models + weighting</b> (LR, SVM) and the weighted Decision Tree flag almost every hazard (93–98% recall) but 7 of 10 alarms are false.</li>
+            <li><b>Random Forest</b> is the opposite: the most precise (61.6%) but it misses 65% of hazards.</li>
+            <li><b>KNN</b> can&rsquo;t use class weights at all, so the rare class gets outvoted by its neighbours.</li>
+            <li>All F1 scores sit between 0.41 and 0.48. The next question: can a <b>better imbalance fix</b> move that?</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 06 SMOTE ================= -->
+    <section class="sec wrap" id="smote">
+      <div class="sec__head rv">
+        <span class="sec__num">06</span>
+        <div>
+          <p class="sec__kick mono">Class weighting vs SMOTE</p>
+          <h2>SMOTE helped only where <em class="s">weighting had failed</em></h2>
+          <p class="lead"><b>SMOTE</b> (Synthetic Minority Over-sampling Technique) creates new hazardous examples by interpolating between real neighbours, on the training set only. Train went from 7,072 to 65,596 hazardous rows.</p>
+        </div>
+      </div>
+      <div class="grid-3">
+        <figure class="fig rv"><button class="fig__btn" data-lb data-group="smote" data-cap="Training set before SMOTE: 65,596 safe vs 7,072 hazardous."><div class="fig__chrome"><i></i><i></i><i></i><span>before SMOTE</span></div><img src="assets/neo/smote-before.png" alt="Class distribution before SMOTE" loading="lazy"></button><figcaption><b>Before:</b> 65,596 vs 7,072</figcaption></figure>
+        <figure class="fig rv"><button class="fig__btn" data-lb data-group="smote" data-cap="Training set after SMOTE: 65,596 vs 65,596. The test set was not touched."><div class="fig__chrome"><i></i><i></i><i></i><span>after SMOTE</span></div><img src="assets/neo/smote-after.png" alt="Class distribution after SMOTE" loading="lazy"></button><figcaption><b>After:</b> 65,596 vs 65,596 (train only)</figcaption></figure>
+        <div class="cell rv" style="align-self:start">
+          <div class="cell__head"><b>[ ]</b> SMOTE on training data</div>
+<pre>smote = <span class="f">SMOTE</span>(
+    sampling_strategy=<span class="st">"auto"</span>,
+    random_state=<span class="n">42</span>
+)
+X_train_smote, y_train_smote = \
+    smote.<span class="f">fit_resample</span>(
+        X_train_scaled, y_train)</pre>
+          <div class="cell__out">After SMOTE:
+0    65596
+1    65596</div>
+        </div>
+      </div>
+
+      <div class="card rv" style="margin-top:20px">
+        <h3 style="margin-bottom:6px">F1 score: class weighting → SMOTE</h3>
+        <p style="color:var(--muted);font-size:15px;margin-bottom:18px">Same test set of 18,168 real records for both.</p>
+        <div class="legend"><span><i style="background:var(--safe)"></i>Class weighting (or none for KNN)</span><span><i style="background:var(--gold)"></i>SMOTE</span></div>
+        <div class="db" id="db"></div>
+      </div>
+      <p class="note rv" style="margin-top:20px">Random Forest and KNN jumped (+9.40 and +7.83 F1 points). The linear models barely moved, because class weighting had already rebalanced them. SMOTE pays off where weighting was weak or not possible.</p>
+    </section>
+
+    <!-- ================= 07 SHAP ================= -->
+    <section class="sec wrap" id="shap">
+      <div class="sec__head rv">
+        <span class="sec__num">07</span>
+        <div>
+          <p class="sec__kick mono">Explainable AI · SHAP</p>
+          <h2>Does the model think <em class="s">like NASA&rsquo;s rule?</em></h2>
+          <p class="lead">We explained the best model (SMOTE Random Forest) with <b>SHAP</b>, which splits each prediction into how much every feature pushed it towards &ldquo;hazardous&rdquo; or &ldquo;safe&rdquo;. 300 test asteroids explained against a 100-row background.</p>
+        </div>
+      </div>
+
+      <div class="card rv">
+        <div class="donut-wrap">
+          <svg class="donut" viewBox="0 0 220 220" role="img" aria-label="82% of SHAP importance comes from object size">
+            <defs><linearGradient id="dg" x1="0" x2="1"><stop offset="0" stop-color="#ffb547"/><stop offset="1" stop-color="#ff5a1f"/></linearGradient></defs>
+            <circle cx="110" cy="110" r="88" stroke="rgba(255,255,255,.06)"/>
+            <circle cx="110" cy="110" r="88" class="arc" id="arc"/>
+            <text x="110" y="116" text-anchor="middle" font-size="46" id="pct">82%</text>
+            <text x="110" y="146" text-anchor="middle" font-size="11" style="font-family:var(--mono);font-weight:400;fill:var(--muted);letter-spacing:.1em">IS ABOUT SIZE</text>
+          </svg>
+          <div>
+            <h3 style="margin-bottom:6px">SHAP matched the physics</h3>
+            <p style="color:var(--muted);margin-bottom:20px">Mean |SHAP| per feature. Diameter + magnitude = 0.42 out of 0.51, so <b>object size makes up 82%</b> of the model&rsquo;s reasoning. That mirrors NASA&rsquo;s own H ≤ 22 condition.</p>
+            <div class="shapbars">
+              <div class="shapbar"><span>est_diameter_min</span><div class="shapbar__t"><div class="shapbar__f" data-w="100"></div></div><b>0.31</b></div>
+              <div class="shapbar"><span>absolute_magnitude</span><div class="shapbar__t"><div class="shapbar__f" data-w="35.5"></div></div><b>0.11</b></div>
+              <div class="shapbar dim"><span>miss_distance</span><div class="shapbar__t"><div class="shapbar__f" data-w="16.1"></div></div><b>0.05</b></div>
+              <div class="shapbar dim"><span>relative_velocity</span><div class="shapbar__t"><div class="shapbar__f" data-w="12.9"></div></div><b>0.04</b></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-2" style="margin-top:20px">
+        <figure class="fig rv">
+          <button class="fig__btn" data-lb data-group="shap" data-cap="SHAP beeswarm: each dot is one asteroid. Red = high feature value, blue = low. Large diameters (red) push predictions to the right, towards hazardous; small ones (blue) push hard to the left."><div class="fig__chrome"><i></i><i></i><i></i><span>shap.plots.beeswarm</span></div><img src="assets/neo/shap-beeswarm.png" alt="SHAP beeswarm summary plot" loading="lazy"></button>
+          <figcaption><b>Beeswarm.</b> Each dot is one asteroid. <b>Large diameter (red) pushes towards hazardous</b>, small diameter (blue) pushes strongly towards safe. Miss distance and velocity barely move anything.</figcaption>
+        </figure>
+        <figure class="fig rv">
+          <button class="fig__btn" data-lb data-group="shap" data-cap="SHAP bar plot: mean absolute SHAP value per feature. est_diameter_min +0.31, absolute_magnitude +0.11, miss_distance +0.05, relative_velocity +0.04."><div class="fig__chrome"><i></i><i></i><i></i><span>shap.plots.bar</span></div><img src="assets/neo/shap-bar.png" alt="SHAP mean absolute value bar plot" loading="lazy"></button>
+          <figcaption><b>Global importance.</b> Average impact of each feature over 300 asteroids.</figcaption>
+        </figure>
+      </div>
+      <div class="grid-2" style="margin-top:20px">
+        <figure class="fig rv">
+          <button class="fig__btn" data-lb data-group="shap" data-cap="SHAP waterfall for one asteroid. The model starts from the average (0.517) and its small diameter alone pulls the score down by 0.41, ending at 0: safe. Actual class: 0, predicted: 0."><div class="fig__chrome"><i></i><i></i><i></i><span>shap.plots.waterfall · one asteroid</span></div><img src="assets/neo/shap-waterfall.png" alt="SHAP waterfall plot for a single asteroid" loading="lazy"></button>
+        </figure>
+        <div class="card rv" style="align-self:start">
+          <p class="sec__kick mono">One asteroid, explained</p>
+          <h3>Why did the model call this one safe?</h3>
+          <ul class="ticks" style="margin-top:16px">
+            <li>The model starts from its average score: <b>0.517</b>.</li>
+            <li>Its small diameter pulls the score down by <b>−0.41</b>. That alone decides it.</li>
+            <li>Magnitude (−0.07), miss distance (−0.03) and velocity (−0.01) only nudge it.</li>
+            <li>Final score <b>0 → predicted safe</b>. Actual class: safe. ✓</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 08 TUNING ================= -->
+    <section class="sec wrap" id="tuning">
+      <div class="sec__head rv">
+        <span class="sec__num">08</span>
+        <div>
+          <p class="sec__kick mono">Hyperparameter tuning</p>
+          <h2>Tuning without <em class="s">data leakage</em></h2>
+          <p class="lead">If you apply SMOTE before cross-validation, synthetic copies of validation rows leak into training and the score looks better than it is. So scaling and SMOTE run <b>inside each fold</b> through an imbalanced-learn Pipeline.</p>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="cell rv">
+          <div class="cell__head"><b>[ ]</b> leak-safe pipeline + randomized search</div>
+<pre>rf_pipeline = <span class="f">Pipeline</span>([
+    (<span class="st">"scaler"</span>, <span class="f">StandardScaler</span>()),
+    (<span class="st">"smote"</span>,  <span class="f">SMOTE</span>(random_state=<span class="n">42</span>)),
+    (<span class="st">"rf"</span>,     <span class="f">RandomForestClassifier</span>(random_state=<span class="n">42</span>))
+])
+
+param_grid = {
+    <span class="st">"rf__n_estimators"</span>:      [<span class="n">100</span>, <span class="n">150</span>, <span class="n">200</span>],
+    <span class="st">"rf__max_depth"</span>:         [<span class="n">10</span>, <span class="n">15</span>, <span class="n">20</span>, <span class="k">None</span>],
+    <span class="st">"rf__min_samples_split"</span>: [<span class="n">2</span>, <span class="n">5</span>, <span class="n">10</span>],
+    <span class="st">"rf__min_samples_leaf"</span>:  [<span class="n">1</span>, <span class="n">2</span>, <span class="n">4</span>],
+    <span class="st">"rf__max_features"</span>:      [<span class="st">"sqrt"</span>, <span class="st">"log2"</span>]
+}
+
+random_search = <span class="f">RandomizedSearchCV</span>(
+    rf_pipeline, param_grid, scoring=<span class="st">"f1"</span>,
+    cv=<span class="f">StratifiedKFold</span>(n_splits=<span class="n">2</span>, shuffle=<span class="k">True</span>))</pre>
+          <div class="cell__out">Best: n_estimators=100, min_samples_split=5,
+      min_samples_leaf=2, max_features='log2'
+Best Cross Validation F1 Score: 0.5084</div>
+        </div>
+        <div style="display:grid;gap:20px;align-content:start">
+          <div class="card rv tbl-wrap">
+            <table class="tbl">
+              <thead><tr><th>Metric</th><th>SMOTE RF</th><th>Tuned SMOTE RF</th></tr></thead>
+              <tbody>
+                <tr><td>Accuracy</td><td>89.95%</td><td>89.59%</td></tr>
+                <tr><td>Precision</td><td>48.70%</td><td>47.39%</td></tr>
+                <tr><td>Recall</td><td>61.54%</td><td style="color:var(--ok)">63.12% ↑</td></tr>
+                <tr><td>F1 score</td><td style="color:var(--gold)">54.37%</td><td>54.14%</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <figure class="fig rv">
+            <button class="fig__btn" data-lb data-cap="Tuned Random Forest: caught 1,116 of 1,768 hazardous with 1,239 false alarms."><div class="fig__chrome"><i></i><i></i><i></i><span>tuned RF · confusion matrix</span></div><img src="assets/neo/cm-rf-tuned.png" alt="Tuned Random Forest confusion matrix" loading="lazy"></button>
+          </figure>
+        </div>
+      </div>
+      <p class="note rv" style="margin-top:20px">Tuning moved recall up a little and F1 stayed flat. When tuning can&rsquo;t move the score, the limit probably isn&rsquo;t the model. That led to the key finding.</p>
+    </section>
+
+    <!-- ================= 09 INSIGHT ================= -->
+    <section class="sec wrap" id="insight">
+      <div class="sec__head rv">
+        <span class="sec__num">09</span>
+        <div>
+          <p class="sec__kick mono">Key insight</p>
+          <h2>A <em class="s">62% precision ceiling</em> that no model could break</h2>
+          <p class="lead">Across every model, weighting, SMOTE and tuning, precision never passed <b>61.6%</b>. The cause is the data, not the algorithms.</p>
+        </div>
+      </div>
+      <div class="card rv">
+        <h3 style="margin-bottom:4px">Precision of every model we trained</h3>
+        <p style="color:var(--muted);font-size:15px;margin-bottom:40px">Of the asteroids each model flagged as hazardous, how many really were.</p>
+        <div class="ceil" id="ceil"></div>
+        <div class="ceil__names" id="ceilNames"></div>
+      </div>
+
+      <div class="card rv" style="margin-top:20px">
+        <h3 style="margin-bottom:18px">Why: the model can see size, but not the orbit</h3>
+        <div class="split">
+          <div class="split__box split__box--seen">
+            <p class="mono" style="color:var(--ok);margin-bottom:8px">✓ visible in data</p>
+            <h3>Is it big? (H ≤ 22)</h3>
+            <p>Diameter and magnitude tell the model this clearly. That&rsquo;s why recall can reach 97%.</p>
+          </div>
+          <div class="split__arrow">→</div>
+          <div class="split__outs">
+            <div class="split__box split__box--blind">
+              <p class="mono" style="color:var(--ember);margin-bottom:8px">✕ invisible: MOID missing</p>
+              <h3>Big + orbit comes close → hazardous</h3>
+              <p>Big + orbit stays far → not hazardous</p>
+            </div>
+            <p style="color:var(--muted);font-size:14px">Among large asteroids, these two groups look <b>identical</b> to the model. It has to guess, so false alarms are unavoidable.</p>
+          </div>
+        </div>
+      </div>
+      <p class="note note--red rv" style="margin-top:20px">The limit comes from missing information, not from the algorithms. Future hazard models need orbital features such as MOID.</p>
+    </section>
+
+    <!-- ================= 10 LEADERBOARD ================= -->
+    <section class="sec wrap" id="results">
+      <div class="sec__head rv">
+        <span class="sec__num">10</span>
+        <div>
+          <p class="sec__kick mono">Final results</p>
+          <h2>Every model, <em class="s">every metric</em></h2>
+          <p class="lead">All numbers on the same 18,168-record test set. MCC and balanced accuracy are computed from each confusion matrix. Sorted by F1.</p>
+        </div>
+      </div>
+      <div class="card rv tbl-wrap">
+        <table class="tbl lb-tbl">
+          <thead><tr><th>Model</th><th>Accuracy</th><th>Precision</th><th>Recall</th><th>F1</th><th>MCC</th><th>Bal. acc.</th></tr></thead>
+          <tbody id="lb"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ================= 11 IMPACT ================= -->
+    <section class="sec wrap" id="impact">
+      <div class="sec__head rv">
+        <span class="sec__num">11</span>
+        <div>
+          <p class="sec__kick mono">Impact</p>
+          <h2>What this is <em class="s">useful for</em></h2>
+        </div>
+      </div>
+      <div class="impact">
+        <div class="card rv"><div class="impact__ico">🔭</div><h3>A fast first screen</h3><p>A size-only screen catches nearly all hazardous objects without fitting an orbit. That can help decide which new objects to follow up first.</p></div>
+        <div class="card rv"><div class="impact__ico">🛰️</div><h3>Which data matters</h3><p>The project shows exactly which data a hazard model needs, and why: without orbital features, precision hits a ceiling.</p></div>
+        <div class="card rv"><div class="impact__ico">♻️</div><h3>A reusable pipeline</h3><p>The leakage-safe Scaler → SMOTE → model pipeline works for other rare-event problems: fraud, disease or defect detection.</p></div>
+      </div>
+
+      <div class="card rv" style="margin-top:20px">
+        <p class="sec__kick mono">Tech stack</p>
+        <div class="stack-chips" style="margin-top:12px">
+          <span>Python</span><span>pandas</span><span>NumPy</span><span>scikit-learn</span><span>imbalanced-learn (SMOTE)</span><span>SHAP</span><span>Matplotlib</span><span>Seaborn</span><span>Google Colab</span><span>kagglehub</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="wrap end">
+      <p class="sec__kick mono">P/04 · NEO hazard classification</p>
+      <h2>Accuracy said 90%.<br><em class="s">The data told the real story.</em></h2>
+      <div class="btns">
+        <a class="btn btn--fill" href="index.html">&larr; Back to portfolio</a>
+        <a class="btn" href="#top">Back to top ↑</a>
+      </div>
+      <footer class="foot mono"><span>© 2026 Aditya Kumar Gupta</span><span>Dataset: NASA Nearest Earth Objects (Kaggle)</span></footer>
+    </section>
+  </main>
+
+  <div class="lbx" id="lbx" role="dialog" aria-modal="true" aria-label="Image viewer">
+    <span class="lbx__count mono" id="lbxCount"></span>
+    <button class="lbx__x" id="lbxX" aria-label="Close">✕</button>
+    <button class="lbx__nav lbx__nav--p" id="lbxP" aria-label="Previous">←</button>
+    <button class="lbx__nav lbx__nav--n" id="lbxN" aria-label="Next">→</button>
+    <figure><img id="lbxImg" alt=""><figcaption id="lbxCap"></figcaption></figure>
+  </div>
+
+  <script>
+  (() => {
+    const $ = (s, r = document) => r.querySelector(s);
+    const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+    const POS = 1768, NEG = 16400;
+
+    /* ---------- model data (test set: 16,400 safe / 1,768 hazardous) ----------
+       cm = [TN, FP, FN, TP]. Taken from notebook confusion matrices; for the three SMOTE
+       models without a plotted matrix, TP/FP are recovered from the reported recall/precision. */
+    const M = [
+      { id: 'base',  name: 'Always “safe”',          grp: 'Baseline',        cm: [16400, 0, 1768, 0] },
+      { id: 'lr',    name: 'Logistic Regression',    grp: 'No imbalance fix', cm: [16274, 126, 1631, 137], img: 'cm-logreg' },
+      { id: 'lrb',   name: 'Logistic Regression',    grp: 'Class weighting', short: 'LR', cm: [12631, 3769, 120, 1648], img: 'cm-logreg-balanced' },
+      { id: 'rf',    name: 'Random Forest',          grp: 'Class weighting', short: 'RF', cm: [16010, 390, 1142, 626], img: 'cm-rf' },
+      { id: 'dt',    name: 'Decision Tree',          grp: 'Class weighting', short: 'DT', cm: [12704, 3696, 43, 1725], img: 'cm-dtree' },
+      { id: 'knn',   name: 'KNN',                    grp: 'Class weighting', short: 'KNN', note: 'no weighting possible', cm: [15734, 666, 1143, 625], img: 'cm-knn' },
+      { id: 'svm',   name: 'Linear SVM',             grp: 'Class weighting', short: 'SVM', cm: [12450, 3950, 74, 1694], img: 'cm-svm' },
+      { id: 'slr',   name: 'Logistic Regression',    grp: 'SMOTE', cm: [12634, 3766, 120, 1648] },
+      { id: 'srf',   name: 'Random Forest',          grp: 'SMOTE', cm: [15254, 1146, 680, 1088] },
+      { id: 'sdt',   name: 'Decision Tree',          grp: 'SMOTE', cm: [12815, 3585, 85, 1683], img: 'cm-dtree-smote' },
+      { id: 'sknn',  name: 'KNN',                    grp: 'SMOTE', cm: [14228, 2172, 500, 1268] },
+      { id: 'ssvm',  name: 'Linear SVM',             grp: 'SMOTE', cm: [12453, 3947, 75, 1693] },
+      { id: 'trf',   name: 'Random Forest (tuned)',  grp: 'SMOTE + tuning', cm: [15161, 1239, 652, 1116], img: 'cm-rf-tuned' },
+    ];
+    const stats = ([tn, fp, fn, tp]) => {
+      const acc = (tp + tn) / (tp + tn + fp + fn);
+      const prec = tp + fp ? tp / (tp + fp) : 0;
+      const rec = tp / (tp + fn);
+      const f1 = prec + rec ? 2 * prec * rec / (prec + rec) : 0;
+      const den = Math.sqrt((tp + fp) * (tp + fn) * (tn + fp) * (tn + fn));
+      const mcc = den ? (tp * tn - fp * fn) / den : 0;
+      const bal = (rec + tn / (tn + fp)) / 2;
+      return { acc, prec, rec, f1, mcc, bal };
+    };
+    M.forEach((m) => (m.s = stats(m.cm)));
+    const pct = (v, d = 2) => (v * 100).toFixed(d) + '%';
+    const fmt = (n) => n.toLocaleString('en-US');
+    const byId = Object.fromEntries(M.map((m) => [m.id, m]));
+
+    /* ---------- reveal on scroll (one-shot) ---------- */
+    const onShow = new Map();
+    const io = new IntersectionObserver((es) => es.forEach((e) => {
+      if (!e.isIntersecting) return;
+      e.target.classList.add('in');
+      const fn = onShow.get(e.target); if (fn) { fn(); onShow.delete(e.target); }
+      io.unobserve(e.target);
+    }), { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
+    const watch = (el, fn) => { if (fn) onShow.set(el, fn); io.observe(el); };
+    $$('.rv').forEach((el) => watch(el));
+
+    /* ---------- hero counters ---------- */
+    $$('[data-count]').forEach((el) => {
+      const to = +el.dataset.count, dec = +(el.dataset.dec || 0), suf = el.dataset.suf || '';
+      const t0 = performance.now(), dur = 1600;
+      const tick = (t) => {
+        const k = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - k, 4), v = to * e;
+        el.textContent = (dec ? v.toFixed(dec) : fmt(Math.round(v))) + suf;
+        if (k < 1) requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    });
+
+    /* ---------- imbalance bars + dots ---------- */
+    const imb = $('.imb');
+    watch(imb, () => $$('.imb__fill', imb).forEach((f) => (f.style.width = f.dataset.w + '%')));
+    const dots = $('#dots');
+    for (let i = 0; i < 250; i++) { const d = document.createElement('i'); if ([7, 18, 26, 39, 47, 58, 66, 79, 88, 97, 104, 116, 123, 137, 146, 152, 168, 174, 189, 196, 207, 214, 228, 241].includes(i)) d.className = 'h'; dots.appendChild(d); }
+
+    /* ---------- confusion explorer ---------- */
+    const pills = $('#pills');
+    let lastGrp = '', box;
+    M.forEach((m) => {
+      if (m.grp !== lastGrp) {
+        const row = document.createElement('div'); row.className = 'pills__row';
+        row.innerHTML = `<span class="grp">${m.grp}</span><div></div>`;
+        pills.appendChild(row); box = row.lastChild; lastGrp = m.grp;
+      }
+      const b = document.createElement('button');
+      b.className = 'pill'; b.dataset.id = m.id; b.textContent = m.name;
+      b.addEventListener('click', () => showCM(m.id));
+      box.appendChild(b);
+    });
+    const metricDefs = [
+      ['acc', 'Accuracy', 'misleading here'],
+      ['rec', 'Recall', 'hazards caught'],
+      ['prec', 'Precision', 'alarms that were real'],
+      ['f1', 'F1 score', 'balance of both', true],
+      ['mcc', 'MCC', '−1 to 1, imbalance-proof', true],
+      ['bal', 'Balanced acc.', 'mean of both classes'],
+    ];
+    $('#metrics').innerHTML = metricDefs.map(([k, n, sub, key]) =>
+      `<div class="metric${key ? ' metric--key' : ''}"><span class="metric__name">${n}<small>${sub}</small></span><div class="metric__track"><div class="metric__fill" data-k="${k}"></div></div><b data-v="${k}">–</b></div>`).join('');
+    const says = {
+      base: 'Predicts “safe” for everything. 90.27% accuracy, yet it catches zero hazardous asteroids. MCC is 0: no skill at all.',
+      lr: 'Plain Logistic Regression looks 90% accurate but misses 1,631 of 1,768 hazards. This is the accuracy trap.',
+      lrb: 'Class weighting fixes recall (93%), but now about 7 of every 10 alarms are false.',
+      rf: 'The most precise model (61.6%), but it lets 1,142 hazardous asteroids through.',
+      dt: 'Best recall of all: misses only 43 of 1,768 hazards. A good “screen everything” model.',
+      knn: 'KNN can’t use class weights, so the rare class gets outvoted by its neighbours.',
+      svm: 'Behaves almost exactly like weighted Logistic Regression: both are linear boundaries.',
+      slr: 'SMOTE gives almost the same result as class weighting for a linear model.',
+      srf: 'Best balance overall: highest F1 (54.37%) and MCC (0.492). Catches 1,088 hazards with far fewer false alarms than the linear models.',
+      sdt: 'SMOTE barely changes the Decision Tree: class weighting had already done the job.',
+      sknn: 'SMOTE helps KNN a lot (+7.8 F1 points): its neighbourhoods now contain hazardous examples.',
+      ssvm: 'Linear SVM is unchanged by SMOTE.',
+      trf: 'Tuning nudges recall up to 63% but F1 stays flat. The ceiling isn’t the model.',
+    };
+    const cmCells = ['cTN', 'cFP', 'cFN', 'cTP'].map((id) => $('#' + id));
+    const animNum = (el, to) => {
+      const from = +(el.dataset.v || 0), t0 = performance.now();
+      el.dataset.v = to;
+      const tick = (t) => { const k = Math.min(1, (t - t0) / 700), e = 1 - Math.pow(1 - k, 3); el.textContent = fmt(Math.round(from + (to - from) * e)); if (k < 1) requestAnimationFrame(tick); };
+      requestAnimationFrame(tick);
+    };
+    function showCM(id) {
+      const m = byId[id];
+      $$('.pill', pills).forEach((p) => p.classList.toggle('is-on', p.dataset.id === id));
+      m.cm.forEach((v, i) => {
+        animNum(cmCells[i], v);
+        const tot = i < 2 ? NEG : POS;
+        cmCells[i].parentElement.style.setProperty('--o', (0.05 + 0.28 * (v / tot)).toFixed(3));
+      });
+      metricDefs.forEach(([k]) => {
+        const v = m.s[k];
+        $(`.metric__fill[data-k="${k}"]`).style.width = Math.max(0, v) * 100 + '%';
+        $(`[data-v="${k}"]`).textContent = k === 'mcc' ? v.toFixed(3) : pct(v, 1);
+      });
+      $('#cmxSay').textContent = says[id];
+      const fig = $('#cmxFig');
+      if (m.img) {
+        fig.style.display = '';
+        $('#cmxImg').src = `assets/neo/${m.img}.png`;
+        $('#cmxImg').alt = `${m.name} (${m.grp}) confusion matrix from the notebook`;
+        $('#cmxChrome').textContent = `notebook · ${m.name} (${m.grp.toLowerCase()})`;
+        $('#cmxBtn').dataset.cap = `${m.name} · ${m.grp}: the original confusion matrix from the Colab notebook.`;
+      } else fig.style.display = 'none';
+    }
+    watch($('#explorer'), () => showCM('lr'));
+
+    /* ---------- five-model bar chart ---------- */
+    const five = ['lrb', 'rf', 'dt', 'knn', 'svm'].map((id) => byId[id]);
+    const hb = $('#hbars');
+    hb.innerHTML = five.map((m) => `<div class="hbar" data-id="${m.id}"><span class="hbar__name">${m.name}<small>${m.id === 'knn' ? 'no class weighting · k = 5' : 'class_weight = "balanced"'}</small></span><div class="hbar__track"><div class="hbar__fill"></div></div><b>–</b></div>`).join('');
+    const colors = { acc: '#7aa2ff', prec: '#b78cff', rec: '#34d399', f1: '#ffb547' };
+    const chartSays = {
+      acc: 'Random Forest and KNN look best on accuracy, but they are the two that miss the most hazards. Accuracy rewards ignoring the rare class.',
+      prec: 'Random Forest is the most precise: 61.6% of its alarms are real. The linear models sit around 30%.',
+      rec: 'Decision Tree, Linear SVM and Logistic Regression catch 93–98% of hazards. Random Forest and KNN catch only about 35%.',
+      f1: 'On F1, which balances precision and recall, all five land between 0.41 and 0.48. No single model wins clearly yet.',
+    };
+    function showMetric(k) {
+      $$('.tab').forEach((t) => t.classList.toggle('is-on', t.dataset.m === k));
+      const best = Math.max(...five.map((m) => m.s[k]));
+      five.forEach((m) => {
+        const row = $(`.hbar[data-id="${m.id}"]`, hb);
+        row.classList.toggle('is-top', m.s[k] === best);
+        const f = $('.hbar__fill', row); f.style.width = m.s[k] * 100 + '%'; f.style.background = colors[k];
+        $('b', row).textContent = pct(m.s[k], 1);
+      });
+      $('#chartSay').textContent = chartSays[k];
+    }
+    $$('.tab').forEach((t) => t.addEventListener('click', () => showMetric(t.dataset.m)));
+    watch(hb, () => showMetric('f1'));
+
+    /* ---------- dumbbell: weighting vs SMOTE (F1) ---------- */
+    const pairs = [['lrb', 'slr', 'Logistic Regression'], ['rf', 'srf', 'Random Forest'], ['dt', 'sdt', 'Decision Tree'], ['knn', 'sknn', 'KNN'], ['svm', 'ssvm', 'Linear SVM']];
+    const lo = 0.35, hi = 0.6, X = (v) => ((v - lo) / (hi - lo)) * 100;
+    const db = $('#db');
+    db.innerHTML = `<div class="db__axis"><span></span><div class="db__ticks">${[35, 40, 45, 50, 55, 60].map((t) => `<span>${t}%</span>`).join('')}</div><span style="text-align:right">change</span></div>` +
+      pairs.map(([a, b, n]) => {
+        const va = byId[a].s.f1, vb = byId[b].s.f1, d = (vb - va) * 100;
+        return `<div class="db__row" data-a="${X(va)}" data-b="${X(vb)}"><span class="db__name">${n}<small>${pct(va)} → ${pct(vb)}</small></span><div class="db__track"><span class="db__line" style="left:${X(Math.min(va, vb))}%;width:0"></span><span class="db__dot db__dot--a" style="left:${X(va)}%"></span><span class="db__dot db__dot--b" style="left:${X(va)}%"></span></div><span class="db__delta${d > 1 ? ' up' : ''}">${d >= 0 ? '+' : ''}${d.toFixed(2)}</span></div>`;
+      }).join('');
+    watch(db, () => $$('.db__row', db).forEach((r, i) => setTimeout(() => {
+      const a = +r.dataset.a, b = +r.dataset.b;
+      const dot = $('.db__dot--b', r), line = $('.db__line', r);
+      dot.style.transition = line.style.transition = 'left 1.1s var(--ease), width 1.1s var(--ease)';
+      dot.style.left = b + '%'; line.style.width = Math.abs(b - a) + '%';
+    }, i * 140)));
+
+    /* ---------- SHAP donut + bars ---------- */
+    const arc = $('#arc'), C = 2 * Math.PI * 88;
+    watch($('.donut-wrap'), () => {
+      arc.style.strokeDasharray = `${C * 0.82} ${C}`;
+      $$('.shapbar__f').forEach((f, i) => setTimeout(() => (f.style.width = f.dataset.w + '%'), 200 + i * 120));
+    });
+
+    /* ---------- precision ceiling ---------- */
+    const ceilModels = M.filter((m) => m.id !== 'base');
+    const short = { lr: 'LR', lrb: 'LR', rf: 'RF', dt: 'DT', knn: 'KNN', svm: 'SVM', slr: 'LR', srf: 'RF', sdt: 'DT', sknn: 'KNN', ssvm: 'SVM', trf: 'RF' };
+    const tagOf = (m) => (m.id === 'lr' ? 'plain' : m.grp === 'Class weighting' ? 'weight' : m.id === 'trf' ? 'tuned' : 'SMOTE');
+    const ceil = $('#ceil'), maxP = Math.max(...ceilModels.map((m) => m.s.prec)), top = 0.8;
+    ceil.innerHTML = ceilModels.map((m) => `<div class="ceil__bar${m.s.prec === maxP ? ' is-max' : ''}" data-h="${(m.s.prec / top) * 100}"><b>${pct(m.s.prec, 1)}</b></div>`).join('') +
+      `<div class="ceil__line" style="bottom:${(maxP / top) * 100}%"><span>ceiling ≈ ${pct(maxP, 1)}</span></div>`;
+    $('#ceilNames').innerHTML = ceilModels.map((m) => `<span>${short[m.id]}<br>${tagOf(m)}</span>`).join('');
+    watch(ceil, () => $$('.ceil__bar', ceil).forEach((b, i) => setTimeout(() => (b.style.height = b.dataset.h + '%'), i * 60)));
+
+    /* ---------- leaderboard ---------- */
+    const rows = M.slice().sort((a, b) => b.s.f1 - a.s.f1);
+    const bestF1 = Math.max(...M.map((m) => m.s.f1)), bestRec = Math.max(...M.map((m) => m.s.rec));
+    $('#lb').innerHTML = rows.map((m) => {
+      const cls = m.s.f1 === bestF1 ? 'is-best' : m.s.rec === bestRec ? 'is-recall' : '';
+      return `<tr class="${cls}"><td>${m.name}<small>${m.grp}</small></td><td>${pct(m.s.acc)}</td><td>${pct(m.s.prec)}</td><td>${pct(m.s.rec)}</td><td class="${cls === 'is-best' ? 'hi' : ''}"><span class="mini" style="width:${m.s.f1 * 60}px"></span>${pct(m.s.f1)}</td><td>${m.s.mcc.toFixed(3)}</td><td>${pct(m.s.bal)}</td></tr>`;
+    }).join('');
+
+    /* ---------- top bar: progress + active section ---------- */
+    const prog = $('#prog'), links = $$('.bar__nav a'), secs = links.map((a) => $(a.getAttribute('href')));
+    let ticking = false;
+    const onScroll = () => {
+      if (ticking) return; ticking = true;
+      requestAnimationFrame(() => {
+        const h = document.documentElement;
+        prog.style.transform = `scaleX(${h.scrollTop / (h.scrollHeight - h.clientHeight || 1)})`;
+        let on = -1; secs.forEach((s, i) => { if (s.getBoundingClientRect().top < innerHeight * 0.35) on = i; });
+        links.forEach((a, i) => a.classList.toggle('is-on', i === on));
+        ticking = false;
+      });
+    };
+    addEventListener('scroll', onScroll, { passive: true }); onScroll();
+
+    /* ---------- lightbox ---------- */
+    const lbx = $('#lbx'), lImg = $('#lbxImg'), lCap = $('#lbxCap'), lCount = $('#lbxCount');
+    let list = [], idx = 0;
+    const render = () => {
+      const b = list[idx], img = $('img', b);
+      lImg.src = img.src; lImg.alt = img.alt;
+      lCap.textContent = b.dataset.cap || img.alt;
+      lCount.textContent = list.length > 1 ? `${idx + 1} / ${list.length}` : '';
+      $('#lbxP').style.display = $('#lbxN').style.display = list.length > 1 ? '' : 'none';
+    };
+    document.addEventListener('click', (e) => {
+      const b = e.target.closest('[data-lb]'); if (!b) return;
+      const g = b.dataset.group;
+      list = g ? $$(`[data-lb][data-group="${g}"]`) : [b];
+      idx = list.indexOf(b); render();
+      lbx.classList.add('open'); $('#lbxX').focus();
+    });
+    const close = () => lbx.classList.remove('open');
+    const step = (d) => { idx = (idx + d + list.length) % list.length; render(); };
+    $('#lbxX').addEventListener('click', close);
+    $('#lbxP').addEventListener('click', () => step(-1));
+    $('#lbxN').addEventListener('click', () => step(1));
+    lbx.addEventListener('click', (e) => { if (e.target === lbx) close(); });
+    addEventListener('keydown', (e) => {
+      if (!lbx.classList.contains('open')) return;
+      if (e.key === 'Escape') close(); else if (e.key === 'ArrowLeft') step(-1); else if (e.key === 'ArrowRight') step(1);
+    });
+  })();
+  </script>
+</body>
+</html>
