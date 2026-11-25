@@ -14,6 +14,17 @@
   const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const mouse = { x: innerWidth / 2, y: innerHeight / 2, moved: 0 };
   addEventListener('pointermove', (e) => { mouse.x = e.clientX; mouse.y = e.clientY; mouse.moved = performance.now(); }, { passive: true });
+  // NOX keeps quiet while someone is scrolling the page: no bubbles, no new acts, and any open bubble fades away
+  let lastScroll = -1e9;
+  const scrolling = () => performance.now() - lastScroll < 1500;
+  const onScroll = () => {
+    if (document.documentElement.classList.contains('nox-playing')) return;
+    lastScroll = performance.now();
+    document.querySelectorAll('.nox-bubble.is-on').forEach((b) => b.classList.remove('is-on', 'has-action'));
+  };
+  addEventListener('scroll', onScroll, { passive: true });
+  addEventListener('wheel', onScroll, { passive: true });
+  addEventListener('touchmove', onScroll, { passive: true });
 
   const backBtn = document.getElementById('noxBack');
   // NOX's badge: his face with his name under it, always in the top bar so people know he can be tapped.
@@ -23,17 +34,17 @@
   dock.setAttribute('aria-label', 'NOX, the site panther. Open his card');
   dock.dataset.cursor = 'NOX';
   dock.innerHTML = '<span class="nox-dock__ring"><span class="nox-dock__face" aria-hidden="true"></span><i class="nox-dock__dot" aria-hidden="true"></i></span><span class="nox-dock__name" aria-hidden="true">NOX</span>';
-  document.body.append(dock);
-  const navSlot = document.querySelector('.nav__resume');
-  const placeDock = () => {
-    // sit just left of the Resume pill, level with it (its x is not affected by the nav sliding up)
-    if (!navSlot) return;
-    const r = navSlot.getBoundingClientRect(), nav = document.getElementById('nav');
-    const navShift = nav ? new DOMMatrixReadOnly(getComputedStyle(nav).transform).m42 : 0;
-    dock.style.left = `${Math.round(r.left - 18 - 36)}px`;
-    dock.style.top = `${Math.round(r.top - navShift + r.height / 2 - 18)}px`;
-  };
-  placeDock(); addEventListener('resize', placeDock); addEventListener('load', placeDock);
+  // the badge sits in the same flex row as Resume (#navSide), so the two can never overlap
+  const navSide = document.getElementById('navSide');
+  if (navSide) {
+    navSide.prepend(dock);
+    // the nav keeps room for that row so its links never run into it
+    const room = () => document.documentElement.style.setProperty('--side-w', `${Math.ceil(navSide.offsetWidth)}px`);
+    room(); if ('ResizeObserver' in window) new ResizeObserver(room).observe(navSide);
+    // hide and show along with the nav when scrolling
+    const nav = document.getElementById('nav');
+    if (nav) new MutationObserver(() => navSide.classList.toggle('is-hidden', nav.classList.contains('nav--hidden'))).observe(nav, { attributes: true, attributeFilter: ['class'] });
+  } else document.body.append(dock);
   requestAnimationFrame(() => requestAnimationFrame(() => dock.classList.add('is-on')));
   const showBack = (on) => {
     if (backBtn) backBtn.hidden = !on;
@@ -62,6 +73,7 @@
     }
   };
   const dockSay = (text, ms = 2600, action) => {
+    if (scrolling()) return;
     const r = dock.getBoundingClientRect();
     fillBubble(dockBubble, text, action);
     dockBubble.style.transform = `translate3d(${Math.round(r.left + r.width / 2)}px, ${Math.round(r.bottom + 10)}px, 0) translate(-80%, 0)`;
@@ -273,7 +285,7 @@
         </div>
         <button class="nox-card__play nox-in" style="--i:6" type="button" data-nox-play data-cursor="Play">
           <span class="nox-card__play-art" aria-hidden="true"></span>
-          <span class="nox-card__play-txt"><small>Mini game &middot; Night Hunt</small><b>Play with him</b><em>Catch the moonfall in the jungle</em></span>
+          <span class="nox-card__play-txt"><small>Mind games &middot; pick one of 2</small><b>Play with him</b><em>Memory or focus. Beat your best.</em></span>
           <span class="nox-card__play-go" aria-hidden="true">&rarr;</span>
         </button>
         <p class="nox-card__foot nox-in" style="--i:7"><span>Miss him? <b>Wake NOX</b> in the footer</span><a href="https://commons.wikimedia.org/wiki/File:Black_leopard,_Padmaja_Naidu_Himalayan_Zoological_Park.jpg" target="_blank" rel="noopener">Photo: A. Panda, CC BY-SA</a></p>
@@ -348,6 +360,7 @@
     let sayPrio = 0, sayUntil = 0;
     const say = (text, ms = 1800, action, prio = 0) => {
       const now = performance.now();
+      if (scrolling()) return;
       if (prio < sayPrio && now < sayUntil) return;
       sayPrio = prio; sayUntil = now + ms;
       fillBubble(bubble, text, action); bubble.classList.add('is-on');
@@ -493,7 +506,7 @@
     const ease = (v) => v * v * (3 - 2 * v);
     const wiggle = (t) => Math.sin(t * 34) * 1.6;                 // the butt wiggle before a pounce
     const ACTS = {
-      invite: { dur: 6.5, pose: 'sit', enter: () => say(['Tired? Come play with me 🐾', 'Need a break? Play with me 🐾', 'Bored? Let’s hunt together 🐾'][Math.floor(Math.random() * 3)], 6500, 'play', 1),
+      invite: { dur: 6.5, pose: 'sit', enter: () => say(['Tired? Come play with me 🐾', 'Need a break? Play with me 🐾', 'Bet you can’t beat my memory 🐾'][Math.floor(Math.random() * 3)], 6500, 'play', 1),
         f: (t, e) => ({ fnw: t < 2.2 ? e : 0, fnx: 19, fny: 20 + Math.sin(t * 11) * 4, head: -6 * e, tail: Math.sin(t * 3) * 14 }) },
       hi: { dur: 2.6, pose: 'sit', enter: () => say(['Hi there! 👋', 'Hello! 👋', 'Hey you 👋'][Math.floor(Math.random() * 3)], 2200),
         f: (t, e) => ({ fnw: e, fnx: 19, fny: 20 + Math.sin(t * 13) * 4, head: -6 * e, tail: 10 * e }) },
@@ -646,7 +659,7 @@
         idleFor += dt;
         run *= 1 - Math.min(1, dt * 8);
         pose = idleFor > 0.9 ? 'sit' : 'stand';
-        if (!act && idleFor > (wantHi ? 0.9 : 1.4)) {
+        if (!act && idleFor > (wantHi ? 0.9 : 1.4) && !scrolling()) {
           nextAct -= dt;
           if (nextAct <= 0 && !calm) {
             const stillFor = (performance.now() - mouse.moved) / 1000;
@@ -731,7 +744,7 @@
     requestAnimationFrame(() => root.classList.add('is-on'));
     raf = requestAnimationFrame(loop);
     if (!calm && !GAME) setTimeout(() => say(opts.enter ? 'I’m back! 😼' : 'Hi! I’m NOX 👋', 2000), opts.enter ? 700 : 900);
-    if (!GAME) lastHi = 0.9;
+    if (!GAME) { lastHi = 0.9; greeted = true; }   // "Hi! I’m NOX" on arrival counts as his hello
 
     const inst = {
       root, say,
@@ -771,7 +784,7 @@
     card.innerHTML = `<div class="nox-card__veil" data-nox-close></div>${cardMarkup}`;
     if (coarse) {
       card.classList.add('is-touch');
-      card.querySelector('.nox-card__lead').textContent = 'He guards this portfolio. On a laptop he follows your cursor around; here, you can still go hunting with him.';
+      card.querySelector('.nox-card__lead').textContent = 'He guards this portfolio. On a laptop he follows your cursor around; here, you can still play his mind games.';
       card.querySelector('.nox-card__actions').remove();
       card.querySelector('.nox-card__foot span').innerHTML = 'Best on a laptop: he <b>runs after your cursor</b>';
     } else if (away) {
@@ -849,18 +862,29 @@
   document.addEventListener('click', (e) => { if (e.target.closest && e.target.closest('.gate')) gateUsed = true; }, true);
   const gates = document.getElementById('gates');
   if (gates && 'IntersectionObserver' in window) {
-    new IntersectionObserver((entries) => {
-      const en = entries[0];
-      if (!en.isIntersecting || gateUsed || document.documentElement.classList.contains('has-dialog')) return;
+    let gatesIn = false, waitT = 0;
+    const tryHint = () => {
+      clearTimeout(waitT);
+      if (!gatesIn || gateUsed || document.documentElement.classList.contains('has-dialog')) return;
+      if (scrolling()) { waitT = setTimeout(tryHint, 600); return; }      // wait until they stop scrolling
       const now = performance.now();
       if (now - gateHintAt < 60000) return;
       gateHintAt = now;
-      setTimeout(() => hint(coarse ? 'Tap any gate to step inside 🚪' : 'Psst… click any gate to step inside 🚪', 3600), 500);
+      hint(coarse ? 'Tap any gate to step inside 🚪' : 'Psst… click any gate to step inside 🚪', 3600);
+    };
+    new IntersectionObserver((entries) => {
+      gatesIn = entries[0].isIntersecting;
+      if (gatesIn) waitT = setTimeout(tryHint, 800); else clearTimeout(waitT);
     }, { threshold: 0.45 }).observe(gates);
   }
   // on phones there is no walking pet, so the badge invites people to play once in a while
   if (coarse && !sessionStorage.getItem('nox:invited')) {
-    setTimeout(() => { if (document.documentElement.classList.contains('has-dialog') || document.documentElement.classList.contains('nox-playing')) return; sessionStorage.setItem('nox:invited', '1'); dockSay('Tired of scrolling? Play with me 🐾', 7000, 'play'); }, 45000);
+    const invite = () => {
+      if (document.documentElement.classList.contains('has-dialog') || document.documentElement.classList.contains('nox-playing')) return;
+      if (scrolling()) { setTimeout(invite, 2000); return; }
+      sessionStorage.setItem('nox:invited', '1'); dockSay('Need a break? Test your memory with me 🐾', 7000, 'play');
+    };
+    setTimeout(invite, 45000);
   }
 
   if (coarse) { /* no cursor to follow: the badge, card and game are the whole show */ }

@@ -731,6 +731,7 @@
     }
   }, { passive: true });
 
+  const cursorPull = { x: 0, y: 0 };
   if (!isTouch) {
     const cursor = $('.cursor');
     const dot = $('.cursor__dot');
@@ -738,13 +739,15 @@
     const label = $('.cursor__label');
     let rx = mouse.x, ry = mouse.y;
     let lx = NaN, ly = NaN;
+    // cursorPull lets an element drag the drawn cursor toward itself (the Hire me web does this)
     (function loop() {
       requestAnimationFrame(loop);
-      const dx = mouse.x - rx, dy = mouse.y - ry;
-      if (Math.abs(dx) < 0.1 && Math.abs(dy) < 0.1 && lx === mouse.x && ly === mouse.y) return;
+      const tx = mouse.x + cursorPull.x, ty = mouse.y + cursorPull.y;
+      const dx = tx - rx, dy = ty - ry;
+      if (Math.abs(dx) < 0.1 && Math.abs(dy) < 0.1 && lx === tx && ly === ty) return;
       rx += dx * 0.22;
       ry += dy * 0.22;
-      if (lx !== mouse.x || ly !== mouse.y) { dot.style.transform = `translate3d(${mouse.x}px, ${mouse.y}px, 0)`; lx = mouse.x; ly = mouse.y; }
+      if (lx !== tx || ly !== ty) { dot.style.transform = `translate3d(${tx.toFixed(1)}px, ${ty.toFixed(1)}px, 0)`; lx = tx; ly = ty; }
       ring.style.transform = `translate3d(${rx.toFixed(1)}px, ${ry.toFixed(1)}px, 0)`;
     })();
     document.addEventListener('pointerover', (e) => {
@@ -797,7 +800,7 @@
     const now = new Date();
     const full = now.toLocaleTimeString('en-GB', { timeZone: 'Asia/Kolkata' });
     if (clock) clock.textContent = 'IST ' + full;
-    if (clock2) clock2.textContent = 'Local time ' + full.slice(0, 5) + ' IST';
+    if (clock2) clock2.textContent = full.slice(0, 5) + ' IST';
   };
   tickClock();
   setInterval(tickClock, 1000);
@@ -1533,12 +1536,18 @@ function startCalendar() {
   }
 
   /* =========================================================
-     HIRE ME: dialog form, delivered to my inbox by FormSubmit
-     (the first ever submission sends an "Activate form" email; click it once)
+     HIRE ME: dialog form, delivered to my inbox.
+     1. Web3Forms (free, 250 messages a month): put the access key that
+        web3forms.com emails you in WEB3FORMS_KEY. Works on any host.
+     2. Without a key: FormSubmit (free too, but it only works once the
+        site is on a real web address, not opened as a file, and the first
+        message sends an "Activate form" email that must be clicked once).
+     3. If both fail, the visitor gets one-click Gmail / email app / copy.
      ========================================================= */
   const hire = $('#hire');
   if (hire) {
     const HIRE_TO = 'adityagrinds@gmail.com';
+    const WEB3FORMS_KEY = '';
     const form = $('#hireForm', hire), done = $('#hireDone', hire), status = $('#hireStatus', hire);
     const send = $('.hire__send', form), sendTxt = $('.hire__send-txt', form);
     let lastFocus = null;
@@ -1606,20 +1615,39 @@ function startCalendar() {
         Reason: d.reason, Name: d.name, Email: d.email, Company: d.company || '-', Timeline: d.timeline, Details: d.message,
       };
       send.disabled = true; send.classList.add('is-busy'); sendTxt.textContent = 'Sending'; status.className = 'hire__status'; status.textContent = '';
+      const postJSON = async (url, data) => {
+        const ctrl = new AbortController(), to = setTimeout(() => ctrl.abort(), 15000);
+        try {
+          const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify(data), signal: ctrl.signal });
+          const out = await res.json().catch(() => ({}));
+          if (!res.ok || String(out.success) !== 'true') throw new Error(out.message || 'Send failed');
+        } finally { clearTimeout(to); }
+      };
       try {
-        const res = await fetch(`https://formsubmit.co/ajax/${HIRE_TO}`, {
-          method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify(payload),
-        });
-        const out = await res.json().catch(() => ({}));
-        if (!res.ok || String(out.success) !== 'true') throw new Error(out.message || 'Send failed');
+        if (WEB3FORMS_KEY) {
+          await postJSON('https://api.web3forms.com/submit', {
+            access_key: WEB3FORMS_KEY, subject: payload._subject, from_name: `${d.name} (portfolio)`, replyto: d.email, botcheck: '',
+            Reason: d.reason, Name: d.name, Email: d.email, Company: d.company || '-', Timeline: d.timeline, Details: d.message,
+          });
+        } else {
+          if (location.protocol === 'file:') throw new Error('FormSubmit needs the site on a web address');
+          await postJSON(`https://formsubmit.co/ajax/${HIRE_TO}`, payload);
+        }
         $('#hireDoneMsg').textContent = `Thanks, ${d.name.split(' ')[0]}. Your message is in my inbox and I'll reply to ${d.email} soon.`;
         form.hidden = true; done.hidden = false; requestAnimationFrame(() => done.classList.add('is-in'));
       } catch (err) {
-        // fall back to the visitor's own mail app, with everything pre-filled
+        // fall back: Gmail in the browser, the visitor's own mail app, or copy it all
         const body = `Reason: ${d.reason}\nName: ${d.name}\nEmail: ${d.email}\nCompany: ${d.company || '-'}\nTimeline: ${d.timeline}\n\n${d.message}`;
-        const href = `mailto:${HIRE_TO}?subject=${encodeURIComponent(payload._subject)}&body=${encodeURIComponent(body)}`;
+        const subj = encodeURIComponent(payload._subject), enc = encodeURIComponent(body);
+        const gmail = `https://mail.google.com/mail/?view=cm&fs=1&to=${HIRE_TO}&su=${subj}&body=${enc}`;
+        const mailto = `mailto:${HIRE_TO}?subject=${subj}&body=${enc}`;
         status.className = 'hire__status is-err';
-        status.innerHTML = `Couldn&rsquo;t send right now. <a href="${href}">Send it from your email app instead</a>.`;
+        status.innerHTML = `Couldn&rsquo;t send it from here. Your message is ready, send it in one click: <a href="${gmail}" target="_blank" rel="noopener">Open in Gmail</a> &middot; <a href="${mailto}">Email app</a> &middot; <button type="button" class="hire__copy">Copy message</button>`;
+        const copy = $('.hire__copy', status);
+        copy.addEventListener('click', async () => {
+          try { await navigator.clipboard.writeText(`To: ${HIRE_TO}\nSubject: ${payload._subject}\n\n${body}`); copy.textContent = 'Copied'; }
+          catch (e2) { copy.textContent = HIRE_TO; }
+        });
       } finally {
         send.disabled = false; send.classList.remove('is-busy'); sendTxt.textContent = 'Send';
       }
@@ -2126,6 +2154,151 @@ function startCalendar() {
       });
       el.addEventListener('pointerleave', () => { xTo(0); yTo(0); });
     });
+  }
+
+  /* =========================================================
+     HIRE ME WEB: small cobwebs on the four corners of the Hire me pill,
+     slowly turning, plus one silk thread that runs round its edge.
+     When the cursor comes near, the nearest corner webs stretch toward
+     it and shoot threads that catch it and pull it in (a page can't
+     move the real pointer, so the site's drawn cursor is pulled).
+     Dark silk with a faint sheen. Draws only while the button is on screen.
+     ========================================================= */
+  const hireBtn = $('#hireOpen');
+  if (hireBtn && window.gsap) {
+    const cv = document.createElement('canvas');
+    cv.className = 'silk'; cv.setAttribute('aria-hidden', 'true');
+    document.body.append(cv);
+    const g = cv.getContext('2d');
+    const DPR = Math.min(1.5, devicePixelRatio || 1);
+    let W = 0, H = 0;
+    const size = () => { W = innerWidth; H = innerHeight; cv.width = W * DPR; cv.height = H * DPR; g.setTransform(DPR, 0, 0, DPR, 0, 0); };
+    size(); addEventListener('resize', size);
+    const xTo = gsap.quickTo(hireBtn, 'x', { duration: 0.9, ease: 'elastic.out(1, 0.4)' });
+    const yTo = gsap.quickTo(hireBtn, 'y', { duration: 0.9, ease: 'elastic.out(1, 0.4)' });
+    const RANGE = 170;
+
+    // the four corners: top-left, top-right, bottom-right, bottom-left (sx, sy = which way is "out")
+    const CORNERS = [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(([sx, sy], i) => ({ sx, sy, ph: i * 1.7, catchK: 0 }));
+    // a point on the pill outline (stadium shape) in direction a, pushed out by `out` px
+    const onPill = (cx, cy, hw, hh, a, out = 0) => {
+      const r = hh, flat = hw - r, c = Math.cos(a), s = Math.sin(a);
+      // ray from the centre: hits the flat top/bottom, or one of the round ends
+      const tFlat = Math.abs(s) > 1e-6 ? r / Math.abs(s) : Infinity;
+      if (Math.abs(c * tFlat) <= flat) return [cx + c * (tFlat + out), cy + s * (tFlat + out)];
+      const ex = cx + Math.sign(c) * flat;                       // centre of that round end
+      const dx = cx - ex, b = dx * c, q = dx * dx - r * r, t = -b + Math.sqrt(Math.max(0, b * b - q));
+      const px = cx + c * t, py = cy + s * t, nx = (px - ex) / r, ny = (py - cy) / r;
+      return [px + nx * out, py + ny * out];
+    };
+
+    let running = false, last = 0, t = 0, reveal = reduce ? 1 : 0, pullK = 0;
+    function frame(now) {
+      if (!running) return;
+      requestAnimationFrame(frame);
+      const dt = Math.min(0.05, (now - last) / 1000 || 0.016); last = now;
+      if (document.hidden) return;
+      t += reduce ? 0 : dt;
+      reveal = Math.min(1, reveal + dt * 0.8);
+      const r = hireBtn.getBoundingClientRect();
+      g.clearRect(0, 0, W, H);
+      if (r.bottom < -200 || r.top > H + 200) return;
+      const cx = r.left + r.width / 2, cy = r.top + r.height / 2, hw = r.width / 2, hh = r.height / 2;
+
+      // the cursor: how close it is to the pill
+      const d = Math.hypot(Math.max(r.left - mouse.x, 0, mouse.x - r.right), Math.max(r.top - mouse.y, 0, mouse.y - r.bottom));
+      const blocked = isTouch || document.documentElement.classList.contains('has-dialog');
+      const prox = blocked ? 0 : Math.max(0, 1 - d / RANGE);
+      pullK += (prox - pullK) * Math.min(1, dt * 5);
+      const pull = d === 0 ? 0.15 : 0.38 * pullK * pullK;
+      cursorPull.x += ((cx - mouse.x) * pull - cursorPull.x) * Math.min(1, dt * 9);
+      cursorPull.y += ((cy - mouse.y) * pull - cursorPull.y) * Math.min(1, dt * 9);
+      const lean = d === 0 ? 0.2 : 0.1 * pullK;
+      const ox = gsap.getProperty(hireBtn, 'x') || 0, oy = gsap.getProperty(hireBtn, 'y') || 0;
+      xTo(prox > 0 ? (mouse.x - (cx - ox)) * lean : 0); yTo(prox > 0 ? (mouse.y - (cy - oy)) * lean : 0);
+      const px = mouse.x + cursorPull.x, py = mouse.y + cursorPull.y;
+
+      const path = new Path2D();
+      const curve = (a, b, sag = 0) => { path.moveTo(a[0], a[1]); path.quadraticCurveTo((a[0] + b[0]) / 2, (a[1] + b[1]) / 2 + sag, b[0], b[1]); };
+
+      // 1. one thread running round the pill, just outside its edge
+      const ring = [];
+      for (let k = 0; k <= 64; k++) {
+        const a = (k / 64) * Math.PI * 2;
+        const wob = Math.sin(a * 5 + t * 1.6) * 0.9;
+        ring.push(onPill(cx, cy, hw, hh, a, 5 + wob));
+      }
+      const ringPath = new Path2D();
+      const shown = Math.floor(ring.length * Math.min(1, reveal * 1.4));
+      ring.slice(0, shown).forEach((p, k) => (k ? ringPath.lineTo(p[0], p[1]) : ringPath.moveTo(p[0], p[1])));
+      // a second, looser thread a little further out
+      for (let k = 0; k <= Math.floor(64 * Math.min(1, reveal * 1.2)); k++) {
+        const a = (k / 64) * Math.PI * 2, p = onPill(cx, cy, hw, hh, a, 11 + Math.sin(a * 3 - t * 1.1) * 2.2);
+        if (k) ringPath.lineTo(p[0], p[1]); else ringPath.moveTo(p[0], p[1]);
+      }
+
+      // 2. a small cobweb on each corner, slowly turning back and forth
+      CORNERS.forEach((cn) => {
+        // the corner itself: where the flat edge turns into the round end
+        const a = Math.atan2(cn.sy * hh, cn.sx * Math.max(1, hw - hh));
+        const diag = Math.atan2(cn.sy, cn.sx);                     // pointing out of the corner
+        const toCursor = Math.atan2(py - cy, px - cx);
+        const facing = Math.cos(toCursor - diag);                  // 1 when the cursor is off this corner
+        cn.catchK += ((pullK > 0.05 && facing > 0.3 ? pullK * facing : 0) - cn.catchK) * Math.min(1, dt * 6);
+        const turn = Math.sin(t * 0.9 + cn.ph) * 0.38;             // the web swings round its corner
+        const sz = Math.min(62, hh * 1.1) * (0.4 + 0.6 * Math.min(1, reveal * 1.3)) * (1 + 0.3 * cn.catchK);
+        // the hub floats just off the corner; it gets dragged toward the cursor when catching
+        const [bx0, by0] = onPill(cx, cy, hw, hh, a, 0);
+        let hx = bx0 + Math.cos(diag + turn) * sz * 0.6, hy = by0 + Math.sin(diag + turn) * sz * 0.6;
+        hx += (px - hx) * 0.22 * cn.catchK; hy += (py - hy) * 0.22 * cn.catchK;
+        // spokes: three hook onto the button edge right round the corner, two reach outward
+        const spokes = [-0.34, -0.17, 0, 0.17, 0.34].map((o) => onPill(cx, cy, hw, hh, a + o * (1 + 0.4 * Math.sin(t * 0.7 + cn.ph)), 0));
+        const outA = diag + turn;
+        [-1.1, -0.55, 0, 0.55, 1.1].forEach((o, k) => {
+          const L = sz * (0.62 + 0.1 * Math.sin(t * 1.3 + cn.ph + k));
+          spokes.push([hx + Math.cos(outA + o) * L, hy + Math.sin(outA + o) * L]);
+        });
+        spokes.forEach((p) => curve([hx, hy], p, 1.2));
+        // two rings of spiral between neighbouring spokes
+        const order = spokes.map((p) => [p, Math.atan2(p[1] - hy, p[0] - hx)]).sort((a, b) => a[1] - b[1]).map((x) => x[0]);
+        [0.24, 0.42, 0.6, 0.78, 0.94].forEach((f, fi) => {
+          for (let s = 0; s < order.length - 1; s++) {
+            const a = order[s], b = order[s + 1];
+            const A = [hx + (a[0] - hx) * f, hy + (a[1] - hy) * f], B = [hx + (b[0] - hx) * f, hy + (b[1] - hy) * f];
+            curve(A, B, 1 + fi * 0.5);
+          }
+        });
+        // catching: threads shoot from the web to the cursor and stay taut
+        if (cn.catchK > 0.04) {
+          const reach = Math.min(1, cn.catchK * 1.6);
+          [[hx, hy], spokes[5], spokes[7], spokes[9]].forEach((p, k) => {
+            const tremble = Math.sin(t * 30 + k * 2) * 0.8 * cn.catchK;
+            const q = [p[0] + (px - p[0]) * reach, p[1] + (py - p[1]) * reach + tremble];
+            curve(p, q, (1 - cn.catchK) * 6);
+          });
+        }
+      });
+
+      // draw: dark silk, then a thin sheen on top
+      const light = document.documentElement.dataset.light === 'on';
+      g.lineCap = 'round'; g.lineJoin = 'round';
+      g.strokeStyle = light ? 'rgba(16, 14, 12, 0.55)' : 'rgba(0, 0, 0, 0.92)';
+      g.lineWidth = 1.3; g.stroke(path);
+      g.lineWidth = 1; g.stroke(ringPath);
+      g.save(); g.translate(-0.4, -0.5);
+      g.strokeStyle = light ? 'rgba(255, 255, 255, 0.45)' : 'rgba(215, 208, 195, 0.3)';
+      g.lineWidth = 0.55; g.stroke(path);
+      // a glint that travels round the edge thread
+      g.setLineDash([18, 140]); g.lineDashOffset = -t * 60;
+      g.strokeStyle = light ? 'rgba(255, 255, 255, 0.8)' : 'rgba(240, 225, 195, 0.55)';
+      g.lineWidth = 1; g.stroke(ringPath);
+      g.restore();
+    }
+    // run only while the button is on screen
+    new IntersectionObserver(([en]) => {
+      if (en.isIntersecting && !running) { running = true; last = performance.now(); requestAnimationFrame(frame); }
+      else if (!en.isIntersecting && running) { running = false; g.clearRect(0, 0, W, H); cursorPull.x = cursorPull.y = 0; xTo(0); yTo(0); }
+    }, { rootMargin: '150px 0px' }).observe(hireBtn);
   }
 
   /* =========================================================
