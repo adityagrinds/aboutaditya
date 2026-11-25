@@ -8,7 +8,7 @@
    Tap him for his ID card; he can be sent away and called back.
    ===================================================================== */
 (() => {
-  if (matchMedia('(pointer: coarse)').matches) return;          // no cursor to follow on touch screens
+  const coarse = matchMedia('(pointer: coarse)').matches;        // touch screens: no walking pet, but the badge, card and game work
   const KEY = 'nox:away';
   const NS = 'http://www.w3.org/2000/svg';
   const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -16,18 +16,62 @@
   addEventListener('pointermove', (e) => { mouse.x = e.clientX; mouse.y = e.clientY; mouse.moved = performance.now(); }, { passive: true });
 
   const backBtn = document.getElementById('noxBack');
-  // while NOX is away, his face waits in the top bar; tapping it opens his card with "Bring him back"
+  // NOX's badge: his face with his name under it, always in the top bar so people know he can be tapped.
+  // It lives outside the nav (the nav blends with mix-blend-mode, which would invert the photo).
   const dock = document.createElement('button');
-  dock.type = 'button'; dock.className = 'nox-dock'; dock.hidden = true;
-  dock.setAttribute('aria-label', 'NOX is away. Open his card to bring him back');
+  dock.type = 'button'; dock.className = 'nox-dock';
+  dock.setAttribute('aria-label', 'NOX, the site panther. Open his card');
   dock.dataset.cursor = 'NOX';
-  dock.innerHTML = '<span class="nox-dock__face" aria-hidden="true"></span><i class="nox-dock__dot" aria-hidden="true"></i>';
+  dock.innerHTML = '<span class="nox-dock__ring"><span class="nox-dock__face" aria-hidden="true"></span><i class="nox-dock__dot" aria-hidden="true"></i></span><span class="nox-dock__name" aria-hidden="true">NOX</span>';
+  document.body.append(dock);
   const navSlot = document.querySelector('.nav__resume');
-  if (navSlot) navSlot.before(dock); else document.body.append(dock);
+  const placeDock = () => {
+    // sit just left of the Resume pill, level with it (its x is not affected by the nav sliding up)
+    if (!navSlot) return;
+    const r = navSlot.getBoundingClientRect(), nav = document.getElementById('nav');
+    const navShift = nav ? new DOMMatrixReadOnly(getComputedStyle(nav).transform).m42 : 0;
+    dock.style.left = `${Math.round(r.left - 18 - 36)}px`;
+    dock.style.top = `${Math.round(r.top - navShift + r.height / 2 - 18)}px`;
+  };
+  placeDock(); addEventListener('resize', placeDock); addEventListener('load', placeDock);
+  requestAnimationFrame(() => requestAnimationFrame(() => dock.classList.add('is-on')));
   const showBack = (on) => {
     if (backBtn) backBtn.hidden = !on;
-    if (on) { dock.hidden = false; requestAnimationFrame(() => requestAnimationFrame(() => dock.classList.add('is-on'))); }
-    else { dock.classList.remove('is-on'); setTimeout(() => { if (!dock.classList.contains('is-on')) dock.hidden = true; }, 400); }
+    dock.classList.toggle('is-away', on);
+    dock.setAttribute('aria-label', on ? 'NOX is away. Open his card to bring him back' : 'NOX, the site panther. Open his card');
+  };
+
+  // the badge can talk too (used on phones, and while NOX is away)
+  const dockBubble = document.createElement('div');
+  dockBubble.className = 'nox-bubble nox-dockbubble'; dockBubble.setAttribute('role', 'status');
+  document.body.append(dockBubble);
+  const openGame = (fromEl) => {
+    if (!window.NoxPlay) return;
+    const r = fromEl.getBoundingClientRect();
+    window.NoxPlay.open({ x: r.left + r.width / 2, y: r.top + r.height / 2 });
+  };
+  // a bubble may carry a "Play" button that opens the game
+  const fillBubble = (el, text, action) => {
+    el.textContent = text;
+    el.classList.toggle('has-action', !!action);
+    if (action === 'play') {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'nox-bubble__go'; b.dataset.cursor = 'Play'; b.innerHTML = 'Play <span aria-hidden="true">&rarr;</span>';
+      b.addEventListener('click', (e) => { e.stopPropagation(); el.classList.remove('is-on'); openGame(b); });
+      el.append(' ', b);
+    }
+  };
+  const dockSay = (text, ms = 2600, action) => {
+    const r = dock.getBoundingClientRect();
+    fillBubble(dockBubble, text, action);
+    dockBubble.style.transform = `translate3d(${Math.round(r.left + r.width / 2)}px, ${Math.round(r.bottom + 10)}px, 0) translate(-80%, 0)`;
+    dockBubble.classList.add('is-on');
+    clearTimeout(dockSay.t); dockSay.t = setTimeout(() => dockBubble.classList.remove('is-on'), ms);
+  };
+  // say something wherever NOX is: next to the panther if he is on screen, otherwise from the badge
+  const hint = (text, ms, action) => {
+    if (alive && !alive.leaving) alive.say(text, ms, action, 1);
+    else dockSay(text, ms, action);
   };
 
   /* ---------------- anatomy (svg units, cat faces +x) ---------------- */
@@ -45,13 +89,15 @@
   const svgMarkup = `
   <svg class="nox__svg" viewBox="0 0 ${VB_W} ${VB_H}" aria-hidden="true">
     <defs>
-      <linearGradient id="noxFur" gradientUnits="userSpaceOnUse" x1="0" y1="20" x2="0" y2="58"><stop offset="0" stop-color="#34343d"/><stop offset=".45" stop-color="#19191e"/><stop offset="1" stop-color="#09090b"/></linearGradient>
-      <linearGradient id="noxLimb" gradientUnits="userSpaceOnUse" x1="0" y1="34" x2="0" y2="80"><stop offset="0" stop-color="#1d1d23"/><stop offset="1" stop-color="#0c0c0f"/></linearGradient>
-      <radialGradient id="noxEye" cx="40%" cy="40%" r="70%"><stop offset="0" stop-color="#f2f7a8"/><stop offset=".55" stop-color="#b9d35a"/><stop offset="1" stop-color="#5d7a24"/></radialGradient>
-      <pattern id="noxRos" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(18)"><circle cx="4" cy="4" r="2" fill="none" stroke="#000" stroke-width=".9"/></pattern>
+      <linearGradient id="noxFur" gradientUnits="userSpaceOnUse" x1="0" y1="20" x2="0" y2="58"><stop offset="0" stop-color="#30323e"/><stop offset=".4" stop-color="#16171d"/><stop offset="1" stop-color="#070709"/></linearGradient>
+      <linearGradient id="noxLimb" gradientUnits="userSpaceOnUse" x1="0" y1="30" x2="0" y2="80"><stop offset="0" stop-color="#1b1c23"/><stop offset=".35" stop-color="#14151a"/><stop offset="1" stop-color="#08080a"/></linearGradient>
+      <radialGradient id="noxEye" cx="45%" cy="45%" r="65%"><stop offset="0" stop-color="#ffe27a"/><stop offset=".5" stop-color="#d9b232"/><stop offset=".85" stop-color="#7f8a1c"/><stop offset="1" stop-color="#3c420c"/></radialGradient>
+      <radialGradient id="noxMuscle" cx="50%" cy="40%" r="55%"><stop offset="0" stop-color="rgba(160,175,215,.16)"/><stop offset="1" stop-color="rgba(160,175,215,0)"/></radialGradient>
+      <radialGradient id="noxSpot"><stop offset=".35" stop-color="#000"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient>
+      <pattern id="noxRos" width="13" height="11" patternUnits="userSpaceOnUse" patternTransform="rotate(14) skewX(8)"><g fill="url(#noxSpot)"><ellipse cx="3" cy="2.2" rx="1.1" ry=".8"/><ellipse cx="5.6" cy="2.6" rx=".9" ry=".7"/><ellipse cx="6.2" cy="5" rx=".8" ry="1"/><ellipse cx="2.4" cy="4.8" rx=".9" ry=".9"/><ellipse cx="10" cy="7.6" rx="1" ry=".8"/><ellipse cx="12" cy="9.4" rx=".8" ry=".9"/><ellipse cx="9" cy="9.8" rx=".9" ry=".7"/><ellipse cx="9.8" cy="4.6" rx=".5" ry=".5"/></g></pattern>
       <filter id="noxFuzz" x="-10%" y="-20%" width="120%" height="140%"><feTurbulence type="fractalNoise" baseFrequency="1.2" numOctaves="2" seed="7"/><feDisplacementMap in="SourceGraphic" scale="0.9" xChannelSelector="R" yChannelSelector="G"/></filter>
-      <clipPath id="noxClipH" clipPathUnits="userSpaceOnUse"><rect x="-200" y="-200" width="${CX + 201.5}" height="500"/></clipPath>
-      <clipPath id="noxClipF" clipPathUnits="userSpaceOnUse"><rect x="${CX - 1.5}" y="-200" width="400" height="500"/></clipPath>
+      <clipPath id="noxClipH" clipPathUnits="userSpaceOnUse"><rect x="-200" y="-200" width="${CX + 203}" height="500"/></clipPath>
+      <clipPath id="noxClipF" clipPathUnits="userSpaceOnUse"><rect x="${CX - 3}" y="-200" width="400" height="500"/></clipPath>
     </defs>
     <ellipse class="nox__shadow" cx="84" cy="${G + 1.5}" rx="34" ry="3"/>
     ${legMk('hf', 'far')}${legMk('ff', 'far')}
@@ -62,24 +108,37 @@
         <g class="nox__body" filter="url(#noxFuzz)"><path class="fur" d="${TORSO}"/></g>
         <path class="nox__ros" d="${TORSO}"/>
         <path class="nox__rim" d="M50 30 C60 27 68 30 78 31 C88 32 96 28 104 25 C110 23 116 22 121 24"/>
+        <ellipse cx="57" cy="38" rx="11" ry="9" fill="url(#noxMuscle)"/>
+        <ellipse cx="106" cy="37" rx="10" ry="10" fill="url(#noxMuscle)"/>
+        <path d="M60 52 C70 55 84 53 98 55 C104 57 112 56 116 52" stroke="#050506" stroke-width="2.4" fill="none" opacity=".55" stroke-linecap="round"/>
       </g>
     </g></g></g>
     <g class="nox__half" data-half="f"><g class="nox__rig"><g transform="translate(0 -${LIFT})"><g class="nox__torso nox__torso--f" clip-path="url(#noxClipF)"></g></g></g></g>
     ${legMk('hn', 'near')}
     <g class="nox__head">
-      <g filter="url(#noxFuzz)">
-        <path class="fur" d="M-2 -9 L0.5 -18 L6.5 -11 Z"/>
-        <path class="fur" d="M-6 -8 C0 -13.5 12 -12.5 17 -6.5 C19.6 -3.6 23 -1.6 24.4 1.8 C25.2 5 22.4 7.2 18.4 7.4 C14 9.4 6 9.6 0 7.6 C-5.4 5.6 -8.2 0.6 -6 -8 Z"/>
-        <path class="fur" d="M5 -11.5 L9.4 -17.6 L12.4 -8.6 Z"/>
+      <g class="nox__ears">
+        <path d="M3 -11.6 C3.6 -16.2 6.6 -18.4 9 -17.2 C10.6 -16.2 10.2 -13.4 9.2 -11.4 Z" fill="#0b0b0e"/>
+        <g filter="url(#noxFuzz)"><path class="fur" d="M-1.4 -10.4 C-2.4 -15.8 1 -19 4.2 -18.2 C6.6 -17.6 7 -14.4 6.2 -11.8 Z"/></g>
+        <path d="M0.4 -12 C0.2 -15.4 2.2 -16.8 3.8 -16.4 C5 -16 5.2 -14.2 4.8 -12.6 Z" fill="#1c1418"/>
       </g>
-      <path d="M6.6 -11.6 L9.2 -15.6 L11 -9.8 Z" fill="#3a2630"/>
-      <path d="M14 1.4 C17 3.4 20.6 4 24 3 C23 6.4 20 7.4 17 7.4 C14.4 7.6 12 6 14 1.4 Z" fill="#202027"/>
-      <path d="M22.6 -0.4 L25.2 0.8 L23.6 2.6 Z" fill="#55505c"/>
-      <path class="nox__mouth" d="M23 3.6 Q20.6 7.8 16.2 6.6 Q19.4 5.8 23 3.6 Z" fill="#6b2833" opacity="0"/>
-      <path d="M23.4 3.2 Q22.4 5.4 19.6 5.8" stroke="#55505c" stroke-width=".6" fill="none" stroke-linecap="round"/>
-      <path class="nox__whisk" d="M18 4 L30 1.6 M18 5.4 L29.6 6.8 M17.4 6.4 L27.6 10.2"/>
-      <path d="M8.4 -5.8 Q12.4 -8 16 -5.2" stroke="#4a4a54" stroke-width=".7" fill="none" stroke-linecap="round"/>
-      <g class="nox__eye"><path d="M8.6 -3.8 Q12.4 -6.8 16 -3.8 Q12.4 -1.4 8.6 -3.8 Z" fill="url(#noxEye)"/><ellipse class="nox__pupil" cx="12.4" cy="-3.9" rx=".8" ry="1.75"/><circle class="nox__glint" cx="13.2" cy="-4.8" r=".45"/></g>
+      <g filter="url(#noxFuzz)">
+        <path class="fur" d="M-7.5 -6 C-5.5 -12 3.5 -14.6 10.6 -12.6 C14.8 -11.4 18 -8.8 21 -5.8 C23.4 -3.6 25.6 -1.6 26.6 0.9 C26.9 2.5 26 3.8 24.8 4.2 L24.2 5.2 C23 7.8 20 9.2 16.2 9.3 C11.6 10.2 5.6 10.8 0.6 9.8 C-4.6 8.8 -8 5 -8.6 0.2 C-9 -2.4 -8.6 -4.4 -7.5 -6 Z"/>
+      </g>
+      <path d="M-6 5.6 C-2 9.6 6 11.4 12 10.2 C8 12.6 0 12.4 -5.4 8.8 Z" fill="#0a0a0c" opacity=".8"/>
+      <path d="M1 -11.6 C6 -13.8 13 -12.6 18.6 -8.4" stroke="rgba(150,170,210,.22)" stroke-width=".8" fill="none" stroke-linecap="round"/>
+      <path d="M16.6 -1 C18.6 0.6 22 1.6 25.4 1.2 C24.6 5 21 6.4 17.6 6.2 C15 6 13.8 3.4 16.6 -1 Z" fill="#17171c"/>
+      <g fill="#050506"><circle cx="19.2" cy="2.8" r=".42"/><circle cx="21" cy="3.6" r=".42"/><circle cx="19.6" cy="4.6" r=".42"/><circle cx="22.4" cy="2.4" r=".42"/></g>
+      <path d="M24.4 -0.6 L26.9 0.6 L25.3 2.5 Z" fill="#2a2228"/>
+      <g class="nox__mouth" opacity="0">
+        <path d="M25 3.4 Q21.6 10.6 14.6 7.6 Q19 6.8 25 3.4 Z" fill="#2c0b12"/>
+        <path d="M22.8 4.4 L22 8 L21 4.9 Z M18 7.6 L18.7 5.2 L19.4 7.5 Z" fill="#ece5d6"/>
+        <path d="M24.4 4.2 Q20.8 6.4 15.8 6.4" stroke="#7a2a36" stroke-width=".7" fill="none"/>
+      </g>
+      <path d="M25 3.4 Q22.8 5.6 18.8 5.8 Q16.4 5.8 14.8 4.8" stroke="#050506" stroke-width=".75" fill="none" stroke-linecap="round"/>
+      <path class="nox__whisk" d="M19.4 3.4 L32 0.4 M19.4 4.6 L31.6 6 M18.8 5.8 L29.6 10"/>
+      <g class="nox__eye"><path d="M10 -4.2 Q12.8 -6.8 17.4 -5.8 Q14.6 -3.2 10 -4.2 Z" fill="url(#noxEye)"/><ellipse class="nox__pupil" cx="13.8" cy="-5" rx=".55" ry="1.3"/><circle class="nox__glint" cx="14.5" cy="-5.7" r=".38"/></g>
+      <path d="M8.4 -6.4 Q13 -8.6 19 -6.6" stroke="#030304" stroke-width="1.7" fill="none" stroke-linecap="round"/>
+      <path d="M17.6 -5.6 Q19.4 -3.6 21.4 -3.2" stroke="#050506" stroke-width=".7" fill="none" stroke-linecap="round" opacity=".8"/>
     </g>
     ${legMk('fn', 'near')}
   </svg>`;
@@ -88,11 +147,12 @@
   // rot: body pitch (+ = nose down), by: body drop, hx/fx: where the hind/front paws rest relative to hip/shoulder,
   // hflat/fflat: hock / forearm lying on the ground, tailA/tailC: tail base angle and curl per joint (deg)
   const POSES = {
-    stand: { rot: 0, by: 0, hx: -4, hflat: 0, fx: 2, fflat: 0, tailA: 128, tailC: 8, head: 3 },
-    sit: { rot: -32, by: 19, hx: 14, hflat: 1, fx: 3, fflat: 0, tailA: 62, tailC: -15, head: 4 },
-    lie: { rot: 0, by: 21, hx: 13, hflat: 1, fx: 17, fflat: 1, tailA: 178, tailC: -5, head: 4 },
-    bow: { rot: 14, by: 8, hx: -5, hflat: 0, fx: 17, fflat: 0.7, tailA: 228, tailC: 9, head: 0 },
-    crouch: { rot: 4, by: 13, hx: 4, hflat: 0.6, fx: 8, fflat: 0.3, tailA: 172, tailC: 2, head: 0 },
+    stand: { rot: 0, by: 0, hx: -4, hflat: 0, fx: 2, fflat: 0, tailA: 128, tailC: 8, head: 3, arch: 0 },
+    sit: { rot: -32, by: 19, hx: 14, hflat: 1, fx: 3, fflat: 0, tailA: 62, tailC: -15, head: 4, arch: 2 },
+    lie: { rot: 0, by: 21, hx: 13, hflat: 1, fx: 17, fflat: 1, tailA: 178, tailC: -5, head: 4, arch: -1 },
+    bow: { rot: 14, by: 8, hx: -5, hflat: 0, fx: 17, fflat: 0.7, tailA: 228, tailC: 9, head: 0, arch: -7 },
+    crouch: { rot: 4, by: 13, hx: 4, hflat: 0.6, fx: 8, fflat: 0.3, tailA: 172, tailC: 2, head: 6, arch: 3 },
+    growl: { rot: 6, by: 9, hx: 0, hflat: 0.3, fx: 6, fflat: 0, tailA: 160, tailC: 4, head: 4, arch: 6 },
   };
 
   /* ---------------- math ---------------- */
@@ -136,7 +196,7 @@
     for (let k = 0; k < n; k++) TAIL_HAIR.push({ seg, t: rnd(), side: k % 2 ? 1 : -1, len: (seg < 5 ? 0.7 : 1.4) + rnd() * (seg < 5 ? 1.1 : 1.8) });
   }
   const FUR = {
-    body: { step: 0.4, len: [0.8, 2.1], root: 0.9, flow: [-1.3, 0.25], lite: 0.55, inner: 95 },
+    body: { step: 0.4, len: [0.7, 1.7], root: 0.9, flow: [-1.4, 0.25], lite: 0.5, inner: 95 },
     head: { step: 0.38, len: [0.5, 1.4], root: 0.7, flow: [-0.9, 0.15], lite: 0.45, inner: 40 },
   };
   // Torso and head get short strands along their edges (pointing out, swept back) and a sprinkle of
@@ -254,7 +314,7 @@
 
     const $ = (s) => root.querySelector(s);
     const rigs = root.querySelectorAll('.nox__rig'), halves = root.querySelectorAll('.nox__half'), head = $('.nox__head'), tail = $('.nox__tail'), shadow = $('.nox__shadow');
-    const pupil = $('.nox__pupil'), glint = $('.nox__glint'), mouth = $('.nox__mouth'), eye = $('.nox__eye');
+    const ears = $('.nox__ears'), pupil = $('.nox__pupil'), glint = $('.nox__glint'), mouth = $('.nox__mouth'), eye = $('.nox__eye');
     const tailHair = $('.nox__tailhair');
     const legs = {};
     root.querySelectorAll('.nox__leg').forEach((g) => { legs[g.dataset.leg] = { bones: [...g.querySelectorAll('.nox__bone')], fur: g.querySelector('.nox__legfur'), pad: g.querySelector('.nox__pad') }; });
@@ -266,12 +326,12 @@
     let x = mouse.x - 90, y = mouse.y + 80, dir = 1, face = 1, heading = 0, speed = 0, depth = GAME ? GAME.scale : 1;
     // facing per body part: the head turns first, then the shoulders, and the hips follow last
     let fHd = 1, fF = 1, fH = 1, foldY = 0;
-    let lastHi = -99, wantHi = false, leapT = -1;
+    let lastHi = -99, wantHi = false, leapT = -1, lastInvite = -99;
     if (GAME) { x = GAME.startX; y = GAME.groundY(); }
     let phase = 0, run = 0, gaitBlend = 0, gaitL = 20, gaitDuty = 0.6, idleFor = 0, prep = 0, state = 'idle';
     let hovered = false, last = performance.now(), raf = 0, act = null, nextAct = 1.2, greeted = false, tAll = 0, shut = false;
     const P = { ...POSES.stand };                                  // the live pose, eased toward a target pose
-    const blank = () => ({ fnw: 0, fnx: 0, fny: 0, head: 0, headY: 0, tail: 0, mouth: 0, eye: 1, rot: 0, by: 0, look: null });
+    const blank = () => ({ fnw: 0, fnx: 0, fny: 0, head: 0, headY: 0, tail: 0, mouth: 0, eye: 1, rot: 0, by: 0, arch: 0, ears: 0, look: null });
     let fx = blank();                                              // per-frame extras from the current act
     const J = { sho: [...SHO], head: [...NECK] };                  // last frame's joints, for the ball and the eyes
     const ballSt = { on: false, x: 0, vy: 0, h: 0, spin: 0, vx: 0, mode: '' };
@@ -284,9 +344,14 @@
     const flySt = { on: false, x: 0, y: 0, o: 0 };
 
     /* ---- helpers ---- */
-    const say = (text, ms = 1800) => {
-      bubble.textContent = text; bubble.classList.add('is-on');
-      clearTimeout(say.t); say.t = setTimeout(() => bubble.classList.remove('is-on'), ms);
+    // prio 1 lines (hints, invites) can't be talked over by everyday chatter until they've been read
+    let sayPrio = 0, sayUntil = 0;
+    const say = (text, ms = 1800, action, prio = 0) => {
+      const now = performance.now();
+      if (prio < sayPrio && now < sayUntil) return;
+      sayPrio = prio; sayUntil = now + ms;
+      fillBubble(bubble, text, action); bubble.classList.add('is-on');
+      clearTimeout(say.t); say.t = setTimeout(() => bubble.classList.remove('is-on', 'has-action'), ms);
     };
     const toScreen = (sx, sy) => [x + face * (sx - 80) * S * depth, y + (sy - G) * S * depth];
 
@@ -296,7 +361,7 @@
       // rotary gallop: the back stretches long when the legs reach out and bunches up when they gather under
       const flex = Math.cos(TAU * (cyc - 0.38)) * g * A;
       const rot = P.rot + fx.rot + A * (g * -2.6 * Math.sin(TAU * (cyc - 0.62)) + (1 - g) * 0.5 * Math.sin(2 * TAU * cyc));
-      const by = P.by + fx.by + A * (g * (-1.4 - 1.8 * Math.cos(TAU * (cyc - 0.38))) + (1 - g) * -0.6 * Math.cos(2 * TAU * cyc));
+      const by = P.by + fx.by + A * (g * (-1.4 - 1.8 * Math.cos(TAU * (cyc - 0.38))) + (1 - g) * (2.4 - 0.6 * Math.cos(2 * TAU * cyc)));
       const sx = SLIM * (1 + 0.075 * flex), sy = 1 - 0.03 * flex;
       const c = Math.cos(rot * Math.PI / 180), s = Math.sin(rot * Math.PI / 180);
       const T = (px, py) => { const x1 = (px - CX) * sx, y1 = (py - CY) * sy; return [CX + x1 * c - y1 * s, CY + x1 * s + y1 * c + by]; };
@@ -306,14 +371,20 @@
       const cl = (f) => Math.sign(f || 1) * Math.max(0.1, Math.abs(f));
       const sH = cl(fH), sF = cl(fF);
       foldY = (1 - Math.sign(sF) * Math.sign(sH) * Math.min(1, Math.abs(sF * sH))) * 1.6;
-      halves[0].setAttribute('transform', `translate(80 0) scale(${sH.toFixed(3)} 1) translate(-80 0)`);
-      halves[1].setAttribute('transform', `translate(80 ${f1(foldY)}) scale(${sF.toFixed(3)} 1) translate(-80 0)`);
+      // the spine bends at the waist: it arches as the legs gather under, flattens as they reach out,
+      // and rolls gently in the walk. + = back humped (both ends drop), - = sway-backed
+      const gather = Math.max(0, -flex), reachOut = Math.max(0, flex);
+      const arch = P.arch + (fx.arch || 0) + A * (g * (8 * gather - 3 * reachOut) + (1 - g) * 1.6 * Math.sin(2 * TAU * cyc + 0.6));
+      const Wp = T(CX, 38), aRad = arch * Math.PI / 180;
+      const bendP = (q, sgn) => { const a = aRad * sgn, cs = Math.cos(a), sn = Math.sin(a), dx = q[0] - Wp[0], dy = q[1] - Wp[1]; return [Wp[0] + dx * cs - dy * sn, Wp[1] + dx * sn + dy * cs]; };
+      halves[0].setAttribute('transform', `translate(80 0) scale(${sH.toFixed(3)} 1) translate(-80 0) rotate(${(-arch).toFixed(2)} ${f1(Wp[0])} ${f1(Wp[1])})`);
+      halves[1].setAttribute('transform', `translate(80 ${f1(foldY)}) scale(${sF.toFixed(3)} 1) translate(-80 0) rotate(${arch.toFixed(2)} ${f1(Wp[0])} ${f1(Wp[1])})`);
 
       // legs: walk = lateral sequence, gallop = rotary; the offsets blend between the two
       const off = { hn: 0, fn: lerp(0.25, 0.55, g), hf: lerp(0.5, 0.1, g), ff: lerp(0.75, 0.45, g) };
       for (const k of ['hf', 'ff', 'hn', 'fn']) {
         const hind = k[0] === 'h', far = k[1] === 'f', L = legs[k];
-        const piv = hind ? T(HIP[0] + (far ? 3 : 0), HIP[1] - (far ? 1 : 0)) : T(SHO[0] + (far ? 3 : 0), SHO[1] - (far ? 1 : 0));
+        const piv = hind ? bendP(T(HIP[0] + (far ? 3 : 0), HIP[1] - (far ? 1 : 0)), -1) : bendP(T(SHO[0] + (far ? 3 : 0), SHO[1] - (far ? 1 : 0)), 1);
         // where the paw rests in the current pose
         const restX = piv[0] + (hind ? P.hx : P.fx) + (far ? 2 : 0);
         // where the paw is in the gait cycle: planted and sliding back under the body, then lifted and swung forward
@@ -334,12 +405,12 @@
           const knee = ik(piv[0], piv[1], footX + mx, footY + my, BONE.thigh, BONE.shin, -1);
           const hock = reach(knee, [footX + mx, footY + my], BONE.shin);
           const foot = [hock[0] - mx, hock[1] - my];
-          const [pA, kA, hA, fA, tA] = [piv, knee, hock, foot, [foot[0] + 3.4, foot[1] + 0.2]].map(Mp);
-          b[0].setAttribute('d', cap(pA, 7.4, kA, 3.6));
-          b[1].setAttribute('d', cap(kA, 3.2, hA, 2.1));
-          b[2].setAttribute('d', cap(hA, 2.1, fA, 1.9));
-          b[3].setAttribute('d', cap(fA, 2, tA, 1.9));
-          if (!far) d = furBone(pA, 7.4, kA, 3.6, 5) + furBone(kA, 3.2, hA, 2.1, 4);
+          const [pA, kA, hA, fA, tA] = [piv, knee, hock, foot, [foot[0] + 4.2, foot[1] + 0.2]].map(Mp);
+          b[0].setAttribute('d', cap(pA, 8.6, kA, 4));
+          b[1].setAttribute('d', cap(kA, 3.5, hA, 2.3));
+          b[2].setAttribute('d', cap(hA, 2.4, fA, 2.2));
+          b[3].setAttribute('d', cap(fA, 2.6, tA, 2.3));
+          if (!far) d = furBone(pA, 8.6, kA, 4, 6) + furBone(kA, 3.5, hA, 2.3, 4);
         } else {
           // shoulder blade, upper arm, forearm, and a paw that curls back while it swings
           let wx = lerp(-1.2, -6.5, P.fflat), wy = lerp(-6, -1.4, P.fflat);
@@ -349,26 +420,27 @@
           const foot = [wrist[0] - wx, wrist[1] - wy];
           const dev = (Math.atan2(elbow[1] - piv[1], elbow[0] - piv[0]) - Math.PI / 2) * 0.45, cs = Math.cos(dev), sn = Math.sin(dev);
           const top = [piv[0] + (-3 * cs + 11 * sn), piv[1] + (-3 * sn - 11 * cs)];
-          const [tpA, pA, eA, wA, fA, toA] = [top, piv, elbow, wrist, foot, [foot[0] + 3.2, foot[1] + 0.2]].map(Mp);
-          b[0].setAttribute('d', far ? '' : cap(tpA, 4.2, pA, 5.6));
-          b[1].setAttribute('d', cap(pA, 5.4, eA, 3.2));
-          b[2].setAttribute('d', cap(eA, 3, wA, 2.2));
-          b[3].setAttribute('d', cap(wA, 2.2, fA, 2));
-          b[4].setAttribute('d', cap(fA, 2, toA, 1.9));
-          if (!far) { d = furBone(pA, 5.4, eA, 3.2, 4) + furBone(eA, 3, wA, 2.2, 4); J.sho = piv; }
+          const [tpA, pA, eA, wA, fA, toA] = [top, piv, elbow, wrist, foot, [foot[0] + 4, foot[1] + 0.2]].map(Mp);
+          b[0].setAttribute('d', far ? '' : cap(tpA, 5, pA, 6.6));
+          b[1].setAttribute('d', cap(pA, 6.4, eA, 3.8));
+          b[2].setAttribute('d', cap(eA, 3.7, wA, 2.6));
+          b[3].setAttribute('d', cap(wA, 2.6, fA, 2.4));
+          b[4].setAttribute('d', cap(fA, 2.6, toA, 2.3));
+          if (!far) { d = furBone(pA, 6.4, eA, 3.8, 5) + furBone(eA, 3.7, wA, 2.6, 4); J.sho = piv; }
           if (L.pad) { const pd = Mp([foot[0] + 1.6, foot[1] + 1.2]); L.pad.setAttribute('cx', f1(pd[0])); L.pad.setAttribute('cy', f1(pd[1])); L.pad.setAttribute('opacity', (fx.fnw * 0.9).toFixed(2)); }
         }
         L.fur.setAttribute('d', d);
       }
 
       // head stays level while the body rocks; a walking panther carries it low
-      const hp = T(NECK[0], NECK[1]); J.head = hp;
-      const hr = P.head + fx.head - rot * 0.8 + A * g * 2.2 * Math.sin(TAU * (cyc - 0.1)) + A * (1 - g) * 5;
+      const hp = bendP(T(NECK[0], NECK[1]), 1); J.head = hp;
+      const hr = P.head + fx.head - rot * 0.8 - arch * 0.6 + A * g * 2.2 * Math.sin(TAU * (cyc - 0.1)) + A * (1 - g) * 8;
       // the head rides on the front half but turns on its own (it leads the turn)
-      head.setAttribute('transform', `translate(${f1(80 + (hp[0] - 80) * sF)} ${f1(hp[1] + foldY + fx.headY + A * (1 - g) * 1.5)}) scale(${cl(fHd).toFixed(3)} 1) rotate(${hr.toFixed(2)}) scale(.92)`);
+      head.setAttribute('transform', `translate(${f1(80 + (hp[0] - 80) * sF)} ${f1(hp[1] + foldY + fx.headY + A * (1 - g) * 3)}) scale(${cl(fHd).toFixed(3)} 1) rotate(${hr.toFixed(2)}) scale(.92)`);
 
       drawTail(t, A);
-      mouth.setAttribute('opacity', fx.mouth.toFixed(2));
+      mouth.setAttribute('opacity', Math.min(1, fx.mouth).toFixed(2));
+      ears.setAttribute('transform', `rotate(${(-(A * g * 28 + (fx.ears || 0))).toFixed(1)} 2 -11)`);
       eye.style.transform = `scaleY(${shut ? 0.1 : fx.eye.toFixed(2)})`;
       shadow.setAttribute('cx', f1(80 + ((T(HIP[0], 0)[0] - 80) * sH + (T(SHO[0], 0)[0] - 80) * sF) / 2 + 2 * sF));
       shadow.setAttribute('rx', f1(30 + 3 * flex - Math.max(0, -by) * 0.6));
@@ -411,9 +483,9 @@
       const [ex, ey] = toScreen(J.head[0] + 11, J.head[1] - 4);
       const tx = fx.look ? fx.look[0] : mouse.x, ty = fx.look ? fx.look[1] : mouse.y;
       const dx = tx - ex, dy = ty - ey, dd = Math.hypot(dx, dy) || 1, k = Math.min(1, dd / 40);
-      const cx = 12.4 + (dx / dd) * 1.3 * k * Math.sign(fHd || 1), cy = -3.9 + (dy / dd) * 0.6 * k;
+      const cx = 13.8 + (dx / dd) * 1.1 * k * Math.sign(fHd || 1), cy = -5 + (dy / dd) * 0.45 * k;
       pupil.setAttribute('cx', cx.toFixed(2)); pupil.setAttribute('cy', cy.toFixed(2));
-      glint.setAttribute('cx', (cx + 0.8).toFixed(2)); glint.setAttribute('cy', (cy - 0.9).toFixed(2));
+      glint.setAttribute('cx', (cx + 0.7).toFixed(2)); glint.setAttribute('cy', (cy - 0.7).toFixed(2));
     };
 
     /* ---- idle acts ---- */
@@ -421,12 +493,16 @@
     const ease = (v) => v * v * (3 - 2 * v);
     const wiggle = (t) => Math.sin(t * 34) * 1.6;                 // the butt wiggle before a pounce
     const ACTS = {
+      invite: { dur: 6.5, pose: 'sit', enter: () => say(['Tired? Come play with me 🐾', 'Need a break? Play with me 🐾', 'Bored? Let’s hunt together 🐾'][Math.floor(Math.random() * 3)], 6500, 'play', 1),
+        f: (t, e) => ({ fnw: t < 2.2 ? e : 0, fnx: 19, fny: 20 + Math.sin(t * 11) * 4, head: -6 * e, tail: Math.sin(t * 3) * 14 }) },
       hi: { dur: 2.6, pose: 'sit', enter: () => say(['Hi there! 👋', 'Hello! 👋', 'Hey you 👋'][Math.floor(Math.random() * 3)], 2200),
         f: (t, e) => ({ fnw: e, fnx: 19, fny: 20 + Math.sin(t * 13) * 4, head: -6 * e, tail: 10 * e }) },
       groom: { dur: 3.4, pose: 'sit',
         f: (t, e) => ({ fnw: e, fnx: 15, fny: 37 + Math.sin(t * 12) * 1.5, head: (26 + Math.sin(t * 12) * 5) * e, headY: 2 * e, eye: 1 - 0.6 * e }) },
       yawn: { dur: 2.4, pose: 'sit',
         f: (t) => { const m = Math.sin(Math.min(1, t / 2.2) * Math.PI); return { head: -18 * m, mouth: Math.max(0, m * 1.5 - 0.5), eye: 1 - 0.7 * m, tail: 12 * m }; } },
+      growl: { dur: 2.6, pose: 'growl', enter: () => say(['Grrr… 😾', 'Hrrr 😾', 'Mine. 😾'][Math.floor(Math.random() * 3)], 1500),
+        f: (t, e) => ({ mouth: e * (0.75 + 0.25 * Math.sin(t * 30)), ears: 40 * e, head: -4 * e, eye: 1 - 0.25 * e, tail: Math.sin(t * 9) * 12 * e, rot: Math.sin(t * 40) * 0.4 * e }) },
       look: { dur: 2.8, pose: 'sit', f: (t, e) => ({ head: Math.sin(t * 2.2) * 12 * e, tail: Math.sin(t * 2) * 8 * e }) },
       stretch: { dur: 3.4, pose: (t) => (t < 2.5 ? 'bow' : 'stand'),
         f: (t) => { const m = Math.sin(Math.min(1, Math.max(0, (t - 0.5) / 1.7)) * Math.PI); return { mouth: m * 0.9, eye: 1 - 0.6 * m, head: -8 * m }; } },
@@ -452,7 +528,7 @@
         } },
       ball: { dur: 7.2, pose: 'stand', enter: () => { say('Wanna play? 🏀', 1600); dropBall(); }, end: () => endBall(), f: (t, e) => dribble(t, e) },
     };
-    const pick = () => { const k = ['ball', 'groom', 'hi', 'yawn', 'look', 'stretch', 'loaf', 'pounce', 'fly', 'stretch', 'pounce', 'fly']; return k[Math.floor(Math.random() * k.length)]; };
+    const pick = () => { const k = ['ball', 'groom', 'yawn', 'look', 'stretch', 'loaf', 'pounce', 'fly', 'growl', 'pounce', 'fly', 'growl', 'stretch']; return k[Math.floor(Math.random() * k.length)]; };
     const endAct = () => { if (act && ACTS[act.name].end) ACTS[act.name].end(); act = null; fx = blank(); };
 
     /* ---- basketball ---- */
@@ -562,8 +638,8 @@
         gaitStep(dt);
         if ((dist < 4 && speed < 45) || (hovered && speed < 10)) {
           state = 'idle'; speed = 0; idleFor = 0; dir = mouse.x >= x ? 1 : -1;
-          // every time you stop, he turns to you and says hello (not more than once every few seconds), then plays
-          wantHi = tAll - lastHi > 6; nextAct = wantHi ? 0.2 : 1.2;
+          // he says hello only after a long gap (45 s), and only if the cursor stays still for a couple of seconds
+          wantHi = tAll - lastHi > 45; nextAct = wantHi ? 1.2 : 1.6;
         }
       } else {
         // idle: let the stride settle, sit down, then pick something to do
@@ -573,8 +649,12 @@
         if (!act && idleFor > (wantHi ? 0.9 : 1.4)) {
           nextAct -= dt;
           if (nextAct <= 0 && !calm) {
-            const name = wantHi || !greeted ? 'hi' : pick(); greeted = true;
+            const stillFor = (performance.now() - mouse.moved) / 1000;
+            // the cursor has been resting a while: sometimes he invites you to play instead
+            const invite = stillFor > 9 && tAll > 35 && tAll - lastInvite > 150 && !!window.NoxPlay;
+            const name = invite ? 'invite' : (wantHi && stillFor > 2) || !greeted ? 'hi' : pick(); greeted = true;
             if (name === 'hi') { wantHi = false; lastHi = tAll; }
+            if (name === 'invite') lastInvite = tAll;
             act = { name, t: 0 }; if (ACTS[name].enter) ACTS[name].enter();
           }
         }
@@ -620,7 +700,7 @@
       if (leapT >= 0) {
         leapT += dt; const u = leapT / 0.62;
         if (u >= 1) leapT = -1;
-        else { const sN = Math.sin(Math.PI * u); fx.by = -44 * sN; fx.rot = lerp(-12, 9, u); fx.fnw = sN; fx.fnx = 22; fx.fny = 26 - 30 * sN; fx.tail = 20 * sN; pose = 'stand'; idleFor = 0; }
+        else { const sN = Math.sin(Math.PI * u); fx.by = -44 * sN; fx.rot = lerp(-12, 9, u); fx.arch = lerp(-6, 7, u) * sN; fx.fnw = sN; fx.fnx = 22; fx.fny = 26 - 30 * sN; fx.tail = 20 * sN; fx.mouth = Math.min(1, sN * 1.6); fx.ears = 30 * sN; pose = 'stand'; idleFor = 0; }
       }
       if (GAME.look) fx.look = GAME.look();
       const target = POSES[pose], k = Math.min(1, dt * 8);
@@ -667,6 +747,7 @@
       get x() { return x; },
       get dir() { return dir; },
       mouth() { return toScreen(J.head[0] + 21, J.head[1] + 4 + (leapT >= 0 ? 0 : 0)); },
+      get leaving() { return state === 'exit'; },
       leave() {
         endAct(); hovered = false;
         say('Bye! 👋', 1500);
@@ -688,7 +769,12 @@
     card.className = 'nox-card';
     card.setAttribute('role', 'dialog'); card.setAttribute('aria-modal', 'true'); card.setAttribute('aria-label', 'About NOX, the site pet');
     card.innerHTML = `<div class="nox-card__veil" data-nox-close></div>${cardMarkup}`;
-    if (away) {
+    if (coarse) {
+      card.classList.add('is-touch');
+      card.querySelector('.nox-card__lead').textContent = 'He guards this portfolio. On a laptop he follows your cursor around; here, you can still go hunting with him.';
+      card.querySelector('.nox-card__actions').remove();
+      card.querySelector('.nox-card__foot span').innerHTML = 'Best on a laptop: he <b>runs after your cursor</b>';
+    } else if (away) {
       card.classList.add('is-away');
       card.querySelector('.nox-card__lead').textContent = 'Out on patrol right now. Call him back and he’ll come running.';
       card.querySelector('.nox-card__actions').innerHTML = '<button class="nox-card__keep" type="button" data-nox-return data-cursor="Call">Bring him back</button><button class="nox-card__remove nox-card__later" type="button" data-nox-close data-cursor="Later">Not now</button>';
@@ -706,7 +792,7 @@
     document.documentElement.classList.add('nox-carded');
     const opened = card; setTimeout(() => { if (card === opened) opened.classList.add('is-settled'); }, 1800);   // after the entrance, the tilt follows the cursor directly
     if (alive) alive.say('That’s me! 😼', 1600);
-    card.querySelector('.nox-card__keep').focus({ preventScroll: true });
+    const firstBtn = card.querySelector('.nox-card__keep, .nox-card__play'); if (firstBtn) firstBtn.focus({ preventScroll: true });
     card.addEventListener('click', (e) => {
       if (e.target.closest('[data-nox-close]')) closeCard();
       if (e.target.closest('[data-nox-remove]')) { localStorage.setItem(KEY, '1'); closeCard(); if (alive) alive.leave(); setTimeout(() => showBack(true), 1200); }
@@ -756,8 +842,29 @@
 
   /* ---------------- boot ---------------- */
   if (backBtn) backBtn.addEventListener('click', () => { localStorage.removeItem(KEY); start({ enter: true }); });
-  dock.addEventListener('click', () => openCard(dock, true));
-  if (localStorage.getItem(KEY) === '1') showBack(true);
+  dock.addEventListener('click', () => openCard(dock, !coarse && !alive));
+
+  // a nudge when the gates come into view: people don't always guess they can be opened
+  let gateUsed = false, gateHintAt = -1e9;
+  document.addEventListener('click', (e) => { if (e.target.closest && e.target.closest('.gate')) gateUsed = true; }, true);
+  const gates = document.getElementById('gates');
+  if (gates && 'IntersectionObserver' in window) {
+    new IntersectionObserver((entries) => {
+      const en = entries[0];
+      if (!en.isIntersecting || gateUsed || document.documentElement.classList.contains('has-dialog')) return;
+      const now = performance.now();
+      if (now - gateHintAt < 60000) return;
+      gateHintAt = now;
+      setTimeout(() => hint(coarse ? 'Tap any gate to step inside 🚪' : 'Psst… click any gate to step inside 🚪', 3600), 500);
+    }, { threshold: 0.45 }).observe(gates);
+  }
+  // on phones there is no walking pet, so the badge invites people to play once in a while
+  if (coarse && !sessionStorage.getItem('nox:invited')) {
+    setTimeout(() => { if (document.documentElement.classList.contains('has-dialog') || document.documentElement.classList.contains('nox-playing')) return; sessionStorage.setItem('nox:invited', '1'); dockSay('Tired of scrolling? Play with me 🐾', 7000, 'play'); }, 45000);
+  }
+
+  if (coarse) { /* no cursor to follow: the badge, card and game are the whole show */ }
+  else if (localStorage.getItem(KEY) === '1') showBack(true);
   else {
     // wait for the first mouse move so NOX appears next to the cursor
     const first = () => { removeEventListener('pointermove', first); setTimeout(start, 300); };

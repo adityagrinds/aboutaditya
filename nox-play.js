@@ -7,7 +7,7 @@
    Catch gold orbs (+1), moon orbs (+5); embers burn; miss gold, lose a life.
    ===================================================================== */
 (() => {
-  if (matchMedia('(pointer: coarse)').matches) return;          // NOX (and his card) only live on cursor devices
+  const coarse = matchMedia('(pointer: coarse)').matches;        // touch: tap/drag to move, a Leap button to jump
   const BEST = 'nox:best';
   const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const html = document.documentElement;
@@ -55,6 +55,7 @@
       </div>
     </section>
 
+    <button class="np__leap" type="button" data-np-leap aria-label="Leap">Leap</button>
     <div class="np__count" data-count aria-hidden="true"></div>
     <a class="np__credit" href="https://commons.wikimedia.org/wiki/File:Tropical_rainforest_in_Sangha_Trinational.jpg" target="_blank" rel="noopener">Forest photo: JosepMGracia, CC BY-SA 4.0</a>`;
 
@@ -182,7 +183,8 @@
       for (const c of [fxC, fgC]) { c.width = W * DPR; c.height = H * DPR; c.style.width = W + 'px'; c.style.height = H + 'px'; }
       fx.setTransform(DPR, 0, 0, DPR, 0, 0); fg.setTransform(DPR, 0, 0, DPR, 0, 0);
       groundY = H * 0.87;
-      scale = Math.max(2.4, Math.min(4.6, W / 320));
+      // big on a laptop, still fitting on a phone (portrait phones are narrow, landscape ones are short)
+      scale = Math.max(1.45, Math.min(4.6, W / 320, H / 185));
       buildSprites();
     }
     function buildSprites() {
@@ -425,6 +427,8 @@
     /* ---- input ---- */
     const onMove = (e) => { ctl.mouseX = e.clientX; ctl.mouseY = e.clientY; };
     const onDown = (e) => {
+      if (e.target.closest('[data-np-leap]')) { e.preventDefault(); nox.leap(); return; }
+      if (e.pointerType === 'touch') { if (!e.target.closest('button, a, .np__panel')) { ctl.mouseX = e.clientX; ctl.mouseY = e.clientY; } return; }
       if (e.button !== 0 || e.target.closest('button, a, .np__panel')) return;
       if (mode === 'play' || mode === 'start' || mode === 'over') nox.leap();
     };
@@ -457,6 +461,7 @@
       }, 820);
     }
 
+    if (coarse) $('.np__keys').innerHTML = '<span><kbd>Tap</kbd> or <kbd>drag</kbd> to move</span><span><kbd>Leap</kbd> button to jump</span>';
     setPanel('start');
     renderLives();
     setTimeout(() => { if (!closing) nox.say('Hi! Ready to hunt? 😼', 2200); }, 900);
