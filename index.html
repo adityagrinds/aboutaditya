@@ -126,6 +126,9 @@
       <a href="#skills" class="scramble">Skills</a>
       <a href="#contact" class="scramble">Contact</a>
     </nav>
+    <button class="nav__resume mono" type="button" data-resume-open data-cursor="Read" aria-haspopup="dialog">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 1.5h5.5L13 5v9.5H4z"/><path d="M9.5 1.5V5H13M6.5 8h4M6.5 10.5h4"/></svg>Resume
+    </button>
   </header>
 
   <button class="light-chip mono" id="lightBtn" type="button" aria-pressed="false">
@@ -376,7 +379,13 @@
         <span class="line"><span class="split accent">legendary.</span></span>
       </h2>
       <div class="contact__cta">
-        <a class="btn-big magnetic" href="mailto:adityagrinds@gmail.com" data-cursor="Say hi">
+        <button class="btn-big btn-big--hire magnetic" type="button" id="hireOpen" data-cursor="Hire" aria-haspopup="dialog">
+          <span>Hire me <i aria-hidden="true">&rarr;</i></span>
+        </button>
+        <button class="btn-big btn-big--ghost magnetic" type="button" data-resume-open data-cursor="Read" aria-haspopup="dialog">
+          <span>Resume</span>
+        </button>
+        <a class="btn-big btn-big--ghost magnetic" href="mailto:adityagrinds@gmail.com" data-cursor="Say hi">
           <span>adityagrinds@gmail.com</span>
         </a>
         <div class="contact__links mono">
@@ -713,6 +722,77 @@
       </div>
     </section>
   </div>
+  <!-- ============ RESUME viewer (paper flies in from the button and unrolls) ============ -->
+  <div class="resume" id="resume" role="dialog" aria-modal="true" aria-label="Resume of Aditya Kumar Gupta" hidden data-lenis-prevent>
+    <div class="resume__backdrop" data-resume-close></div>
+    <div class="resume__bar">
+      <span class="resume__name mono"><i></i>Resume &middot; Aditya Kumar Gupta</span>
+      <div class="resume__actions">
+        <a class="resume__btn mono" href="assets/resume/Aditya_Kumar_Gupta_Resume.pdf" download="Aditya_Kumar_Gupta_Resume.pdf" data-cursor="Save">Download PDF &darr;</a>
+        <a class="resume__btn mono" href="assets/resume/Aditya_Kumar_Gupta_Resume.pdf" target="_blank" rel="noopener" data-cursor="Open">New tab &nearr;</a>
+        <button class="resume__x" type="button" data-resume-close aria-label="Close resume" data-cursor="Close">&times;</button>
+      </div>
+    </div>
+    <div class="resume__scroll" data-resume-close-area>
+      <div class="resume__paper">
+        <img src="assets/resume/resume-p1.jpg" alt="Resume of Aditya Kumar Gupta: B.Tech Computer Science at Manav Rachna University (CGPA 8.51), Agentic AI Intern, AWS Student Builder Campus Leader, Google Student Ambassador, GSSoC contributor; projects SangyanAI, MRU Connect and VaultGate; winner of EYFI and Hackbriven, NASA Space Apps National Grand Finalist." width="1654" height="2339" loading="lazy" decoding="async">
+        <span class="resume__scan" aria-hidden="true"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ HIRE ME form (sent to email through FormSubmit) ============ -->
+  <div class="hire" id="hire" role="dialog" aria-modal="true" aria-labelledby="hireTitle" hidden data-lenis-prevent>
+    <div class="hire__backdrop" data-hire-close></div>
+    <div class="hire__panel">
+      <button class="hire__x" type="button" data-hire-close aria-label="Close" data-cursor="Close">&times;</button>
+
+      <form class="hire__form" id="hireForm" novalidate>
+        <p class="hire__kick mono">Hire me</p>
+        <h3 class="hire__title" id="hireTitle">Let&rsquo;s work <em>together.</em></h3>
+        <p class="hire__lead">Tell me a bit about what you have in mind. It comes straight to my inbox.</p>
+
+        <fieldset class="hire__reasons">
+          <legend class="hire__label mono">What&rsquo;s it about? <b>*</b></legend>
+          <label class="hire__chip"><input type="radio" name="reason" value="Internship" checked><span>Internship</span></label>
+          <label class="hire__chip"><input type="radio" name="reason" value="Full-time role"><span>Full-time role</span></label>
+          <label class="hire__chip"><input type="radio" name="reason" value="Freelance project"><span>Freelance project</span></label>
+          <label class="hire__chip"><input type="radio" name="reason" value="Collaboration"><span>Collaboration</span></label>
+          <label class="hire__chip"><input type="radio" name="reason" value="Speaking / workshop"><span>Speaking / workshop</span></label>
+          <label class="hire__chip"><input type="radio" name="reason" value="Something else"><span>Something else</span></label>
+        </fieldset>
+
+        <div class="hire__grid">
+          <label class="hire__field"><span class="hire__label mono">Your name <b>*</b></span><input name="name" type="text" autocomplete="name" required maxlength="80" placeholder="Jane Doe"><small class="hire__err"></small></label>
+          <label class="hire__field"><span class="hire__label mono">Email <b>*</b></span><input name="email" type="email" autocomplete="email" required maxlength="120" placeholder="jane@company.com"><small class="hire__err"></small></label>
+          <label class="hire__field"><span class="hire__label mono">Company / organisation</span><input name="company" type="text" autocomplete="organization" maxlength="120" placeholder="Optional"></label>
+          <label class="hire__field"><span class="hire__label mono">When do you need this?</span>
+            <select name="timeline">
+              <option value="Flexible">Flexible</option>
+              <option value="As soon as possible">As soon as possible</option>
+              <option value="Within a month">Within a month</option>
+              <option value="In 1 to 3 months">In 1 to 3 months</option>
+            </select>
+          </label>
+        </div>
+        <label class="hire__field"><span class="hire__label mono">Details <b>*</b></span><textarea name="message" rows="4" required maxlength="3000" placeholder="The role or project, what you'd like me to work on, and any links."></textarea><small class="hire__err"></small></label>
+        <input class="hire__hp" type="text" name="_honey" tabindex="-1" autocomplete="off" aria-hidden="true">
+
+        <div class="hire__foot">
+          <p class="hire__status" id="hireStatus" aria-live="polite"></p>
+          <button class="hire__send" type="submit" data-cursor="Send"><span class="hire__send-txt">Send</span><i aria-hidden="true">&rarr;</i></button>
+        </div>
+      </form>
+
+      <div class="hire__done" id="hireDone" hidden>
+        <span class="hire__tick" aria-hidden="true"><svg viewBox="0 0 52 52"><circle cx="26" cy="26" r="24"/><path d="M15 27l7 7 15-16"/></svg></span>
+        <h3 class="hire__title">Sent. <em>Thank you!</em></h3>
+        <p class="hire__lead" id="hireDoneMsg"></p>
+        <button class="hire__send" type="button" data-hire-close data-cursor="Close"><span>Close</span></button>
+      </div>
+    </div>
+  </div>
+
   <div class="lb" id="lightbox" role="dialog" aria-modal="true" aria-label="Photo viewer" hidden>
     <div class="lb__bg"></div>
     <img class="lb__img" alt="">

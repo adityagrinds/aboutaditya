@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=2000">
+<title>Poster · NEO Hazard Classification with Explainable ML · Aditya Kumar Gupta</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Source+Serif+4:ital,opsz,wght@0,8..60,600;0,8..60,700;1,8..60,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #0e2747; --navy-2: #1b3b66; --ink: #1d2330; --body: #3a4252; --muted: #6b7385; --rule: #dfe3ea; --soft: #f4f6f9;
+    --hz: #d9480f; --hz-soft: #fff1ea; --safe: #2f6db5; --safe-soft: #eaf1fa; --ok: #2b8a5e; --ok-soft: #e8f5ee; --gold: #c98a12; --gold-soft: #fdf5e3;
+    --sans: "Inter", sans-serif; --serif: "Source Serif 4", Georgia, serif; --mono: "JetBrains Mono", monospace;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  @page { margin: 0; size: 2000px 1414px; }
+  html, body { background: #e9ecf1; }
+  body { font-family: var(--sans); color: var(--ink); -webkit-font-smoothing: antialiased; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .poster { width: 2000px; height: 1414px; margin: 0 auto; background: #fff; display: flex; flex-direction: column; overflow: hidden; }
+
+  /* header */
+  .head { position: relative; background: var(--navy); color: #fff; padding: 34px 44px 30px; display: grid; grid-template-columns: 1fr auto; gap: 40px; align-items: center; overflow: hidden; }
+  .head::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 6px; background: linear-gradient(90deg, var(--hz), #f08c00 40%, var(--gold) 70%, var(--safe)); }
+  .head__kicker { font-family: var(--mono); font-size: 14px; letter-spacing: 0.16em; text-transform: uppercase; color: #9fb4d3; margin-bottom: 10px; }
+  .head h1 { font-family: var(--serif); font-weight: 700; font-size: 52px; line-height: 1.05; letter-spacing: -0.01em; }
+  .head h1 span { color: #ffc078; }
+  .head__by { margin-top: 14px; font-size: 19px; color: #d7e1ef; }
+  .head__by b { color: #fff; font-weight: 600; }
+  .head__stats { display: grid; grid-template-columns: repeat(4, auto); border: 1px solid rgba(255,255,255,.18); border-radius: 10px; overflow: hidden; }
+  .head__stats div { padding: 14px 22px; border-left: 1px solid rgba(255,255,255,.18); text-align: center; }
+  .head__stats div:first-child { border-left: 0; }
+  .head__stats b { display: block; color: #fff; font-size: 32px; font-weight: 800; letter-spacing: -0.02em; }
+  .head__stats small { display: block; font-size: 13px; color: #9fb4d3; margin-top: 2px; white-space: nowrap; }
+
+  /* body grid */
+  .body { flex: 1; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 30px; padding: 26px 44px 18px; min-height: 0; }
+  .col { display: flex; flex-direction: column; justify-content: space-between; gap: 22px; min-width: 0; }
+  .sec h2 { display: flex; align-items: center; gap: 10px; font-size: 22.5px; font-weight: 700; color: var(--navy); padding-bottom: 7px; margin-bottom: 11px; border-bottom: 2px solid var(--navy); letter-spacing: -0.01em; }
+  .sec h2 i { font-style: normal; display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 6px; background: var(--navy); color: #fff; font-size: 14px; font-weight: 700; flex: none; }
+  p, li { font-size: 16.5px; line-height: 1.5; color: var(--body); }
+  b { color: var(--ink); font-weight: 600; }
+  .ul { list-style: none; display: grid; gap: 6px; }
+  .ul li { padding-left: 16px; position: relative; }
+  .ul li::before { content: ""; position: absolute; left: 2px; top: 9px; width: 6px; height: 6px; border-radius: 2px; background: var(--navy-2); }
+  .box { border-radius: 8px; padding: 12px 15px; font-size: 16px; line-height: 1.45; margin-top: 10px; }
+  .box--hz { background: var(--hz-soft); border-left: 4px solid var(--hz); color: #5c2a14; }
+  .box--nv { background: var(--safe-soft); border-left: 4px solid var(--safe); color: #1d3557; }
+  .box--ok { background: var(--ok-soft); border-left: 4px solid var(--ok); color: #1f4d38; }
+  .cap { font-size: 13.5px; color: var(--muted); margin-top: 6px; line-height: 1.4; }
+  .cap b { color: var(--body); }
+  svg text { font-family: var(--sans); }
+
+  .rule { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+  .rule div { border: 1px solid var(--rule); border-radius: 8px; padding: 9px 11px; }
+  .rule .f { font-family: var(--mono); font-weight: 600; font-size: 17px; }
+  .rule small { display: block; font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+  .tag { display: inline-block; margin-top: 5px; font-size: 11.5px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; padding: 2px 7px; border-radius: 4px; }
+  .tag--y { background: var(--ok-soft); color: var(--ok); } .tag--n { background: var(--hz-soft); color: var(--hz); }
+
+  .classbar { display: flex; height: 26px; border-radius: 6px; overflow: hidden; margin: 10px 0 4px; font-size: 12.5px; font-weight: 600; color: #fff; }
+  .classbar span { display: flex; align-items: center; padding: 0 8px; white-space: nowrap; }
+  .feat { width: 100%; border-collapse: collapse; margin-top: 8px; }
+  .feat td { font-size: 14.5px; padding: 6px 4px 6px 0; border-bottom: 1px solid var(--rule); color: var(--body); }
+  .feat td:first-child { font-family: var(--mono); font-size: 12.5px; color: var(--ink); }
+  .feat tr:last-child td { border-bottom: 0; }
+
+  .flow { display: grid; gap: 7px; }
+  .step { display: grid; grid-template-columns: 26px 1fr; gap: 10px; align-items: start; border: 1px solid var(--rule); border-radius: 8px; padding: 9px 11px; background: #fff; position: relative; }
+  .step + .step::before { content: ""; position: absolute; left: 22px; top: -8px; height: 8px; border-left: 2px solid #b7c3d6; }
+  .step .n { width: 26px; height: 26px; border-radius: 6px; display: grid; place-items: center; background: var(--soft); color: var(--navy); font-weight: 700; font-size: 13px; }
+  .step.lock { border-color: #b9dccb; background: #f6fbf8; }
+  .step.lock .n { background: var(--ok); color: #fff; }
+  .step b { display: block; font-size: 15.5px; }
+  .step small { display: block; font-size: 13.5px; color: var(--muted); line-height: 1.35; }
+  code { font-family: var(--mono); font-size: 12px; color: var(--navy-2); }
+
+  .trap { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .trap div { border-radius: 8px; padding: 10px 12px; background: var(--soft); }
+  .trap .big { font-size: 34px; font-weight: 800; letter-spacing: -0.02em; color: var(--navy); line-height: 1.1; }
+  .trap small { display: block; font-size: 13px; color: var(--muted); }
+  .trap em { font-style: normal; font-weight: 700; color: var(--hz); }
+
+  .res { width: 100%; border-collapse: collapse; }
+  .res th { font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); font-weight: 600; text-align: right; padding: 4px 4px 6px; border-bottom: 2px solid var(--navy); }
+  .res th:first-child { text-align: left; }
+  .res td { font-size: 14.5px; padding: 7px 4px; border-bottom: 1px solid var(--rule); text-align: right; font-variant-numeric: tabular-nums; color: var(--body); }
+  .res td:first-child { text-align: left; color: var(--ink); }
+  .res td:first-child small { display: block; font-size: 11.5px; color: var(--muted); }
+  .res tr.best td { background: var(--gold-soft); color: var(--ink); font-weight: 600; }
+  .res tr.rec td:nth-child(3) { color: var(--ok); font-weight: 700; }
+  .res .hi { font-weight: 700; color: var(--ink); }
+
+  .mats { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .mat h4 { font-size: 13px; font-weight: 600; color: var(--ink); margin-bottom: 5px; }
+  .mat h4 span { color: var(--muted); font-weight: 400; }
+  .mg { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; }
+  .mg div { border-radius: 5px; padding: 8px 9px; }
+  .mg b { display: block; font-size: 21px; font-weight: 800; letter-spacing: -0.01em; }
+  .mg small { font-size: 10.5px; text-transform: uppercase; letter-spacing: .04em; }
+  .tn { background: var(--safe-soft); } .tn small { color: var(--safe); }
+  .fp { background: var(--gold-soft); } .fp small { color: var(--gold); }
+  .fn { background: var(--hz-soft); } .fn small { color: var(--hz); }
+  .tp { background: var(--ok-soft); } .tp small { color: var(--ok); }
+
+  .fig { border: 1px solid var(--rule); border-radius: 8px; padding: 6px; margin-top: 8px; }
+  .fig img { width: 100%; display: block; }
+  .refs { list-style: none; display: grid; gap: 4px; counter-reset: r; }
+  .refs li { font-size: 13.5px; line-height: 1.4; color: var(--muted); padding-left: 24px; position: relative; counter-increment: r; }
+  .refs li::before { content: "[" counter(r) "]"; position: absolute; left: 0; color: var(--navy); font-weight: 600; }
+  .refs i { color: var(--body); }
+
+  .foot { display: flex; justify-content: space-between; align-items: center; padding: 11px 44px; border-top: 1px solid var(--rule); font-size: 13.5px; color: var(--muted); }
+  .foot b { color: var(--navy); }
+</style>
+</head>
+<body>
+<div class="poster" id="poster">
+
+  <header class="head">
+    <div>
+      <p class="head__kicker">Machine learning · Explainable AI · NASA open data</p>
+      <h1>Near-Earth Object Hazard Classification<br><span>with Explainable Machine Learning</span></h1>
+      <p class="head__by"><b>Aditya Kumar Gupta</b> &nbsp;·&nbsp; B.Tech Computer Science &amp; Engineering, Manav Rachna University, Faridabad &nbsp;·&nbsp; November 2026</p>
+    </div>
+    <div class="head__stats">
+      <div><b>90,836</b><small>asteroid records</small></div>
+      <div><b style="color:#ffa07a">9.73%</b><small>hazardous</small></div>
+      <div><b style="color:#8ce99a">97.6%</b><small>best recall</small></div>
+      <div><b style="color:#ffc078">0.492</b><small>best MCC</small></div>
+    </div>
+  </header>
+
+  <main class="body">
+    <div class="col">
+      <section class="sec">
+        <h2><i>1</i>Introduction</h2>
+        <p>NASA labels an asteroid <b>potentially hazardous</b> when two conditions hold. We ask how much of this label a model can learn from <b>four quick fly-by measurements</b>, and where it stops.</p>
+        <div class="rule">
+          <div><span class="f" style="color:var(--gold)">H ≤ 22</span><small>big enough (≈ 140 m+)</small><span class="tag tag--y">in data</span></div>
+          <div><span class="f" style="color:var(--hz)">MOID ≤ 0.05 au</span><small>orbit passes close to Earth</small><span class="tag tag--n">not in data</span></div>
+        </div>
+      </section>
+
+      <section class="sec">
+        <h2><i>2</i>Dataset</h2>
+        <p>Kaggle <b>NASA Nearest Earth Objects</b> (neo_v2.csv): 90,836 close approaches, 10 columns, no missing values.</p>
+        <div class="classbar"><span style="flex:81996;background:var(--safe)">Safe · 81,996 (90.3%)</span><span style="flex:8840;background:var(--hz);justify-content:center">8,840</span></div>
+        <p class="cap">Severe class imbalance: about <b>1 in 10</b> objects is hazardous.</p>
+        <table class="feat">
+          <tr><td>est_diameter_min</td><td>estimated size (km)</td></tr>
+          <tr><td>absolute_magnitude</td><td>brightness H</td></tr>
+          <tr><td>relative_velocity</td><td>speed relative to Earth</td></tr>
+          <tr><td>miss_distance</td><td>distance on this fly-by</td></tr>
+        </table>
+        <p class="cap">est_diameter_max dropped (r = 1.00 with min); identifiers dropped.</p>
+      </section>
+
+      <section class="sec">
+        <h2><i>3</i>Methodology</h2>
+        <div class="flow">
+          <div class="step lock"><span class="n">1</span><div><b>Stratified 80 / 20 split</b><small>72,668 train · 18,168 test, never resampled</small></div></div>
+          <div class="step"><span class="n">2</span><div><b>Scale on training data only</b><small><code>StandardScaler</code> fitted on train</small></div></div>
+          <div class="step"><span class="n">3</span><div><b>Five classifiers</b><small>LogReg, Random Forest, Decision Tree, KNN, Linear SVM</small></div></div>
+          <div class="step"><span class="n">4</span><div><b>Two imbalance strategies</b><small><code>class_weight="balanced"</code> vs SMOTE</small></div></div>
+          <div class="step"><span class="n">5</span><div><b>Explain with SHAP</b><small>global importance and single predictions</small></div></div>
+          <div class="step lock"><span class="n">6</span><div><b>Leakage-safe tuning</b><small>Scaler → SMOTE → RF inside each CV fold, F1 scoring</small></div></div>
+        </div>
+      </section>
+    </div>
+
+    <div class="col">
+      <section class="sec">
+        <h2><i>4</i>Results</h2>
+        <div class="trap">
+          <div><small>Always predict “safe”</small><div class="big">90.27%</div><small>accuracy · <em>0</em> of 1,768 caught</small></div>
+          <div><small>Plain logistic regression</small><div class="big">90.33%</div><small>accuracy · <em>137</em> of 1,768 caught</small></div>
+        </div>
+        <div class="box box--hz">Accuracy hides the failure on rare events, so models are compared on <b>recall, F1 and MCC</b>.</div>
+      </section>
+
+      <section class="sec">
+        <table class="res" id="res">
+          <thead><tr><th>Model</th><th>Prec.</th><th>Recall</th><th>F1</th><th>MCC</th></tr></thead>
+          <tbody></tbody>
+        </table>
+        <p class="cap">Held-out test set (n = 18,168). <span style="background:var(--gold-soft);padding:0 4px">Highlighted</span>: best F1 and MCC. Green: best recall.</p>
+      </section>
+
+      <section class="sec">
+        <div class="mats" id="mats"></div>
+        <p class="cap">Confusion matrices. The weighted tree misses only <b>43</b> hazards; SMOTE + RF cuts false alarms by <b>69%</b>.</p>
+      </section>
+    </div>
+
+    <div class="col">
+      <section class="sec">
+        <h2><i>5</i>Class imbalance: weighting vs SMOTE</h2>
+        <svg id="db" width="100%" viewBox="0 0 430 250"></svg>
+        <p class="cap"><span style="color:var(--safe)">●</span> class weighting (none for KNN) &nbsp; <span style="color:var(--hz)">●</span> SMOTE. F1 on the same test set.</p>
+        <div class="box box--nv">SMOTE helps only where weighting was weak or impossible: <b>Random Forest +9.4</b> and <b>KNN +7.8</b> F1 points; linear models are unchanged.</div>
+      </section>
+
+      <section class="sec">
+        <h2><i>6</i>Explainability (SHAP)</h2>
+        <svg id="shap" width="100%" viewBox="0 0 430 140"></svg>
+        <p class="cap">Mean |SHAP value|, SMOTE Random Forest, 300 test asteroids.</p>
+        <div class="fig"><img src="assets/neo/shap-beeswarm.png" alt="SHAP beeswarm plot"></div>
+        <div class="box box--ok">Size features account for <b>82%</b> of the model’s reasoning, matching NASA’s own <b>H ≤ 22</b> criterion.</div>
+      </section>
+    </div>
+
+    <div class="col">
+      <section class="sec">
+        <h2><i>7</i>Key finding: a precision ceiling</h2>
+        <svg id="ceil" width="100%" viewBox="0 0 430 250"></svg>
+        <p class="cap">Precision of all 12 trained models. None exceeds <b>61.6%</b>, and tuning does not move it.</p>
+        <div class="box box--hz">Among large asteroids, hazardous and safe objects look <b>identical</b> without the orbit (MOID). The limit is <b>missing information</b>, not the algorithm.</div>
+      </section>
+
+      <section class="sec">
+        <h2><i>8</i>Conclusions</h2>
+        <ul class="ul">
+          <li>Accuracy is misleading for rare-event detection; use recall, F1 and MCC.</li>
+          <li>A size-only screen catches <b>97.6%</b> of hazards without fitting an orbit, useful for prioritising follow-up.</li>
+          <li><b>SMOTE + Random Forest</b> gives the best balance (F1 54.4%, MCC 0.492).</li>
+          <li>Future models need <b>orbital features</b> (MOID, orbital elements).</li>
+        </ul>
+      </section>
+
+      <section class="sec">
+        <h2><i>9</i>References</h2>
+        <ol class="refs">
+          <li>NASA CNEOS. <i>NEO Basics: Potentially Hazardous Asteroids.</i></li>
+          <li>S. Vani. <i>NASA Nearest Earth Objects</i>, Kaggle dataset.</li>
+          <li>Chawla et al. <i>SMOTE: Synthetic Minority Over-sampling Technique.</i> JAIR, 2002.</li>
+          <li>Lundberg &amp; Lee. <i>A Unified Approach to Interpreting Model Predictions.</i> NeurIPS, 2017.</li>
+          <li>Pedregosa et al. <i>Scikit-learn: Machine Learning in Python.</i> JMLR, 2011.</li>
+        </ol>
+      </section>
+    </div>
+  </main>
+
+  <footer class="foot">
+    <span><b>Aditya Kumar Gupta</b> · adityagrinds@gmail.com · github.com/adityagrinds</span>
+    <span>Python · pandas · scikit-learn · imbalanced-learn · SHAP · Matplotlib · Seaborn</span>
+  </footer>
+</div>
+
+<script>
+(() => {
+  const NS = 'http://www.w3.org/2000/svg';
+  const el = (t, a, p, txt) => { const e = document.createElementNS(NS, t); for (const k in a) e.setAttribute(k, a[k]); if (txt != null) e.textContent = txt; p.appendChild(e); return e; };
+  const st = ([tn, fp, fn, tp]) => { const prec = tp / (tp + fp), rec = tp / (tp + fn); return { prec, rec, f1: 2 * prec * rec / (prec + rec), mcc: (tp * tn - fp * fn) / Math.sqrt((tp + fp) * (tp + fn) * (tn + fp) * (tn + fn)) }; };
+  const M = {
+    lr:   ['Logistic Regression', 'no imbalance fix', [16274, 126, 1631, 137]],
+    lrb:  ['Logistic Regression', 'class weighting', [12631, 3769, 120, 1648]],
+    svm:  ['Linear SVM', 'class weighting', [12450, 3950, 74, 1694]],
+    dt:   ['Decision Tree', 'class weighting', [12704, 3696, 43, 1725]],
+    knn:  ['KNN', 'no weighting', [15734, 666, 1143, 625]],
+    rf:   ['Random Forest', 'class weighting', [16010, 390, 1142, 626]],
+    slr:  ['Logistic Regression', 'SMOTE', [12634, 3766, 120, 1648]],
+    sdt:  ['Decision Tree', 'SMOTE', [12815, 3585, 85, 1683]],
+    sknn: ['KNN', 'SMOTE', [14228, 2172, 500, 1268]],
+    ssvm: ['Linear SVM', 'SMOTE', [12453, 3947, 75, 1693]],
+    srf:  ['Random Forest', 'SMOTE', [15254, 1146, 680, 1088]],
+    trf:  ['Random Forest', 'SMOTE + tuned', [15161, 1239, 652, 1116]],
+  };
+  for (const k in M) M[k].s = st(M[k][2]);
+  const p1 = (v) => (v * 100).toFixed(1);
+
+  const tb = document.querySelector('#res tbody');
+  ['lr', 'lrb', 'svm', 'dt', 'knn', 'rf', 'srf', 'trf'].forEach((k) => {
+    const [n, g] = M[k], s = M[k].s;
+    tb.insertAdjacentHTML('beforeend', `<tr class="${k === 'srf' ? 'best' : k === 'dt' ? 'rec' : ''}"><td>${n}<small>${g}</small></td><td>${p1(s.prec)}</td><td>${p1(s.rec)}</td><td class="${k === 'srf' ? 'hi' : ''}">${p1(s.f1)}</td><td>${s.mcc.toFixed(3)}</td></tr>`);
+  });
+
+  const mats = document.getElementById('mats'), f = (x) => x.toLocaleString('en-US');
+  [['dt', 'Decision Tree', 'weighted'], ['srf', 'Random Forest', 'SMOTE']].forEach(([k, n, g]) => {
+    const [tn, fp, fn, tp] = M[k][2];
+    mats.insertAdjacentHTML('beforeend', `<div class="mat"><h4>${n} <span>· ${g}</span></h4><div class="mg">
+      <div class="tn"><small>True neg.</small><b>${f(tn)}</b></div><div class="fp"><small>False alarm</small><b>${f(fp)}</b></div>
+      <div class="fn"><small>Missed</small><b>${f(fn)}</b></div><div class="tp"><small>Caught</small><b>${f(tp)}</b></div></div></div>`);
+  });
+
+  const db = document.getElementById('db');
+  const pairs = [['lrb', 'slr', 'Logistic Reg.'], ['rf', 'srf', 'Random Forest'], ['dt', 'sdt', 'Decision Tree'], ['knn', 'sknn', 'KNN'], ['svm', 'ssvm', 'Linear SVM']];
+  const x0 = 120, x1 = 370, lo = 0.38, hi = 0.58, X = (v) => x0 + ((v - lo) / (hi - lo)) * (x1 - x0);
+  [0.4, 0.45, 0.5, 0.55].forEach((t) => {
+    el('line', { x1: X(t), x2: X(t), y1: 4, y2: 222, stroke: '#e6e9ef' }, db);
+    el('text', { x: X(t), y: 242, 'text-anchor': 'middle', 'font-size': 12, fill: '#6b7385' }, db, Math.round(t * 100) + '%');
+  });
+  pairs.forEach(([a, b, n], i) => {
+    const y = 24 + i * 44, va = M[a].s.f1, vb = M[b].s.f1, d = (vb - va) * 100;
+    el('text', { x: 0, y: y + 5, 'font-size': 14, fill: '#1d2330' }, db, n);
+    el('line', { x1: X(va), x2: X(vb), y1: y, y2: y, stroke: d > 1 ? '#d9480f' : '#b7c3d6', 'stroke-width': 3 }, db);
+    el('circle', { cx: X(va), cy: y, r: 6.5, fill: '#2f6db5' }, db);
+    el('circle', { cx: X(vb), cy: y, r: 6.5, fill: '#d9480f' }, db);
+    el('text', { x: 430, y: y + 5, 'text-anchor': 'end', 'font-size': 13.5, 'font-weight': 700, fill: d > 1 ? '#2b8a5e' : '#6b7385' }, db, (d >= 0 ? '+' : '') + d.toFixed(1));
+  });
+
+  const sh = document.getElementById('shap');
+  [['est_diameter_min', 0.31, '#d9480f'], ['absolute_magnitude', 0.11, '#d9480f'], ['miss_distance', 0.05, '#9aa5b8'], ['relative_velocity', 0.04, '#9aa5b8']].forEach(([n, v, c], i) => {
+    const y = 6 + i * 33;
+    el('text', { x: 0, y: y + 17, 'font-size': 13, fill: '#1d2330', style: 'font-family:JetBrains Mono' }, sh, n);
+    el('rect', { x: 160, y: y + 5, width: (v / 0.31) * 220, height: 17, rx: 3, fill: c }, sh);
+    el('text', { x: 166 + (v / 0.31) * 220, y: y + 18, 'font-size': 13, 'font-weight': 700, fill: '#1d2330' }, sh, v.toFixed(2));
+  });
+
+  const ce = document.getElementById('ceil');
+  const order = ['lr', 'lrb', 'rf', 'dt', 'knn', 'svm', 'slr', 'srf', 'sdt', 'sknn', 'ssvm', 'trf'];
+  const ab = { lr: 'LR', lrb: 'LR', rf: 'RF', dt: 'DT', knn: 'KNN', svm: 'SVM', slr: 'LR', srf: 'RF', sdt: 'DT', sknn: 'KNN', ssvm: 'SVM', trf: 'RF*' };
+  const base = 200, H = 180, top = 0.75, bw = 24, gap = (430 - 30 - order.length * bw) / order.length;
+  [0, 0.25, 0.5, 0.75].forEach((t) => {
+    el('line', { x1: 30, x2: 430, y1: base - (t / top) * H, y2: base - (t / top) * H, stroke: '#eef0f4' }, ce);
+    el('text', { x: 24, y: base - (t / top) * H + 4, 'text-anchor': 'end', 'font-size': 11, fill: '#6b7385' }, ce, t * 100 + '%');
+  });
+  const maxP = Math.max(...order.map((k) => M[k].s.prec));
+  order.forEach((k, i) => {
+    const v = M[k].s.prec, h = (v / top) * H, x = 30 + gap / 2 + i * (bw + gap);
+    const fill = i === 0 ? '#9aa5b8' : i <= 5 ? '#2f6db5' : i <= 10 ? '#d9480f' : '#c98a12';
+    el('rect', { x, y: base - h, width: bw, height: h, fill, opacity: v === maxP ? 1 : 0.85 }, ce);
+    el('text', { x: x + bw / 2, y: base + 15, 'text-anchor': 'middle', 'font-size': 10.5, fill: '#3a4252' }, ce, ab[k]);
+  });
+  const yl = base - (maxP / top) * H;
+  el('line', { x1: 30, x2: 430, y1: yl, y2: yl, stroke: '#1d2330', 'stroke-width': 1.5, 'stroke-dasharray': '6 4' }, ce);
+  el('text', { x: 430, y: yl - 6, 'text-anchor': 'end', 'font-size': 12.5, 'font-weight': 700, fill: '#1d2330' }, ce, 'ceiling 61.6%');
+  [['none', '#9aa5b8'], ['weighting', '#2f6db5'], ['SMOTE', '#d9480f'], ['tuned', '#c98a12']].forEach(([t, c], i) => {
+    el('rect', { x: 34 + i * 96, y: 232, width: 11, height: 11, fill: c }, ce);
+    el('text', { x: 50 + i * 96, y: 242, 'font-size': 12, fill: '#3a4252' }, ce, t);
+  });
+})();
+</script>
+</body>
+</html>

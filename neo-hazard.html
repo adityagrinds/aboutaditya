@@ -326,6 +326,32 @@
     .btn--fill:hover { background: var(--fg); border-color: var(--fg); color: var(--bg); }
     .foot { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding: 28px 0 40px; border-top: 1px solid var(--line); color: var(--dim); margin-top: 80px; }
 
+    /* poster section */
+    .poster-wrap { display: flex; flex-direction: column-reverse; gap: 22px; max-width: 1080px; margin: 0 auto; }
+    .poster-info .card { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 10px 32px; align-items: center; }
+    .poster-info .card > .sec__kick { grid-column: 1 / -1; margin: 0; }
+    .poster-info .poster-list { grid-template-columns: 1fr 1fr; margin: 0; }
+    .poster-info .poster-btns { flex-direction: column; align-items: stretch; }
+    .poster-info .poster-btns .btn { justify-content: center; }
+    .poster-info .card > p.mono { grid-column: 2; margin-top: 0 !important; text-align: center; }
+    .poster-list { list-style: none; counter-reset: p; display: grid; gap: 10px; margin: 14px 0 26px; }
+    .poster-list li { counter-increment: p; position: relative; padding-left: 38px; color: var(--muted); font-size: 15px; }
+    .poster-list li::before { content: counter(p, decimal-leading-zero); position: absolute; left: 0; top: 1px; font-family: var(--mono); font-size: 11px; color: var(--gold); border: 1px solid rgba(255, 181, 71, 0.35); border-radius: 6px; padding: 2px 5px; }
+    .poster-list b { color: var(--fg); font-weight: 600; }
+    .poster-btns { display: flex; flex-wrap: wrap; gap: 10px; }
+    .poster-btns .btn { padding: 12px 18px; font-size: 11px; }
+    .poster-frame {
+      position: relative; display: block; border-radius: 18px; overflow: hidden; border: 1px solid var(--line);
+      box-shadow: 0 50px 120px -40px rgba(255, 140, 60, 0.28), 0 40px 80px -40px rgba(0, 0, 0, 0.9);
+      transform: perspective(2000px) rotateX(3deg); transition: transform 0.8s var(--ease), box-shadow 0.8s var(--ease);
+    }
+    .poster-frame:hover { transform: none; box-shadow: 0 60px 140px -40px rgba(255, 140, 60, 0.4), 0 0 0 1px rgba(255, 181, 71, 0.45); }
+    .poster-frame img { width: 100%; height: auto; display: block; }
+    .poster-frame::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(115deg, rgba(255, 255, 255, 0.1), transparent 30%, transparent 70%, rgba(255, 181, 71, 0.06)); }
+    .poster-frame__hint { position: absolute; right: 16px; top: 16px; z-index: 1; padding: 8px 12px; border-radius: 999px; background: rgba(7, 7, 9, 0.85); color: #ece8df; opacity: 0; transform: translateY(-6px); transition: all 0.4s var(--ease); }
+    .poster-frame:hover .poster-frame__hint { opacity: 1; transform: none; }
+    @media (max-width: 900px) { .poster-info .card { grid-template-columns: 1fr; } .poster-info .poster-list { grid-template-columns: 1fr; } .poster-info .card > p.mono { grid-column: auto; } .poster-frame { transform: none; } }
+
     /* lightbox */
     .lbx { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 4vh 4vw; background: rgba(5, 5, 7, 0.92); opacity: 0; pointer-events: none; transition: opacity .35s ease; }
     .lbx.open { opacity: 1; pointer-events: auto; }
@@ -355,6 +381,7 @@
       <a href="#tuning">Tuning</a>
       <a href="#insight">Insight</a>
       <a href="#impact">Impact</a>
+      <a href="#poster">Poster</a>
     </nav>
     <span class="bar__prog" id="prog"></span>
   </header>
@@ -887,6 +914,45 @@ Best Cross Validation F1 Score: 0.5084</div>
         <div class="stack-chips" style="margin-top:12px">
           <span>Python</span><span>pandas</span><span>NumPy</span><span>scikit-learn</span><span>imbalanced-learn (SMOTE)</span><span>SHAP</span><span>Matplotlib</span><span>Seaborn</span><span>Google Colab</span><span>kagglehub</span>
         </div>
+      </div>
+    </section>
+
+    <!-- ================= 12 POSTER ================= -->
+    <section class="sec wrap" id="poster">
+      <div class="sec__head rv">
+        <span class="sec__num">12</span>
+        <div>
+          <p class="sec__kick mono">Research poster</p>
+          <h2>The whole study on <em class="s">one page</em></h2>
+          <p class="lead">A one-page, conference-style poster of the study (landscape, A-series ratio). Every chart is drawn from the notebook&rsquo;s real numbers.</p>
+        </div>
+      </div>
+      <div class="poster-wrap">
+        <div class="poster-info rv">
+          <div class="card">
+            <p class="sec__kick mono">Inside the poster</p>
+            <ol class="poster-list">
+              <li><b>Introduction</b> &middot; NASA&rsquo;s hazard rule</li>
+              <li><b>Dataset</b> &middot; 1 in 10 hazardous</li>
+              <li><b>Methodology</b> &middot; 6-step pipeline</li>
+              <li><b>Results</b> &middot; table + matrices</li>
+              <li><b>Weighting vs SMOTE</b></li>
+              <li><b>Explainability</b> &middot; SHAP</li>
+              <li><b>Key finding</b> &middot; 62% ceiling</li>
+              <li><b>Conclusions</b> &amp; references</li>
+            </ol>
+            <div class="poster-btns">
+              <a class="btn btn--fill" href="assets/neo/neo-poster.pdf" download="NEO-Hazard-Classification-Poster.pdf">Download PDF &darr;</a>
+              <a class="btn" href="assets/neo/neo-poster.png" download="NEO-Hazard-Classification-Poster.png">PNG &middot; 4000px</a>
+              <a class="btn" href="neo-poster.html" target="_blank" rel="noopener">Open full size &nearr;</a>
+            </div>
+            <p class="mono" style="color:var(--dim);margin-top:16px">Vector PDF &middot; prints sharp at any size</p>
+          </div>
+        </div>
+        <a class="poster-frame rv" href="neo-poster.html" target="_blank" rel="noopener" aria-label="Open the research poster at full size">
+          <img src="assets/neo/neo-poster.jpg" alt="Research poster: Near-Earth Object Hazard Classification with explainable machine learning, by Aditya Kumar Gupta" loading="lazy" width="1600" height="1131">
+          <span class="poster-frame__hint mono">Open full size &nearr;</span>
+        </a>
       </div>
     </section>
 

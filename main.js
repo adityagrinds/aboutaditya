@@ -1527,6 +1527,166 @@ function startCalendar() {
   }
 
   /* =========================================================
+     RESUME: the page flies out of the button that opened it, unrolls
+     top to bottom, a gold scan line runs down it; closing rolls it back up
+     ========================================================= */
+  const resume = $('#resume');
+  if (resume) {
+    const paper = $('.resume__paper', resume), bar = $('.resume__bar', resume), bg = $('.resume__backdrop', resume);
+    const scan = $('.resume__scan', resume), scroller = $('.resume__scroll', resume), img = $('img', paper);
+    const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let origin = null, tl = null, lastFocus = null;
+    const fromButton = () => {
+      // where the paper starts: the centre of the button, relative to the paper's own centre
+      const p = paper.getBoundingClientRect();
+      const o = origin ? origin.getBoundingClientRect() : { left: innerWidth / 2, top: innerHeight / 2, width: 0, height: 0 };
+      return { x: o.left + o.width / 2 - (p.left + p.width / 2), y: o.top + o.height / 2 - (p.top + Math.min(p.height, innerHeight) / 2) };
+    };
+    const openResume = (btn) => {
+      if (!resume.hidden) return;
+      origin = btn; lastFocus = document.activeElement;
+      img.loading = 'eager';
+      resume.hidden = false; scroller.scrollTop = 0;
+      document.documentElement.classList.add('has-dialog');
+      if (lenis) lenis.stop();
+      document.documentElement.style.overflow = 'hidden';
+      if (tl) tl.kill();
+      if (calm) { gsap.set([bg, bar, paper], { opacity: 1, clearProps: 'transform,clipPath' }); $('.resume__x', resume).focus(); return; }
+      const f = fromButton();
+      tl = gsap.timeline({ onComplete: () => $('.resume__x', resume).focus({ preventScroll: true }) })
+        .fromTo(bg, { opacity: 0 }, { opacity: 1, duration: 0.5, ease: 'power2.out' }, 0)
+        // 1. a thin folded strip leaps out of the button to the centre
+        .fromTo(paper,
+          { x: f.x, y: f.y, scale: 0.18, rotation: -9, rotationX: 55, opacity: 0, clipPath: 'inset(0% 0% 96% 0% round 6px)' },
+          { x: 0, y: 0, scale: 1, rotation: 0, rotationX: 0, opacity: 1, duration: 0.75, ease: 'expo.out' }, 0)
+        // 2. then it unrolls downwards
+        .to(paper, { clipPath: 'inset(0% 0% 0% 0% round 6px)', duration: 0.9, ease: 'power3.inOut' }, 0.45)
+        // 3. a gold scan line reads it once
+        .fromTo(scan, { opacity: 1, yPercent: -100, top: 0 }, { top: '100%', duration: 1.1, ease: 'power2.inOut' }, 0.55)
+        .to(scan, { opacity: 0, duration: 0.3 }, 1.5)
+        .fromTo(bar, { opacity: 0, y: -16 }, { opacity: 1, y: 0, duration: 0.6, ease: 'power3.out' }, 0.9);
+    };
+    const closeResume = () => {
+      if (resume.hidden) return;
+      const done = () => {
+        resume.hidden = true;
+        document.documentElement.classList.remove('has-dialog');
+        if (lenis) lenis.start();
+        document.documentElement.style.overflow = '';
+        if (lastFocus) lastFocus.focus({ preventScroll: true });
+      };
+      if (tl) tl.kill();
+      if (calm) return done();
+      scroller.scrollTop = Math.min(scroller.scrollTop, 0);
+      const f = fromButton();
+      tl = gsap.timeline({ onComplete: done })
+        .to(bar, { opacity: 0, y: -16, duration: 0.25 }, 0)
+        .to(paper, { clipPath: 'inset(0% 0% 96% 0% round 6px)', duration: 0.5, ease: 'power3.in' }, 0)
+        .to(paper, { x: f.x, y: f.y, scale: 0.18, rotation: -9, rotationX: 55, opacity: 0, duration: 0.45, ease: 'power3.in' }, 0.4)
+        .to(bg, { opacity: 0, duration: 0.4 }, 0.45);
+    };
+    $$('[data-resume-open]').forEach((b) => b.addEventListener('click', () => openResume(b)));
+    resume.addEventListener('click', (e) => {
+      if (e.target.closest('[data-resume-close]') || e.target === scroller) closeResume();
+    });
+    addEventListener('keydown', (e) => { if (!resume.hidden && e.key === 'Escape') { e.stopPropagation(); closeResume(); } }, true);
+  }
+
+  /* =========================================================
+     HIRE ME: dialog form, delivered to my inbox by FormSubmit
+     (the first ever submission sends an "Activate form" email; click it once)
+     ========================================================= */
+  const hire = $('#hire');
+  if (hire) {
+    const HIRE_TO = 'adityagrinds@gmail.com';
+    const form = $('#hireForm', hire), done = $('#hireDone', hire), status = $('#hireStatus', hire);
+    const send = $('.hire__send', form), sendTxt = $('.hire__send-txt', form);
+    let lastFocus = null;
+    const openHire = () => {
+      lastFocus = document.activeElement;
+      hire.hidden = false;
+      document.documentElement.classList.add('has-dialog');
+      requestAnimationFrame(() => hire.classList.add('is-open'));
+      if (lenis) lenis.stop();
+      document.documentElement.style.overflow = 'hidden';
+      setTimeout(() => { const f = $('input[name="name"]', form); if (f && !form.hidden) f.focus({ preventScroll: true }); }, 350);
+    };
+    const closeHire = () => {
+      hire.classList.remove('is-open');
+      document.documentElement.classList.remove('has-dialog');
+      if (lenis) lenis.start();
+      document.documentElement.style.overflow = '';
+      setTimeout(() => {
+        hire.hidden = true;
+        if (!done.hidden) { done.hidden = true; done.classList.remove('is-in'); form.hidden = false; form.reset(); status.textContent = ''; }
+      }, 450);
+      if (lastFocus) lastFocus.focus({ preventScroll: true });
+    };
+    $('#hireOpen').addEventListener('click', openHire);
+    hire.addEventListener('click', (e) => { if (e.target.closest('[data-hire-close]')) closeHire(); });
+    addEventListener('keydown', (e) => {
+      if (hire.hidden) return;
+      if (e.key === 'Escape') { e.stopPropagation(); closeHire(); }
+      if (e.key === 'Tab') { // keep focus inside the dialog
+        const els = $$('button, input, select, textarea, a[href]', hire).filter((el) => el.offsetParent && !el.disabled && el.tabIndex !== -1);
+        const first = els[0], lastEl = els[els.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); lastEl.focus(); }
+        else if (!e.shiftKey && document.activeElement === lastEl) { e.preventDefault(); first.focus(); }
+      }
+    }, true);
+
+    const setErr = (name, msg) => {
+      const field = form.elements[name].closest('.hire__field');
+      field.classList.toggle('is-bad', !!msg);
+      $('.hire__err', field).textContent = msg || '';
+      form.elements[name].setAttribute('aria-invalid', msg ? 'true' : 'false');
+    };
+    const validate = () => {
+      const v = (n) => form.elements[n].value.trim();
+      const errs = {
+        name: v('name').length < 2 ? 'Please add your name.' : '',
+        email: !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v('email')) ? 'Please add a valid email so I can reply.' : '',
+        message: v('message').length < 10 ? 'A line or two about the work, please.' : '',
+      };
+      Object.entries(errs).forEach(([k, m]) => setErr(k, m));
+      const bad = Object.keys(errs).find((k) => errs[k]);
+      if (bad) form.elements[bad].focus();
+      return !bad;
+    };
+    ['name', 'email', 'message'].forEach((n) => form.elements[n].addEventListener('input', () => setErr(n, '')));
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (form.elements._honey.value) return;             // bot
+      if (!validate()) return;
+      const d = Object.fromEntries(new FormData(form).entries());
+      const payload = {
+        _subject: `Portfolio: ${d.reason} enquiry from ${d.name}`,
+        _template: 'table', _captcha: 'false', _replyto: d.email,
+        Reason: d.reason, Name: d.name, Email: d.email, Company: d.company || '-', Timeline: d.timeline, Details: d.message,
+      };
+      send.disabled = true; send.classList.add('is-busy'); sendTxt.textContent = 'Sending'; status.className = 'hire__status'; status.textContent = '';
+      try {
+        const res = await fetch(`https://formsubmit.co/ajax/${HIRE_TO}`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify(payload),
+        });
+        const out = await res.json().catch(() => ({}));
+        if (!res.ok || String(out.success) !== 'true') throw new Error(out.message || 'Send failed');
+        $('#hireDoneMsg').textContent = `Thanks, ${d.name.split(' ')[0]}. Your message is in my inbox and I'll reply to ${d.email} soon.`;
+        form.hidden = true; done.hidden = false; requestAnimationFrame(() => done.classList.add('is-in'));
+      } catch (err) {
+        // fall back to the visitor's own mail app, with everything pre-filled
+        const body = `Reason: ${d.reason}\nName: ${d.name}\nEmail: ${d.email}\nCompany: ${d.company || '-'}\nTimeline: ${d.timeline}\n\n${d.message}`;
+        const href = `mailto:${HIRE_TO}?subject=${encodeURIComponent(payload._subject)}&body=${encodeURIComponent(body)}`;
+        status.className = 'hire__status is-err';
+        status.innerHTML = `Couldn&rsquo;t send right now. <a href="${href}">Send it from your email app instead</a>.`;
+      } finally {
+        send.disabled = false; send.classList.remove('is-busy'); sendTxt.textContent = 'Send';
+      }
+    });
+  }
+
+  /* =========================================================
      GATES: hover to focus one, click to fly through a cave into its room
      ========================================================= */
   const gatesEl = $('#gates');
@@ -1996,7 +2156,9 @@ function startCalendar() {
   });
 
   // contact CTA
-  gsap.from('.contact__cta', { y: 60, opacity: 0, duration: 1.2, ease: 'power3.out', scrollTrigger: { trigger: '.contact__cta', start: 'top 92%' } });
+  // triggered by the section, not the buttons: the buttons sit so low that their own start point
+  // could land past the end of the page and they would never appear
+  gsap.from('.contact__cta', { y: 60, opacity: 0, duration: 1.2, ease: 'power3.out', scrollTrigger: { trigger: '.contact', start: 'top 55%' } });
 
   /* ---------------- helpers ---------------- */
   function tilt(el, strength) {
