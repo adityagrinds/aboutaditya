@@ -757,135 +757,7 @@
     document.addEventListener('pointerleave', () => { cursor.style.opacity = 0; });
     document.addEventListener('pointerenter', () => { cursor.style.opacity = 1; });
 
-    // black panther cub: waits for the cursor to stop, wiggles, trots or bounds over, sits,
-    // then says hi and keeps itself busy (grooming, batting at a bug, stretching, looking around)
-    const pan = $('.panther');
-    if (pan) {
-      const svg = $('.panther__svg', pan), rig = $('.panther__rig', pan), head = $('.phead', pan), tail = $('.ptail', pan);
-      const pupil = $('.ppupil', pan), glint = $('.pglint', pan), mouth = $('.pmouth', pan);
-      const legs = $$('.pleg', pan).map((g) => ({ g, k: g.dataset.leg, base: g.getAttribute('transform') }));
-      const W = 64, H = 37, SC = W / 100;
-      const EYE = { x: 81.3 * SC, y: 21.2 * SC };
-      let x = 0, y = 0, vx = 0, vy = 0, dir = 1, phase = 0, amp = 0, sit = 0, idleFor = 0, wiggle = 0;
-      let state = 'idle', seen = false, lastMove = 0, last = performance.now(), tailK = 0, greeted = false;
-      let act = null, nextAct = 0;
-      const fx = { paw: 0, head: 0, headY: 0, tail: 0, lean: 0, hop: 0, mouth: 0 };
-      const ease = (v) => v * v * (3 - 2 * v);
-      // each act returns pose offsets for time t (seconds) with an in/out envelope e
-      const ACTS = {
-        hi:     { dur: 2.4, f: (t, e) => ({ paw: (-82 + Math.sin(t * 13) * 26) * e, head: 10 * e, tail: 18 * e }) },
-        groom:  { dur: 2.8, f: (t, e) => ({ paw: (-118 + Math.sin(t * 13) * 6) * e, head: (24 + Math.sin(t * 13) * 5) * e, headY: 1.6 * e, tail: Math.sin(t * 3) * 8 * e }) },
-        bug:    { dur: 2.4, f: (t, e) => { const sw = Math.max(0, Math.sin(t * 9)); return { paw: (-40 - sw * 70) * e, head: -14 * e, lean: 6 * sw * e, hop: -1.5 * sw * e, tail: Math.sin(t * 9) * 14 * e }; } },
-        stretch:{ dur: 2.4, f: (t, e) => { const m = Math.sin(Math.min(1, t / 2.2) * Math.PI); return { head: -16 * m, lean: -8 * m, mouth: Math.max(0, m * 1.4 - 0.4), tail: 22 * m }; } },
-        look:   { dur: 2.6, f: (t, e) => ({ head: Math.sin(t * 2.4) * 12 * e, tail: Math.sin(t * 2) * 10 * e }) },
-      };
-      const pick = () => { const k = ['groom', 'bug', 'stretch', 'look', 'hi', 'groom', 'bug']; return k[Math.floor(Math.random() * k.length)]; };
-      const place = (hop, tilt) => {
-        svg.style.transform = `scaleX(${dir})`;
-        pan.style.transform = `translate3d(${(x - W / 2).toFixed(1)}px, ${(y - H + hop).toFixed(1)}px, 0) rotate(${(tilt * dir).toFixed(2)}deg)`;
-      };
-      const look = () => {
-        const ex = x - W / 2 + (dir > 0 ? EYE.x : W - EYE.x), ey = y - H + EYE.y;
-        const dx = mouse.x - ex, dy = mouse.y - ey, d = Math.hypot(dx, dy) || 1, k = Math.min(1, d / 40);
-        const cx = 7.3 + (dx / d) * 1.1 * k * dir, cy = -3.8 + (dy / d) * 0.5 * k;
-        pupil.setAttribute('cx', cx.toFixed(2)); pupil.setAttribute('cy', cy.toFixed(2));
-        glint.setAttribute('cx', (cx + 0.7).toFixed(2)); glint.setAttribute('cy', (cy - 0.8).toFixed(2));
-      };
-      const draw = (speed) => {
-        const bound = speed > 150;
-        const s = Math.sin(phase), c = Math.cos(phase);
-        legs.forEach((l) => {
-          let r;
-          if (bound) r = (l.k[1] === 'f' ? s : -s) * amp + (l.k[0] === 'f' ? 6 : 0) * Math.sign(amp);
-          else r = (l.k === 'nf' || l.k === 'fb' ? s : -s) * amp;
-          let extra = '';
-          if (sit > 0 && l.k[1] === 'b') { r = r * (1 - sit) - 75 * sit; extra = ` scale(1 ${(1 - 0.5 * sit).toFixed(3)})`; }
-          if (l.k === 'nf') r += fx.paw;
-          l.g.setAttribute('transform', `${l.base} rotate(${r.toFixed(1)})${extra}`);
-        });
-        const run = amp / 28;
-        const hop = (bound ? -Math.abs(s) * 5 * run : -Math.abs(c) * 1.3 * run) + fx.hop;
-        const tilt = bound ? c * 5 * run : 0;
-        const wig = wiggle > 0 ? Math.sin(wiggle * 55) * 4 : 0;
-        rig.setAttribute('transform', `rotate(${(-22 * sit + wig + fx.lean).toFixed(2)} 64 55) translate(0 ${(3.5 * sit + (wiggle > 0 ? 1.6 : 0)).toFixed(2)})`);
-        head.setAttribute('transform', `translate(74 ${(25 + fx.headY).toFixed(2)}) rotate(${(20 * sit - tilt * 0.8 + Math.sin(phase * 2) * 2 * run + fx.head - fx.lean).toFixed(2)})`);
-        tail.setAttribute('transform', `translate(19 34) rotate(${(run * (14 + s * 14) - 10 * sit + tailK + fx.tail).toFixed(1)})`);
-        mouth.setAttribute('opacity', fx.mouth.toFixed(2));
-        place(hop, tilt);
-      };
-      const clearFx = () => { for (const k in fx) fx[k] = 0; };
-      addEventListener('pointermove', () => {
-        lastMove = performance.now();
-        if (!seen) { seen = true; x = mouse.x - 80; y = mouse.y + 70; draw(0); pan.classList.add('is-on'); }
-        look();
-      }, { passive: true });
-      document.addEventListener('pointerleave', () => pan.classList.remove('is-on'));
-      document.addEventListener('pointerenter', () => { if (seen) pan.classList.add('is-on'); });
-      (function petLoop(now) {
-        requestAnimationFrame(petLoop);
-        const dt = Math.min(0.05, (now - last) / 1000); last = now;
-        if (!seen) return;
-        const side = mouse.x >= x ? -1 : 1;
-        const tx = mouse.x + side * 64, ty = mouse.y + 56;
-        const dx = tx - x, dy = ty - y, dist = Math.hypot(dx, dy);
-        const still = now - lastMove > 220;
-
-        if (state === 'idle' && still && dist > 22) {
-          state = dist > 160 ? 'wiggle' : 'chase'; wiggle = dist > 160 ? 0.38 : 0;
-          dir = dx > 0 ? 1 : -1; act = null; clearFx();
-        }
-        if (state === 'wiggle') {
-          wiggle -= dt; sit = Math.max(0, sit - dt * 6);
-          if (wiggle <= 0) { wiggle = 0; state = 'chase'; }
-          draw(0); look(); return;
-        }
-        if (state === 'chase') {
-          sit = Math.max(0, sit - dt * 6);
-          const top = dist > 320 ? 330 : 190;
-          const want = top * Math.min(1, dist / 90);
-          const ux = dist ? dx / dist : 0, uy = dist ? dy / dist : 0;
-          const acc = Math.min(1, dt * 4.5);
-          vx += (ux * want - vx) * acc; vy += (uy * want - vy) * acc;
-          x += vx * dt; y += vy * dt;
-          const speed = Math.hypot(vx, vy);
-          if (Math.abs(vx) > 12) dir = vx > 0 ? 1 : -1;
-          amp += (Math.min(30, 8 + speed * 0.12) - amp) * Math.min(1, dt * 8);
-          phase += speed * dt * (speed > 150 ? 0.085 : 0.14);
-          if (dist < 3 && speed < 25) { state = 'idle'; vx = vy = 0; idleFor = 0; dir = mouse.x >= x ? 1 : -1; nextAct = 0.5; }
-          draw(speed); look(); return;
-        }
-        // idle: legs settle, sit down, then do little things
-        idleFor += dt;
-        const sitWant = idleFor > 0.9 ? 1 : 0;
-        if (sit > 0.97 && !act) {
-          nextAct -= dt;
-          if (nextAct <= 0) {
-            const name = greeted ? pick() : 'hi';
-            greeted = true;
-            act = { name, t: 0, dur: ACTS[name].dur };
-          }
-        }
-        if (act) {
-          act.t += dt;
-          const e = ease(Math.min(1, act.t / 0.35, (act.dur - act.t) / 0.4));
-          clearFx(); Object.assign(fx, ACTS[act.name].f(act.t, Math.max(0, e)));
-          if (act.t >= act.dur) { act = null; clearFx(); nextAct = 2.5 + Math.random() * 3.5; }
-        }
-        const settling = act || amp > 0.2 || Math.abs(sit - sitWant) > 0.01 || tailK || (sit > 0.97 && nextAct > 0);
-        if (!settling) return;
-        amp *= 1 - Math.min(1, dt * 10); if (amp < 0.2) amp = 0;
-        sit += (sitWant - sit) * Math.min(1, dt * 5); if (Math.abs(sit - sitWant) < 0.01) sit = sitWant;
-        if (tailK) { tailK *= 1 - Math.min(1, dt * 4); if (Math.abs(tailK) < 0.3) tailK = 0; }
-        draw(0);
-      })(last);
-      const blink = () => {
-        pan.classList.add('blink');
-        setTimeout(() => pan.classList.remove('blink'), 150);
-        if (state === 'idle' && !act && Math.random() < 0.55) tailK = (Math.random() < 0.5 ? -1 : 1) * 16;
-        setTimeout(blink, 2600 + Math.random() * 3600);
-      };
-      setTimeout(blink, 3000);
-    }
+    // NOX, the panther pet, lives in pet.js
   }
 
   const portrait = $('#portrait');
@@ -900,7 +772,7 @@
 
   // hero portrait: hover lights it up; on touch screens a tap toggles it
   const heroPhoto = $('#heroPhoto');
-  if (heroPhoto && isTouch) heroPhoto.addEventListener('click', () => heroPhoto.classList.toggle('is-lit'));
+  // (a tap/click on the portrait opens the about-me card: see ABOUT-ME below)
 
   /* ---------------- scramble text ---------------- */
   const GLYPHS = '!<>-_\\/[]{}=+*^?#AKG01';
@@ -1524,6 +1396,74 @@ function startCalendar() {
       else e.target.pause();
     }), { threshold: 0.25 });
     shotVids.forEach((v) => vio.observe(v));
+  }
+
+  /* =========================================================
+     ABOUT-ME card: grows out of the hero portrait
+     ========================================================= */
+  const meCard = $('#meCard');
+  const mePhoto = $('#heroPhoto');
+  if (meCard && mePhoto) {
+    const card = $('.me__card', meCard), veil = $('.me__veil', meCard);
+    const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let meTl = null, meFocus = null;
+    const flipFrom = () => {
+      const a = mePhoto.getBoundingClientRect(), b = card.getBoundingClientRect();
+      return { x: a.left + a.width / 2 - (b.left + b.width / 2), y: a.top + a.height / 2 - (b.top + b.height / 2), sx: Math.max(0.2, a.width / b.width), sy: Math.max(0.2, a.height / b.height) };
+    };
+    const lockPage = (on) => {
+      document.documentElement.classList.toggle('has-dialog', on);
+      document.documentElement.style.overflow = on ? 'hidden' : '';
+      if (lenis) on ? lenis.stop() : lenis.start();
+    };
+    const openMe = () => {
+      if (!meCard.hidden) return;
+      meFocus = document.activeElement;
+      meCard.hidden = false; meCard.scrollTop = 0;
+      lockPage(true);
+      const parts = $$('.me__in, .me__kick, .me__tag, .me__photo-top', meCard);
+      const lines = $$('.me__line-mask > *', meCard);
+      if (meTl) meTl.kill();
+      if (still) { gsap.set([veil, card, ...parts, ...lines], { clearProps: 'all', opacity: 1 }); return; }
+      const f = flipFrom();
+      meTl = gsap.timeline({ onComplete: () => $('.me__x', meCard).focus({ preventScroll: true }) })
+        .fromTo(veil, { opacity: 0 }, { opacity: 1, duration: 0.5, ease: 'power2.out' }, 0)
+        .fromTo(card, { x: f.x, y: f.y, scaleX: f.sx, scaleY: f.sy, opacity: 0, borderRadius: 200 },
+          { x: 0, y: 0, scaleX: 1, scaleY: 1, opacity: 1, borderRadius: 24, duration: 0.85, ease: 'expo.out' }, 0)
+        .fromTo($('.me__photo img', meCard), { yPercent: 14, scale: 1.06 }, { yPercent: 0, scale: 1, duration: 1.3, ease: 'expo.out' }, 0.1)
+        .fromTo($('.me__photo-word', meCard), { opacity: 0, yPercent: 30 }, { opacity: 1, yPercent: 0, duration: 1.4, ease: 'expo.out' }, 0.2)
+        .fromTo(lines, { yPercent: 110 }, { yPercent: 0, duration: 1, ease: 'expo.out', stagger: 0.09 }, 0.3)
+        .fromTo(parts, { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.7, ease: 'power3.out', stagger: 0.06 }, 0.42)
+        .fromTo($$('.me__facts > div, .me__wins', meCard), { clipPath: 'inset(0 100% 0 0)' }, { clipPath: 'inset(0 0% 0 0)', duration: 0.9, ease: 'power3.inOut', stagger: 0.07, clearProps: 'clipPath' }, 0.55);
+    };
+    const closeMe = (keepLock) => {
+      if (meCard.hidden) return;
+      const done = () => {
+        meCard.hidden = true;
+        // another dialog (resume or hire) may have opened from this card; leave the page locked for it
+        const other = !$('#resume').hidden || !$('#hire').hidden;
+        if (!keepLock && !other) lockPage(false);
+        if (meFocus && !other) meFocus.focus({ preventScroll: true });
+      };
+      if (meTl) meTl.kill();
+      if (still) return done();
+      const f = flipFrom();
+      meTl = gsap.timeline({ onComplete: done })
+        .to(card, { x: f.x, y: f.y, scaleX: f.sx, scaleY: f.sy, opacity: 0, borderRadius: 200, duration: 0.5, ease: 'power3.in' }, 0)
+        .to(veil, { opacity: 0, duration: 0.4 }, 0.1);
+    };
+    mePhoto.setAttribute('role', 'button');
+    mePhoto.setAttribute('tabindex', '0');
+    mePhoto.setAttribute('aria-label', 'Open a short introduction to Aditya');
+    mePhoto.dataset.cursor = 'Meet me';
+    mePhoto.addEventListener('click', openMe);
+    mePhoto.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openMe(); } });
+    meCard.addEventListener('click', (e) => {
+      if (e.target.closest('[data-me-close]') || e.target === meCard) closeMe();
+      if (e.target.closest('[data-me-close-first]')) closeMe(true);
+      if (e.target.closest('[data-me-hire]')) { closeMe(true); setTimeout(() => $('#hireOpen').click(), 380); }
+    });
+    addEventListener('keydown', (e) => { if (!meCard.hidden && e.key === 'Escape') { e.stopPropagation(); closeMe(); } }, true);
   }
 
   /* =========================================================

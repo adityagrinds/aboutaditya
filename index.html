@@ -12,7 +12,7 @@
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%23070709'/><circle cx='32' cy='30' r='12' fill='%23ffb547'/><rect x='29' y='44' width='6' height='10' rx='3' fill='%23ffb547'/></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@500;600;700;800&family=Inter:wght@300;400;500;600&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@500;600;700;800&family=Inter:wght@300;400;500;600&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&family=Fraunces:ital,opsz,wght@0,9..144,300..600;1,9..144,300..500&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body class="is-loading">
@@ -36,43 +36,6 @@
   <div class="progress" id="progress" aria-hidden="true"></div>
 
   <!-- ============ CURSOR ============ -->
-  <div class="panther" aria-hidden="true">
-    <svg class="panther__svg" viewBox="0 0 100 58">
-      <defs>
-        <linearGradient id="pFur" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2c2c34"/><stop offset=".5" stop-color="#151519"/><stop offset="1" stop-color="#09090b"/></linearGradient>
-        <filter id="pFuzz" x="-10%" y="-10%" width="120%" height="120%"><feTurbulence type="fractalNoise" baseFrequency="1.1" numOctaves="2" seed="4" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="1.9" xChannelSelector="R" yChannelSelector="G"/></filter>
-        <radialGradient id="pEye" cx="40%" cy="40%" r="70%"><stop offset="0" stop-color="#c2dfa6"/><stop offset="1" stop-color="#4f8a55"/></radialGradient>
-      </defs>
-      <g class="panther__rig">
-        <g class="pleg pleg--far" data-leg="fb" transform="translate(30 40)"><path filter="url(#pFuzz)" d="M-3.4 0 L3.4 0 L2.6 11.5 Q2.8 13.6 0.8 14 L-4.2 14 Q-6 13.8 -4.6 12 L-2.6 10.6 Z"/></g>
-        <g class="pleg pleg--far" data-leg="ff" transform="translate(61 40)"><path filter="url(#pFuzz)" d="M-3 0 L3 0 L2.4 11.5 Q2.6 13.6 0.8 14 L-4 14 Q-5.8 13.8 -4.4 12 L-2.4 10.6 Z"/></g>
-        <g class="ptail" transform="translate(19 34)" filter="url(#pFuzz)"><path d="M0 0 C-8 1 -14 -2 -16 -9 C-17 -14 -14.5 -17.5 -11 -16" fill="none" stroke="url(#pFur)" stroke-width="4.2" stroke-linecap="round"/><path class="pfur" d="M-13.4 -18.6 L-11.6 -20.6 L-10.6 -18.4 L-8.4 -19.2 L-8.8 -16.6 L-6.8 -15.4 L-9.4 -14.2 L-11.8 -14.6 Z"/></g>
-        <path class="pfur pbody" filter="url(#pFuzz)" d="M72.5 35.5 Q72.2 36.6 71.9 37.7 Q71.1 38.8 70.1 39.8 Q69.0 41.2 67.2 41.7 Q65.5 42.9 63.4 43.3 Q61.4 45.0 58.8 44.6 Q56.3 46.1 53.5 45.5 Q50.7 46.5 47.9 45.9 Q45.0 47.4 42.1 45.9 Q39.3 46.4 36.5 45.5 Q33.7 46.2 31.3 44.6 Q28.8 44.5 26.6 43.3 Q24.5 42.9 22.8 41.7 Q21.1 41.1 19.9 39.8 Q18.7 38.9 18.1 37.7 Q17.8 36.6 17.5 35.5 Q17.8 34.5 18.1 33.5 Q18.8 32.4 19.9 31.7 Q20.9 30.2 22.8 29.9 Q24.3 28.4 26.6 28.5 Q28.7 27.0 31.2 27.3 Q33.6 25.1 36.5 26.5 Q39.3 25.6 42.1 26.1 Q45.0 24.1 47.9 26.1 Q50.8 25.2 53.5 26.5 Q56.3 26.1 58.8 27.3 Q61.2 27.3 63.4 28.5 Q65.6 28.6 67.2 29.9 Q69.1 30.2 70.1 31.7 Q71.1 32.5 71.9 33.5 Q72.3 34.5 72.5 35.5 Z"/>
-        <path class="pfur" filter="url(#pFuzz)" d="M63 27.5 L71 25.5 L73.6 29 L71.4 30.2 L74.2 32.8 L71.2 34 L73.2 37 L69.8 37.6 L70.6 40.6 L66.8 40 L64 41.4 Z"/>
-        <g class="pleg pleg--near" data-leg="nb" transform="translate(25 41)"><path filter="url(#pFuzz)" d="M-4 0 L4 0 L3 11.5 Q3.2 13.8 1 14 L-4.6 14 Q-6.6 13.8 -5 12 L-3 10.4 Z"/></g>
-        <g class="phead" transform="translate(74 25)">
-          <path class="pfur" filter="url(#pFuzz)" d="M-9 -5 L-8.5 -17 L-1.5 -9.5 Z"/>
-          <path class="pfur" filter="url(#pFuzz)" d="M0.5 -10 L5.5 -18.5 L8.8 -6.5 Z"/>
-          <path d="M-7.4 -7 L-7.2 -13.6 L-3.4 -9.6 Z M2.6 -9.8 L5.2 -15 L7 -8 Z" fill="#2e2228"/>
-          <path class="pfur" filter="url(#pFuzz)" d="M-11 0 C-11 -7.5 -5 -11 1 -11 C6 -11 9.8 -8.6 11.5 -4.6 L17.6 -1.6 C19.6 -0.6 19.8 2 18.4 3.4 L15 6.4 C11 8.8 5 9.2 -0.5 8.2 L-3.4 9.6 L-4.4 7.8 L-6.6 8.8 L-7.2 6.6 L-9.4 7 L-9.6 4.8 L-11.4 4.4 C-11 3 -11 1.5 -11 0 Z"/>
-          <path d="M11 1.8 C13 3.4 15.6 3.8 18 3.2 L15 6.4 C12.6 7.8 9.6 8.4 7 8.2 C8.6 6.4 9.8 4 11 1.8 Z" fill="#1f1f26"/>
-          <path d="M17.2 -1.4 L19.4 -0.2 L18 1.2 Z" fill="#4a4a55"/>
-          <path d="M18.2 1.6 Q17.4 4 15.2 4.6" stroke="#4a4a55" stroke-width=".6" fill="none" stroke-linecap="round"/>
-          <path class="pmouth" d="M17.6 2.4 Q16 6.6 12.2 6.4 Q14.6 4.4 17.6 2.4 Z" fill="#5a2a33" opacity="0"/>
-          <path class="pwhisk" d="M14 3 L24 1.2 M14 4.2 L23.6 5.6 M13.4 5.2 L22 8.6"/>
-          <path class="pstreaks" d="M-4 -8 q1.5 2 1.4 4 M-1 -9 q1.4 2 1 4 M-8 -2 q2 1.2 3 3.4 M-6 3 q1.6 1 2.4 3"/>
-          <path class="pfur" filter="url(#pFuzz)" d="M-4.5 -10.6 L-3.4 -12.8 L-2.2 -10.8 L-0.6 -12.6 L0.2 -10.4 Z"/>
-          <path d="M3.4 -5.6 Q7.4 -7.8 11 -5.4" stroke="#3a3a44" stroke-width=".7" fill="none" stroke-linecap="round"/>
-          <g class="peye">
-            <path d="M3.4 -3.6 Q7.2 -6.6 10.8 -3.8 Q7.2 -1.4 3.4 -3.6 Z" fill="url(#pEye)"/>
-            <ellipse class="ppupil" cx="7.3" cy="-3.8" rx=".85" ry="1.7"/>
-            <circle class="pglint" cx="8" cy="-4.6" r=".45"/>
-          </g>
-        </g>
-        <g class="pleg pleg--near pleg--paw" data-leg="nf" transform="translate(66 41)"><path filter="url(#pFuzz)" d="M-3.6 0 L3.6 0 L2.8 11.5 Q3 13.8 1 14 L-4.4 14 Q-6.4 13.8 -4.8 12 L-2.8 10.4 Z"/><ellipse class="ppad" cx="-1.4" cy="13" rx="2.6" ry="1.3"/></g>
-      </g>
-    </svg>
-  </div>
   <div class="cursor" aria-hidden="true">
     <div class="cursor__dot"></div>
     <div class="cursor__ring"><div class="cursor__circle"><span class="cursor__label"></span></div></div>
@@ -165,7 +128,7 @@
           <div class="scroll-cue mono" data-fade><span>Scroll to explore</span><i></i></div>
         </div>
 
-        <figure class="hero__photo" id="heroPhoto" data-cursor="Light up">
+        <figure class="hero__photo" id="heroPhoto" data-cursor="Meet me">
           <div class="hero__halo" aria-hidden="true"></div>
           <img class="hero__img" src="assets/aditya-cutout.webp" alt="Aditya Kumar Gupta" draggable="false">
           <img class="hero__key" src="assets/aditya-cutout.webp" alt="" aria-hidden="true" draggable="false">
@@ -398,6 +361,7 @@
         <span>© 2026 Aditya Kumar Gupta</span>
         <span>Designed &amp; engineered from scratch</span>
         <span id="clock2">IST --:--</span>
+        <button class="nox-back" id="noxBack" type="button" hidden data-cursor="Wake">&#128062; Wake NOX</button>
         <a href="#home" class="scramble">Back to top</a>
       </footer>
     </section>
@@ -722,6 +686,46 @@
       </div>
     </section>
   </div>
+  <!-- ============ ABOUT-ME card (opens from the hero portrait) ============ -->
+  <div class="me" id="meCard" role="dialog" aria-modal="true" aria-labelledby="meName" hidden data-lenis-prevent>
+    <div class="me__veil" data-me-close></div>
+    <article class="me__card">
+      <button class="me__x" type="button" data-me-close aria-label="Close" data-cursor="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+      <figure class="me__photo">
+        <span class="me__mono me__photo-top" aria-hidden="true"><span>Profile</span><span>N&ordm; 01</span></span>
+        <span class="me__photo-word" aria-hidden="true">AKG</span>
+        <img src="assets/aditya-cutout.webp" alt="Aditya Kumar Gupta" width="1000" height="1289" draggable="false">
+        <figcaption class="me__tag"><i></i>Open to internships</figcaption>
+      </figure>
+      <div class="me__body">
+        <p class="me__kick me__mono me__in">Hey, I&rsquo;m</p>
+        <h3 class="me__name" id="meName"><span class="me__line-mask"><span>Aditya</span></span><span class="me__line-mask"><em>Kumar Gupta</em></span></h3>
+        <p class="me__role me__in">I build <em>AI agents</em> and the apps they live in.</p>
+        <p class="me__lead me__in">I fall for the problem first and the code second. If it can think, talk or scale, I want to build it, ship it, and watch real people use it.</p>
+
+        <dl class="me__facts me__in">
+          <div><dt>Study</dt><dd>B.Tech CSE, Manav Rachna University <span>CGPA 8.51</span></dd></div>
+          <div><dt>Now</dt><dd>Agentic AI Intern, MR.IMPACT <span>LLM agents for university workflows</span></dd></div>
+          <div><dt>Roles</dt><dd>AWS Student Builder Campus Leader <span>Google Student Ambassador</span></dd></div>
+        </dl>
+
+        <div class="me__wins me__in">
+          <div><small>Hackbriven &middot; GfG HQ</small><b>N&ordm;&thinsp;1</b><span>1st place</span></div>
+          <div><small>NASA Space Apps</small><b>Finalist</b><span>National grand finale</span></div>
+          <div><small>EYFI Wave 01</small><b>Winner</b><span>First real income</span></div>
+        </div>
+
+        <p class="me__quote me__in">&ldquo;Late nights, loud music, one more commit.&rdquo;</p>
+
+        <div class="me__actions me__in">
+          <button class="me__btn me__btn--fill" type="button" data-me-hire data-cursor="Hire">Hire me <span aria-hidden="true">&rarr;</span></button>
+          <button class="me__btn" type="button" data-resume-open data-me-close-first data-cursor="Read">Resume</button>
+          <a class="me__btn" href="https://www.linkedin.com/in/aditya-kumar-gupta-048a96371/" target="_blank" rel="noopener" data-cursor="Connect">LinkedIn <span aria-hidden="true">&nearr;</span></a>
+        </div>
+      </div>
+    </article>
+  </div>
+
   <!-- ============ RESUME viewer (paper flies in from the button and unrolls) ============ -->
   <div class="resume" id="resume" role="dialog" aria-modal="true" aria-label="Resume of Aditya Kumar Gupta" hidden data-lenis-prevent>
     <div class="resume__backdrop" data-resume-close></div>
@@ -808,5 +812,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
   <script src="https://unpkg.com/lenis@1.1.13/dist/lenis.min.js"></script>
   <script src="main.js"></script>
+  <script src="pet.js"></script>
+  <script src="nox-play.js"></script>
 </body>
 </html>
