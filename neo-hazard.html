@@ -364,16 +364,189 @@
     .lbx__nav--p { left: 20px; top: 50%; } .lbx__nav--n { right: 20px; top: 50%; }
     .lbx__x:hover, .lbx__nav:hover { border-color: var(--gold); color: var(--gold); }
     .lbx__count { position: absolute; top: 32px; left: 24px; color: var(--muted); }
+
+    /* =====================================================================
+       3D LAYER (neo-3d.js): the space scene, the intro, the hazard tag
+       ===================================================================== */
+    #space { position: fixed; left: 0; top: 0; width: 100vw; height: 100vh; z-index: 0; pointer-events: none; display: block; }
+    main, .bar, footer { position: relative; z-index: 1; }
+    .bar { z-index: 50; }
+    .hero__space { min-height: 420px; }
+    /* the hero always fits the first screen: spacing and type scale with the viewport height */
+    /* the hero starts under the 64px top bar, so it fills exactly what's left of the first screen */
+    .hero { min-height: calc(100vh - 64px); min-height: calc(100svh - 64px); padding-top: 3vh; padding-bottom: 5vh; position: relative; }
+    .hero__eyebrow { margin-bottom: clamp(12px, 2.6vh, 26px); }
+    .hero h1 { font-size: clamp(26px, min(3.1vw, 6.3vh), 56px); }
+    .hero__sub { margin-top: clamp(6px, 1.4vh, 14px); font-size: clamp(19px, min(2.4vw, 4.1vh), 34px); }
+    .hero__one { margin-top: clamp(10px, 2.2vh, 22px); font-size: clamp(14.5px, 2.1vh, 17px); }
+    .stats { margin-top: clamp(16px, 3.8vh, 40px); }
+    .stat { padding: clamp(10px, 1.9vh, 18px) 16px; }
+    .scrollcue { position: absolute; left: 50%; bottom: 1.6vh; translate: -50% 0; display: grid; justify-items: center; gap: 6px; color: var(--dim); font-size: 10px; }
+    .scrollcue i { width: 18px; height: 28px; border-radius: 10px; border: 1px solid var(--line-2); position: relative; }
+    .scrollcue i::after { content: ""; position: absolute; left: 50%; top: 6px; width: 2px; height: 6px; margin-left: -1px; border-radius: 2px; background: var(--gold); animation: cue 1.8s ease-in-out infinite; }
+    @keyframes cue { 0% { transform: translateY(0); opacity: 1; } 70% { transform: translateY(9px); opacity: 0; } 100% { opacity: 0; } }
+    html.neo-intro .scrollcue { opacity: 0; }
+    .scrollcue { transition: opacity .8s 1s; }
+    @media (max-width: 980px), (max-height: 620px) { .scrollcue { display: none; } }
+    /* a soft shadow behind the title so the 3D scene never fights the text */
+    .hero > div:first-child { position: relative; }
+    .hero > div:first-child::before { content: ""; position: absolute; inset: -12% -18% -12% -30%; z-index: -1; pointer-events: none; background: radial-gradient(closest-side, rgba(7, 7, 9, .82), rgba(7, 7, 9, .55) 55%, transparent); }
+    .journey.is-live .journey__head { opacity: calc(1 - var(--fin, 0)); }
+    @media (max-width: 760px) { .jf__chips { display: none; } .jf__best div { padding: 12px 14px; } .jf__best b { font-size: 24px; } }
+    .intro { position: fixed; inset: 0; z-index: 80; display: grid; place-content: center; justify-items: center; gap: 10px; background: #050507; text-align: center; transition: opacity .6s; }
+    .intro.is-gone { opacity: 0; pointer-events: none; visibility: hidden; }
+    .intro p { color: var(--muted); }
+    .intro b { font-family: var(--display); font-weight: 800; font-size: clamp(56px, 9vw, 120px); letter-spacing: -0.05em; line-height: 1; font-variant-numeric: tabular-nums; background: linear-gradient(90deg, var(--fg), var(--gold)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .intro span { color: var(--gold); }
+    .intro::after { content: ""; width: 180px; height: 2px; margin-top: 18px; background: linear-gradient(90deg, transparent, var(--gold), transparent); animation: introScan 1.2s ease-in-out infinite; }
+    @keyframes introScan { 0%, 100% { transform: scaleX(0.2); opacity: .4; } 50% { transform: scaleX(1); opacity: 1; } }
+    html.neo-intro .bar { opacity: 0; }
+    .bar { transition: opacity .8s; }
+    .hz { position: fixed; left: 0; top: 0; z-index: 2; pointer-events: none; opacity: 0; transition: opacity .5s; }
+    .hz.is-on { opacity: 1; }
+    .hz i { position: absolute; left: -16px; top: -16px; width: 32px; height: 32px; border-radius: 50%; border: 1px solid rgba(255, 90, 31, .8); animation: hzPing 1.6s ease-out infinite; }
+    .hz span { position: absolute; left: 22px; top: -30px; white-space: nowrap; padding: 4px 9px; border-radius: 999px; background: rgba(255, 90, 31, .14); border: 1px solid rgba(255, 90, 31, .55); color: #ffb59a; font-size: 10px; }
+    .hz span::before { content: ""; position: absolute; left: -14px; bottom: -8px; width: 16px; height: 1px; background: rgba(255, 90, 31, .7); transform: rotate(-38deg); transform-origin: right; }
+    .hz.is-near span { background: var(--ember); color: #170803; }
+    @keyframes hzPing { from { transform: scale(.6); opacity: 1; } to { transform: scale(1.8); opacity: 0; } }
+    @media (max-width: 980px) { #space { opacity: .55; } .hero__space { display: none; } }
+
+    /* =====================================================================
+       01 · THE PROJECT: what this is, before anything else
+       ===================================================================== */
+    .flow { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; margin-top: 8px; position: relative; }
+    .flow__step { position: relative; padding: 26px 22px 24px; border: 1px solid var(--line); background: linear-gradient(180deg, rgba(20, 20, 26, .9), rgba(10, 10, 13, .92)); }
+    .flow__step:first-child { border-radius: 20px 0 0 20px; }
+    .flow__step:last-child { border-radius: 0 20px 20px 0; }
+    .flow__step + .flow__step { border-left: 0; }
+    .flow__n { font-family: var(--mono); font-size: 11px; color: var(--dim); letter-spacing: .12em; }
+    .flow__ic { width: 46px; height: 46px; border-radius: 14px; display: grid; place-items: center; margin: 14px 0 16px; background: rgba(255, 181, 71, .1); color: var(--gold); }
+    .flow__ic svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+    .flow__step h3 { font-family: var(--display); font-size: 20px; letter-spacing: -0.02em; line-height: 1.15; }
+    .flow__step p { color: var(--muted); font-size: 14px; margin-top: 8px; }
+    .flow__step .feat { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+    .flow__step .feat span { font-family: var(--mono); font-size: 10.5px; padding: 4px 8px; border-radius: 6px; border: 1px solid var(--line-2); color: var(--fg); }
+    .flow__step--out { background: linear-gradient(180deg, rgba(255, 90, 31, .12), rgba(10, 10, 13, .92)); }
+    .flow__step--out .flow__ic { background: var(--ember); color: #170803; }
+    .verdict { display: flex; gap: 8px; margin-top: 12px; }
+    .verdict span { flex: 1; text-align: center; padding: 8px; border-radius: 10px; font-family: var(--mono); font-size: 11px; letter-spacing: .1em; border: 1px solid var(--line-2); }
+    .verdict .v-yes { border-color: rgba(255, 90, 31, .6); color: #ffb59a; background: rgba(255, 90, 31, .12); animation: vPulse 2.4s ease-in-out infinite; }
+    @keyframes vPulse { 50% { box-shadow: 0 0 0 4px rgba(255, 90, 31, .12); } }
+    /* a pulse of data travelling along the flow */
+    .flow__beam { position: absolute; left: 4%; right: 4%; top: 0; height: 2px; overflow: hidden; border-radius: 2px; }
+    .flow__beam::after { content: ""; position: absolute; top: 0; left: -30%; width: 30%; height: 100%; background: linear-gradient(90deg, transparent, var(--gold), var(--ember), transparent); animation: beam 3.2s cubic-bezier(.6, 0, .4, 1) infinite; }
+    @keyframes beam { to { left: 100%; } }
+    .flow.in .flow__step { animation: flowIn .9s var(--ease) both; }
+    .flow.in .flow__step:nth-child(3) { animation-delay: .12s; } .flow.in .flow__step:nth-child(4) { animation-delay: .24s; } .flow.in .flow__step:nth-child(5) { animation-delay: .36s; }
+    @keyframes flowIn { from { opacity: 0; transform: translateY(30px) rotateX(18deg); } }
+    .shapw { margin-top: 14px; display: grid; gap: 6px; }
+    .shapw div { display: grid; grid-template-columns: 64px 1fr 40px; gap: 8px; align-items: center; font-family: var(--mono); font-size: 10.5px; color: var(--muted); }
+    .shapw i { height: 6px; border-radius: 3px; background: linear-gradient(90deg, var(--ember), var(--gold)); transform-origin: left; transform: scaleX(0); transition: transform 1.2s var(--ease); }
+    .flow.in .shapw i { transform: scaleX(var(--w)); }
+    .built { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-top: 22px; }
+    .built .card { padding: 22px; }
+    .built b { display: block; font-family: var(--display); font-size: 30px; letter-spacing: -0.03em; color: var(--gold); line-height: 1; }
+    .built h3 { font-size: 16px; margin-top: 10px; }
+    .built p { color: var(--muted); font-size: 14px; margin-top: 6px; }
+    .stack { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 22px; align-items: center; }
+    .stack span { font-family: var(--mono); font-size: 11px; letter-spacing: .08em; padding: 7px 12px; border-radius: 999px; border: 1px solid var(--line-2); color: var(--fg); }
+    .stack small { color: var(--muted); margin-right: 6px; }
+    @media (max-width: 980px) {
+      .flow { grid-template-columns: 1fr 1fr; }
+      .flow__step { border-radius: 0 !important; border: 1px solid var(--line) !important; }
+      .built { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 560px) { .flow, .built { grid-template-columns: 1fr; } .flow__beam { display: none; } }
+
+    /* =====================================================================
+       THE MODEL LINE-UP: 13 models arrive one at a time as you scroll
+       ===================================================================== */
+    .journey { position: relative; margin-top: clamp(80px, 12vh, 140px); scroll-margin-top: 60px; }
+    .journey__pin { position: relative; height: 100vh; display: grid; grid-template-rows: auto 1fr; padding-top: 78px; overflow: hidden; }
+    .journey__head { display: flex; align-items: end; justify-content: space-between; gap: 20px; }
+    .journey__head h2 { font-family: var(--display); font-weight: 700; font-size: clamp(30px, 3.6vw, 52px); letter-spacing: -0.035em; line-height: 1; }
+    .journey__count { font-family: var(--display); font-weight: 800; letter-spacing: -0.05em; line-height: .9; text-align: right; }
+    .journey__count b { font-size: clamp(56px, 7vw, 110px); color: var(--gold); font-variant-numeric: tabular-nums; }
+    .journey__count span { font-size: clamp(22px, 2.4vw, 34px); color: var(--dim); }
+    .journey__stage { position: relative; display: grid; grid-template-columns: 260px 1fr; gap: 40px; align-items: center; min-height: 0; }
+    .jr { list-style: none; display: grid; gap: 2px; align-content: center; font-size: 13px; }
+    .jr__grp { margin: 12px 0 4px; font-family: var(--mono); font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--dim); }
+    .jr__grp:first-child { margin-top: 0; }
+    .jr__it { display: flex; align-items: center; gap: 10px; color: var(--dim); padding: 3px 0; transition: color .35s, transform .45s var(--ease); }
+    .jr__it i { width: 8px; height: 8px; border-radius: 50%; border: 1px solid currentColor; transition: background .35s, box-shadow .35s; }
+    .jr__it.is-done { color: var(--muted); }
+    .jr__it.is-done i { background: var(--muted); }
+    .jr__it.is-on { color: var(--fg); transform: translateX(6px); }
+    .jr__it.is-on i { background: var(--gold); border-color: var(--gold); box-shadow: 0 0 12px var(--gold); }
+    .deck { position: relative; height: min(470px, 62vh); perspective: 1400px; perspective-origin: 30% 40%; }
+    .jc { position: absolute; inset: 0; margin: auto; width: min(640px, 100%); height: fit-content; padding: 28px 30px; border-radius: 24px; transform-style: preserve-3d; will-change: transform, opacity;
+      background: linear-gradient(160deg, rgba(26, 26, 33, .97), rgba(11, 11, 14, .98)); border: 1px solid var(--line-2);
+      box-shadow: 0 50px 100px -40px rgba(0, 0, 0, 1), inset 0 1px 0 rgba(255, 255, 255, .06); }
+    .jc.is-front { border-color: rgba(255, 181, 71, .45); box-shadow: 0 50px 100px -40px rgba(0, 0, 0, 1), 0 0 80px -30px rgba(255, 181, 71, .35), inset 0 1px 0 rgba(255, 255, 255, .08); }
+    .jc__top { display: flex; align-items: center; gap: 10px; }
+    .jc__grp { font-family: var(--mono); font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; padding: 5px 10px; border-radius: 999px; border: 1px solid var(--line-2); color: var(--muted); }
+    .jc.is-base .jc__grp { color: var(--muted); } .jc.is-raw .jc__grp { color: #c9b8ff; border-color: rgba(201, 184, 255, .4); }
+    .jc.is-w .jc__grp { color: var(--safe); border-color: rgba(122, 162, 255, .45); } .jc.is-s .jc__grp { color: var(--ok); border-color: rgba(52, 211, 153, .45); }
+    .jc.is-t .jc__grp { color: var(--gold); border-color: rgba(255, 181, 71, .5); }
+    .jc__win { font-family: var(--mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; padding: 5px 10px; border-radius: 999px; background: var(--gold); color: #0b0905; }
+    .jc__no { margin-left: auto; font-family: var(--mono); font-size: 11px; color: var(--dim); letter-spacing: .1em; }
+    .jc__name { font-family: var(--display); font-size: clamp(26px, 2.8vw, 40px); letter-spacing: -0.035em; line-height: 1.05; margin-top: 16px; }
+    .jc__about { color: var(--muted); margin-top: 10px; font-size: 15px; max-width: 54ch; }
+    .jc__ms { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-top: 22px; }
+    .jc__m span { display: block; font-family: var(--mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--dim); }
+    .jc__m b { display: block; font-family: var(--display); font-size: clamp(18px, 1.8vw, 24px); letter-spacing: -0.02em; margin: 4px 0 8px; font-variant-numeric: tabular-nums; }
+    .jc__m i { display: block; height: 5px; border-radius: 3px; background: rgba(255, 255, 255, .07); position: relative; overflow: hidden; }
+    .jc__m i::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, var(--gold), var(--ember)); transform-origin: left; transform: scaleX(0); transition: transform 1s var(--ease) .15s; }
+    .jc.is-front .jc__m i::after { transform: scaleX(var(--v)); }
+    .jc__cm { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13.5px; }
+    .jc__cm b { color: var(--fg); font-weight: 600; }
+    /* the summary */
+    .jfinal { position: absolute; inset: 78px var(--pad) 30px; display: grid; place-content: center; justify-items: center; text-align: center; gap: 14px; opacity: 0; transform: scale(.94) translateY(20px); pointer-events: none; transition: opacity .7s var(--ease), transform .9s var(--ease); }
+    .jfinal.is-on { opacity: 1; transform: none; pointer-events: auto; }
+    .jfinal h3 { font-family: var(--display); font-weight: 800; font-size: clamp(54px, 8vw, 120px); letter-spacing: -0.05em; line-height: .9; }
+    .jfinal h3 b { color: var(--gold); font-variant-numeric: tabular-nums; }
+    .jf__sub { color: var(--muted); max-width: 60ch; }
+    .jf__chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; max-width: 980px; margin-top: 8px; }
+    .jf__chips span { display: grid; padding: 8px 12px; border-radius: 12px; border: 1px solid var(--line-2); background: rgba(255, 255, 255, .03); font-size: 13px; text-align: left; }
+    .jf__chips small { font-family: var(--mono); font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--dim); }
+    .jfinal.is-on .jf__chips span { animation: chipIn .6s var(--ease) both; }
+    .jfinal.is-on .jf__chips span:nth-child(n) { animation-delay: calc(var(--k, 0) * 40ms); }
+    @keyframes chipIn { from { opacity: 0; transform: translateY(14px) scale(.9); } }
+    .jf__chips .is-w { border-color: rgba(122, 162, 255, .35); } .jf__chips .is-s { border-color: rgba(52, 211, 153, .35); } .jf__chips .is-t { border-color: rgba(255, 181, 71, .5); }
+    .jf__best { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-top: 14px; width: min(860px, 100%); }
+    .jf__best div { padding: 16px; border-radius: 16px; border: 1px solid var(--line); background: var(--bg-2); text-align: left; }
+    .jf__best small { color: var(--dim); }
+    .jf__best b { display: block; font-family: var(--display); font-size: 28px; letter-spacing: -0.03em; color: var(--gold); margin: 6px 0 4px; }
+    .jf__best span { color: var(--muted); font-size: 13px; }
+    .journey.is-live .journey__stage { opacity: calc(1 - var(--fin, 0)); }
+    /* without GSAP (or with reduced motion) it's a plain list */
+    .journey.is-static .journey__pin { height: auto; overflow: visible; }
+    .journey.is-static .deck { height: auto; perspective: none; display: grid; gap: 14px; }
+    .journey.is-static .jc { position: relative; inset: auto; }
+    .journey.is-static .jc .jc__m i::after { transform: scaleX(var(--v)); }
+    .journey.is-static .jfinal { position: relative; inset: auto; margin-top: 30px; }
+    @media (max-width: 980px) {
+      .journey__stage { grid-template-columns: 1fr; }
+      .jr { display: none; }
+      .jc { padding: 22px; }
+      .jc__ms { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .jf__best { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 <body>
+  <canvas id="space" aria-hidden="true"></canvas>
+  <div class="intro" id="intro" aria-hidden="true"><p class="mono">Loading NASA close-approach data</p><b id="introN">0</b><span class="mono">asteroid fly-bys</span></div>
+  <div class="hz" id="hz" aria-hidden="true"><i></i><span class="mono">Potentially hazardous</span></div>
 
   <header class="bar">
     <a class="bar__back mono" href="index.html">&larr; Portfolio</a>
     <nav class="bar__nav mono" aria-label="Sections">
+      <a href="#project">Project</a>
       <a href="#question">Question</a>
       <a href="#data">Data</a>
       <a href="#pipeline">Pipeline</a>
+      <a href="#lineup">Line-up</a>
       <a href="#trap">Accuracy trap</a>
       <a href="#models">Models</a>
       <a href="#smote">SMOTE</a>
@@ -406,50 +579,65 @@
           <div class="stat"><b data-count="54.37" data-dec="2" data-suf="%">54.37%</b><small>best F1 (MCC 0.492)</small></div>
         </div>
       </div>
-      <div>
-        <svg class="orbit" viewBox="100 70 640 470" role="img" aria-label="Diagram: Earth's orbit around the Sun and an asteroid orbit passing very close to it. The gap between them is the MOID.">
-          <defs>
-            <radialGradient id="sun"><stop offset="0" stop-color="#fff4d2"/><stop offset=".45" stop-color="#ffb547"/><stop offset="1" stop-color="#ff5a1f" stop-opacity="0"/></radialGradient>
-            <radialGradient id="ast"><stop offset="0" stop-color="#ffd2b8"/><stop offset=".5" stop-color="#ff5a1f"/><stop offset="1" stop-color="#ff5a1f" stop-opacity="0"/></radialGradient>
-          </defs>
-          <circle cx="300" cy="300" r="46" fill="url(#sun)" class="fade" style="animation-delay:.2s"/>
-          <circle cx="300" cy="300" r="13" fill="#ffe7a3"/>
-          <text x="300" y="338" text-anchor="middle" class="fade lbl-gold" style="animation-delay:.6s">SUN</text>
-          <!-- Earth orbit -->
-          <circle cx="300" cy="300" r="150" fill="none" stroke="#7aa2ff" stroke-opacity=".55" stroke-width="1.5" class="draw"/>
-          <!-- asteroid orbit -->
-          <path id="astPath" d="M 140 300 A 280 200 0 1 1 700 300 A 280 200 0 1 1 140 300" fill="none" stroke="#ff5a1f" stroke-opacity=".6" stroke-width="1.5" stroke-dasharray="5 6"/>
-          <!-- Earth -->
-          <circle cx="150" cy="300" r="9" fill="#7aa2ff"/>
-          <circle cx="150" cy="300" r="16" fill="none" stroke="#7aa2ff" stroke-opacity=".3"/>
-          <text x="168" y="276" class="lbl-blue fade">EARTH</text>
-          <!-- MOID bracket -->
-          <g class="fade">
-            <line x1="140" y1="300" x2="118" y2="250" stroke="#ff5a1f" stroke-width="1"/>
-            <line x1="118" y1="250" x2="118" y2="200" stroke="#ff5a1f" stroke-width="1"/>
-            <text x="112" y="190" class="lbl-red">MOID ≤ 0.05 au</text>
-            <text x="112" y="174" font-size="10">CLOSE ENOUGH?</text>
-          </g>
-          <!-- moving asteroid -->
-          <g>
-            <circle r="16" fill="url(#ast)"/>
-            <circle r="5" fill="#ffd2b8"/>
-            <animateMotion dur="24s" repeatCount="indefinite" rotate="auto"><mpath href="#astPath"/></animateMotion>
-          </g>
-          <g class="fade" style="animation-delay:2.2s">
-            <text x="560" y="128" class="lbl-gold">H ≤ 22</text>
-            <text x="560" y="144" font-size="10">BIG ENOUGH? (~140 m+)</text>
-            <line x1="556" y1="134" x2="520" y2="134" stroke="#ffb547" stroke-width="1"/>
-          </g>
-          <text x="420" y="532" text-anchor="middle" class="fade" font-size="10">BOTH TRUE  →  NASA CALLS IT “POTENTIALLY HAZARDOUS”</text>
-        </svg>
+      <div class="hero__space" aria-hidden="true"></div>
+      <div class="scrollcue mono" aria-hidden="true"><i></i>Scroll</div>
+    </section>
+
+    <!-- ================= 01 THE PROJECT ================= -->
+    <section class="sec wrap" id="project">
+      <div class="sec__head rv">
+        <span class="sec__num">01</span>
+        <div>
+          <p class="sec__kick mono">The project</p>
+          <h2>A machine-learning model that spots <em class="s">dangerous asteroids</em></h2>
+          <p class="lead">Give it four numbers NASA records for every asteroid fly-by: how big it is, how bright, how fast and how close it passes. It predicts whether NASA would label that asteroid <b>potentially hazardous</b>, and then explains <b>why</b>. Behind it: 12 trained models, two ways of handling a 1-in-10 rare class, and a leak-proof pipeline.</p>
+        </div>
       </div>
+      <div class="flow rv">
+        <span class="flow__beam" aria-hidden="true"></span>
+        <div class="flow__step">
+          <span class="flow__n">STEP 1 · INPUT</span>
+          <div class="flow__ic"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v6c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/></svg></div>
+          <h3>NASA fly-by data</h3>
+          <p><b>90,836</b> close approaches. Only <b>9.73%</b> are labelled hazardous.</p>
+        </div>
+        <div class="flow__step">
+          <span class="flow__n">STEP 2 · FEATURES</span>
+          <div class="flow__ic"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h10M4 17h13"/></svg></div>
+          <h3>Four measurements</h3>
+          <div class="feat"><span>diameter</span><span>brightness (H)</span><span>velocity</span><span>miss distance</span></div>
+        </div>
+        <div class="flow__step">
+          <span class="flow__n">STEP 3 · MODELS</span>
+          <div class="flow__ic"><svg viewBox="0 0 24 24"><circle cx="6" cy="6" r="2.2"/><circle cx="6" cy="18" r="2.2"/><circle cx="18" cy="12" r="2.2"/><path d="M8 7l8 4M8 17l8-4M6 8.2v7.6"/></svg></div>
+          <h3>12 models, compared</h3>
+          <p>Logistic Regression to a tuned Random Forest, with class weighting or SMOTE.</p>
+        </div>
+        <div class="flow__step flow__step--out">
+          <span class="flow__n">STEP 4 · OUTPUT</span>
+          <div class="flow__ic"><svg viewBox="0 0 24 24"><path d="M12 3l9 16H3z"/><path d="M12 10v4M12 17v.1"/></svg></div>
+          <h3>Hazardous? And why</h3>
+          <div class="verdict"><span class="v-yes">HAZARDOUS</span><span>SAFE</span></div>
+          <div class="shapw" aria-label="What drives a prediction: mean SHAP values">
+            <div><span>size</span><i style="--w:1"></i><span>.31</span></div>
+            <div><span>brightness</span><i style="--w:.35"></i><span>.11</span></div>
+            <div><span>distance</span><i style="--w:.16"></i><span>.05</span></div>
+            <div><span>speed</span><i style="--w:.13"></i><span>.04</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="built">
+        <div class="card rv"><b>12</b><h3>Models trained and compared</h3><p>Five algorithms, each with class weighting and with SMOTE, plus a tuned Random Forest, all scored against an always-“safe” baseline.</p></div>
+        <div class="card rv"><b>97.57%</b><h3>Hazards caught</h3><p>The weighted Decision Tree missed only 43 of 1,768 hazardous asteroids in the test set.</p></div>
+        <div class="card rv"><b>SHAP</b><h3>Explainable, not a black box</h3><p>Every prediction can be traced back to the features that pushed it. Size alone drives most of the reasoning, just like NASA’s own rule.</p></div>
+      </div>
+      <div class="stack rv"><small class="mono">Built with</small><span>Python</span><span>scikit-learn</span><span>SMOTE</span><span>SHAP</span><span>pandas</span><span>Seaborn</span></div>
     </section>
 
     <!-- ================= 01 QUESTION ================= -->
     <section class="sec wrap" id="question">
       <div class="sec__head rv">
-        <span class="sec__num">01</span>
+        <span class="sec__num">02</span>
         <div>
           <p class="sec__kick mono">The question</p>
           <h2>How much of NASA&rsquo;s hazard label can <em class="s">machine learning</em> recover?</h2>
@@ -486,7 +674,7 @@
     <!-- ================= 02 DATA ================= -->
     <section class="sec wrap" id="data">
       <div class="sec__head rv">
-        <span class="sec__num">02</span>
+        <span class="sec__num">03</span>
         <div>
           <p class="sec__kick mono">The data</p>
           <h2>90,836 fly-bys, <em class="s">only 1 in 10</em> hazardous</h2>
@@ -538,7 +726,7 @@
     <!-- ================= 03 PIPELINE ================= -->
     <section class="sec wrap" id="pipeline">
       <div class="sec__head rv">
-        <span class="sec__num">03</span>
+        <span class="sec__num">04</span>
         <div>
           <p class="sec__kick mono">The method</p>
           <h2>A pipeline built so the <em class="s">test set stays honest</em></h2>
@@ -583,10 +771,28 @@ Scaled Testing Shape:  (18168, 4)</div>
       </div>
     </section>
 
+    <!-- ================= THE MODEL LINE-UP (scroll-driven) ================= -->
+    <section class="journey" id="lineup" aria-label="Every model that was trained, one at a time">
+      <div class="journey__pin" data-pin>
+        <div class="wrap journey__head">
+          <div>
+            <p class="sec__kick mono">The model line-up &middot; scroll</p>
+            <h2>Every model, <em class="s">one at a time</em></h2>
+          </div>
+          <div class="journey__count" aria-hidden="true"><b data-jnum>01</b><span> / 13</span></div>
+        </div>
+        <div class="wrap journey__stage">
+          <ol class="jr" data-rail></ol>
+          <div class="deck" data-deck></div>
+        </div>
+        <div class="jfinal" data-final></div>
+      </div>
+    </section>
+
     <!-- ================= 04 ACCURACY TRAP ================= -->
     <section class="sec wrap" id="trap">
       <div class="sec__head rv">
-        <span class="sec__num">04</span>
+        <span class="sec__num">05</span>
         <div>
           <p class="sec__kick mono">The accuracy trap</p>
           <h2>90% accurate, and <em class="s">almost useless</em></h2>
@@ -644,7 +850,7 @@ Scaled Testing Shape:  (18168, 4)</div>
     <!-- ================= 05 MODELS ================= -->
     <section class="sec wrap" id="models">
       <div class="sec__head rv">
-        <span class="sec__num">05</span>
+        <span class="sec__num">06</span>
         <div>
           <p class="sec__kick mono">Five algorithms</p>
           <h2>Same data, five <em class="s">very different</em> trade-offs</h2>
@@ -689,7 +895,7 @@ Scaled Testing Shape:  (18168, 4)</div>
     <!-- ================= 06 SMOTE ================= -->
     <section class="sec wrap" id="smote">
       <div class="sec__head rv">
-        <span class="sec__num">06</span>
+        <span class="sec__num">07</span>
         <div>
           <p class="sec__kick mono">Class weighting vs SMOTE</p>
           <h2>SMOTE helped only where <em class="s">weighting had failed</em></h2>
@@ -726,7 +932,7 @@ X_train_smote, y_train_smote = \
     <!-- ================= 07 SHAP ================= -->
     <section class="sec wrap" id="shap">
       <div class="sec__head rv">
-        <span class="sec__num">07</span>
+        <span class="sec__num">08</span>
         <div>
           <p class="sec__kick mono">Explainable AI · SHAP</p>
           <h2>Does the model think <em class="s">like NASA&rsquo;s rule?</em></h2>
@@ -786,7 +992,7 @@ X_train_smote, y_train_smote = \
     <!-- ================= 08 TUNING ================= -->
     <section class="sec wrap" id="tuning">
       <div class="sec__head rv">
-        <span class="sec__num">08</span>
+        <span class="sec__num">09</span>
         <div>
           <p class="sec__kick mono">Hyperparameter tuning</p>
           <h2>Tuning without <em class="s">data leakage</em></h2>
@@ -840,7 +1046,7 @@ Best Cross Validation F1 Score: 0.5084</div>
     <!-- ================= 09 INSIGHT ================= -->
     <section class="sec wrap" id="insight">
       <div class="sec__head rv">
-        <span class="sec__num">09</span>
+        <span class="sec__num">10</span>
         <div>
           <p class="sec__kick mono">Key insight</p>
           <h2>A <em class="s">62% precision ceiling</em> that no model could break</h2>
@@ -879,7 +1085,7 @@ Best Cross Validation F1 Score: 0.5084</div>
     <!-- ================= 10 LEADERBOARD ================= -->
     <section class="sec wrap" id="results">
       <div class="sec__head rv">
-        <span class="sec__num">10</span>
+        <span class="sec__num">11</span>
         <div>
           <p class="sec__kick mono">Final results</p>
           <h2>Every model, <em class="s">every metric</em></h2>
@@ -897,7 +1103,7 @@ Best Cross Validation F1 Score: 0.5084</div>
     <!-- ================= 11 IMPACT ================= -->
     <section class="sec wrap" id="impact">
       <div class="sec__head rv">
-        <span class="sec__num">11</span>
+        <span class="sec__num">12</span>
         <div>
           <p class="sec__kick mono">Impact</p>
           <h2>What this is <em class="s">useful for</em></h2>
@@ -920,7 +1126,7 @@ Best Cross Validation F1 Score: 0.5084</div>
     <!-- ================= 12 POSTER ================= -->
     <section class="sec wrap" id="poster">
       <div class="sec__head rv">
-        <span class="sec__num">12</span>
+        <span class="sec__num">13</span>
         <div>
           <p class="sec__kick mono">Research poster</p>
           <h2>The whole study on <em class="s">one page</em></h2>
@@ -975,6 +1181,16 @@ Best Cross Validation F1 Score: 0.5084</div>
     <figure><img id="lbxImg" alt=""><figcaption id="lbxCap"></figcaption></figure>
   </div>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  <script src="neo-3d.js?v=9"></script>
   <script>
   (() => {
     const $ = (s, r = document) => r.querySelector(s);
@@ -1013,6 +1229,7 @@ Best Cross Validation F1 Score: 0.5084</div>
     const pct = (v, d = 2) => (v * 100).toFixed(d) + '%';
     const fmt = (n) => n.toLocaleString('en-US');
     const byId = Object.fromEntries(M.map((m) => [m.id, m]));
+    window.NEO_M = M;
 
     /* ---------- reveal on scroll (one-shot) ---------- */
     const onShow = new Map();
@@ -1026,7 +1243,7 @@ Best Cross Validation F1 Score: 0.5084</div>
     $$('.rv').forEach((el) => watch(el));
 
     /* ---------- hero counters ---------- */
-    $$('[data-count]').forEach((el) => {
+    (window.NEO_READY || Promise.resolve()).then(() => $$('[data-count]').forEach((el) => {
       const to = +el.dataset.count, dec = +(el.dataset.dec || 0), suf = el.dataset.suf || '';
       const t0 = performance.now(), dur = 1600;
       const tick = (t) => {
@@ -1035,7 +1252,7 @@ Best Cross Validation F1 Score: 0.5084</div>
         if (k < 1) requestAnimationFrame(tick);
       };
       requestAnimationFrame(tick);
-    });
+    }));
 
     /* ---------- imbalance bars + dots ---------- */
     const imb = $('.imb');
