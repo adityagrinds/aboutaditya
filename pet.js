@@ -285,7 +285,7 @@
         </div>
         <button class="nox-card__play nox-in" style="--i:6" type="button" data-nox-play data-cursor="Play">
           <span class="nox-card__play-art" aria-hidden="true"></span>
-          <span class="nox-card__play-txt"><small>Mind games &middot; pick one of 2</small><b>Play with him</b><em>Memory or focus. Beat your best.</em></span>
+          <span class="nox-card__play-txt"><small>Mind games &middot; pick one of 4</small><b>Play with him</b><em>Memory, focus, code or maths.</em></span>
           <span class="nox-card__play-go" aria-hidden="true">&rarr;</span>
         </button>
         <p class="nox-card__foot nox-in" style="--i:7"><span>Miss him? <b>Wake NOX</b> in the footer</span><a href="https://commons.wikimedia.org/wiki/File:Black_leopard,_Padmaja_Naidu_Himalayan_Zoological_Park.jpg" target="_blank" rel="noopener">Photo: A. Panda, CC BY-SA</a></p>

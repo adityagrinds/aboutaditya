@@ -7,7 +7,7 @@
 ### A portfolio you switch on.
 
 The site opens in a dark room. Pull the lamp cord and it lights up.<br>
-It has a panther that follows your cursor, four gates that lead into tunnels, two mind games, and a Hire me button caught in a spider web.
+It has a panther that follows your cursor, four gates that lead into tunnels, four mind games (memory, focus, coding and maths), and a Hire me button caught in a spider web.
 
 **Hand-built with vanilla JavaScript, WebGL and GSAP. No framework, no bundler, no build step.**
 
@@ -50,7 +50,7 @@ It has a panther that follows your cursor, four gates that lead into tunnels, tw
   </tr>
   <tr>
     <td width="50%"><img src="assets/readme/arcade.jpg" alt="Nox's arcade menu with two games"><br><sub><b>Nox&rsquo;s arcade.</b> Two mind games with live previews, sound and personal bests.</sub></td>
-    <td width="50%"><img src="assets/readme/eyes.jpg" alt="Eyes in the Dark: glowing eyes on a grid"><br><sub><b>Eyes in the Dark.</b> Remember where the eyes opened, then find them before the clock runs out.</sub></td>
+    <td width="50%"><img src="assets/readme/eyes.jpg" alt="Night Eyes: glowing eyes on a grid"><br><sub><b>Night Eyes.</b> Remember where the eyes opened, then find them before the clock runs out.</sub></td>
   </tr>
 </table>
 
@@ -77,12 +77,16 @@ It has a panther that follows your cursor, four gates that lead into tunnels, tw
 - **He knows when to be quiet.** NOX never talks while you're scrolling.
 
 ### Nox&rsquo;s arcade
-Two quick mind games ([`nox-play.js`](nox-play.js)) in a moonlit jungle with fireflies:
+Four quick mind games ([`nox-play.js`](nox-play.js)) in a moonlit jungle with fireflies. The menu puts NOX's real face in the middle with the four games around him. He types out *"Let's see how smart you are"*, and his ring turns toward whichever game you point at while he comments on it.
 
 | Game | Skill | How it plays |
 | --- | --- | --- |
-| **Eyes in the Dark** | Memory, against the clock | Eyes open on a grid for a moment. Tap where they were before the timer runs out. Red eyes are traps. Each level adds eyes, the grid grows from 3×3 to 6×6, and time left over becomes a speed bonus. 3 lives. |
-| **Mind Trick** | Focus | A colour word appears in the wrong ink. Tap the **ink** or the **word**, whichever the rule says, and the rule flips without warning. 40 seconds, ×2 and ×3 streak multipliers, and a wrong tap costs 3 seconds. |
+| **Night Eyes** | Memory, against the clock | Eyes open on a grid for a moment. Tap where they were before the timer runs out. Red eyes are traps. Each level adds eyes, the grid grows from 3×3 to 6×6, and time left over becomes a speed bonus. 3 lives. |
+| **Colour Clash** | Focus | A colour word appears in the wrong ink. Tap the **ink** or the **word**, whichever the rule says, and the rule flips without warning. 40 seconds, ×2 and ×3 streak multipliers, and a wrong tap costs 3 seconds. |
+| **Bug Bounty** | Coding | A little code editor with syntax highlighting. Either tap the line with the bug (it gets fixed in front of you) or predict what the snippet prints, JavaScript quirks included. Each question has its own clock. Levels bring harder code and less time. 3 lives. |
+| **Math Pounce** | Maths, time attack | Quick sums, true-or-false, missing signs and "which is bigger?". A right answer adds 2 seconds and a wrong one takes 3. Every 6 right answers is a new level: two-step sums, squares and percentages arrive as you climb. |
+
+In **Bug Bounty** and **Math Pounce**, **NOX joins you**. The real panther rig sits at the bottom of the screen: it leaps on right answers, runs a victory lap on streaks, cheers level-ups and shrugs off misses. Every question is generated fresh, and every answer is computed in code, so it is always right.
 
 It has a 3-2-1 countdown, eyelid blinks, ripples, level banners, a rolling score counter, **synthesised WebAudio sound effects** (no audio files) with a mute toggle, and vibration on phones. Your best score for each game is kept in your browser.
 
@@ -120,8 +124,8 @@ flowchart LR
 
     subgraph PLAY["nox-play.js · Arcade"]
       direction TB
-      G1["Eyes in the Dark"]
-      G2["Mind Trick"]
+      G1["Night Eyes"]
+      G2["Colour Clash"]
       G3["WebAudio synth · fireflies"]
     end
 
@@ -148,7 +152,7 @@ aboutaditya/
 ├── style.css           # design tokens, both themes, every component
 ├── main.js             # loader, lights, WebGL, scroll choreography, gates, dialogs, silk web
 ├── pet.js              # NOX: the procedural panther, his card and the nav badge
-├── nox-play.js         # Nox's arcade: Eyes in the Dark + Mind Trick
+├── nox-play.js         # Nox's arcade: Night Eyes + Colour Clash
 ├── neo-hazard.html     # NEO Hazard machine-learning case study
 ├── neo-poster.html     # one-page research poster (source for the PDF/PNG)
 └── assets/
@@ -180,7 +184,7 @@ npx serve .
 python -m http.server 8080
 ```
 
-**Keyboard shortcuts:** <kbd>L</kbd> toggles the lights · <kbd>Esc</kbd> closes any room, dialog or game · <kbd>1</kbd>–<kbd>4</kbd> answer in Mind Trick · <kbd>1</kbd>–<kbd>9</kbd> tap the 3×3 grid in Eyes in the Dark.
+**Keyboard shortcuts:** <kbd>L</kbd> toggles the lights · <kbd>Esc</kbd> closes any room, dialog or game · <kbd>1</kbd>–<kbd>4</kbd> answer in Colour Clash · <kbd>1</kbd>–<kbd>9</kbd> tap the 3×3 grid in Night Eyes.
 
 ### Configure the Hire me form
 
